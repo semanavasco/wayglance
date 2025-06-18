@@ -1,0 +1,18 @@
+window,
+box {
+  background-color: transparent;
+}
+
+.time {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 120pt;
+  font-weight: bold;
+  color: #cba6f7;
+}
+
+.date {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 30pt;
+  font-weight: normal;
+  color: white;
+}
