@@ -1,6 +1,6 @@
-window,
-box {
+#wallpaper_window {
   background-color: transparent;
+  background: none;
 }
 
 .time {
