@@ -2,7 +2,11 @@
 #include <chrono>
 #include <clocale>
 #include <format>
+#include <gdkmm/display.h>
+#include <gdkmm/monitor.h>
 #include <gtkmm.h>
+#include <iostream>
+#include <vector>
 
 extern "C" {
 #include <gtk4-layer-shell.h>
@@ -11,7 +15,7 @@ extern "C" {
 // Declaring a custom window
 class WallpaperWindow : public Gtk::ApplicationWindow {
 public:
-  WallpaperWindow();
+  WallpaperWindow(GdkMonitor *p_monitor);
   virtual ~WallpaperWindow();
 
 protected:
@@ -28,7 +32,7 @@ protected:
 };
 
 // Window's constructor
-WallpaperWindow::WallpaperWindow()
+WallpaperWindow::WallpaperWindow(GdkMonitor *p_monitor)
     : m_label_box(Gtk::Orientation::VERTICAL, 10) {
   // Window configuration
   set_title("Hyprland Widget");
@@ -50,11 +54,19 @@ WallpaperWindow::WallpaperWindow()
 
   // Configuring layer shell
   gtk_layer_init_for_window((GtkWindow *)gobj());
+
+  // Setting the right monitor
+  if (p_monitor)
+    gtk_layer_set_monitor((GtkWindow *)gobj(), p_monitor);
+
+  // Configuring layer and anchors
   gtk_layer_set_layer((GtkWindow *)gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
   gtk_layer_set_anchor((GtkWindow *)gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
   gtk_layer_set_anchor((GtkWindow *)gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, true);
   gtk_layer_set_anchor((GtkWindow *)gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
   gtk_layer_set_anchor((GtkWindow *)gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+
+  // Disabling keyboard interaction
   gtk_layer_set_keyboard_mode((GtkWindow *)gobj(),
                               GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
 
@@ -99,8 +111,60 @@ int main(int argc, char *argv[]) {
   std::setlocale(LC_ALL, "");
 
   // Creating an instance of the GTK app
-  auto app = Gtk::Application::create("org.example.hyprwidget");
+  auto app = Gtk::Application::create("com.svasco.hyprwidget");
+
+  // Reference to our windows
+  std::vector<WallpaperWindow *> windows;
+
+  // Connecting to the activate signal on startup
+  app->signal_activate().connect([&]() {
+    // Getting the default display
+    auto display = Gdk::Display::get_default();
+    if (!display)
+      return;
+
+    // Getting a list of all monitors
+    auto monitors = display->get_monitors();
+    if (!monitors)
+      return;
+
+    // Getting the number of monitors via the C function
+    guint n_monitors = g_list_model_get_n_items(monitors->gobj());
+
+    std::cout << "Detected " << n_monitors << " monitors" << std::endl;
+
+    for (guint i = 0; i < n_monitors; i++) {
+      // Getting the raw C object
+      void *monitor_gobject = g_list_model_get_item(monitors->gobj(), i);
+
+      if (!monitor_gobject)
+        continue;
+
+      // Wrapping the C-Object in a C++ Glib::RefPtr to manipulate it
+      auto monitor_wrapper = Glib::wrap((GObject *)monitor_gobject);
+
+      // Ensuring it's a monitor
+      auto monitor = std::dynamic_pointer_cast<Gdk::Monitor>(monitor_wrapper);
+
+      if (!monitor)
+        continue;
+
+      std::cout << "Creating widget for monitor n°" << i << std::endl;
+
+      // Creating a new instance for our window
+      auto window = new WallpaperWindow((GdkMonitor *)monitor->gobj());
+
+      // Adding the window to the app so that it is handled and displayed
+      app->add_window(*window);
+
+      // Showing the window
+      window->show();
+
+      // Storing the pointer
+      windows.push_back(window);
+    }
+  });
 
   // Displaying the WallpaperWindow
-  return app->make_window_and_run<WallpaperWindow>(argc, argv);
+  return app->run(argc, argv);
 }
