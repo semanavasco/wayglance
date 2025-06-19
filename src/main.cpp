@@ -39,7 +39,7 @@ protected:
 WallpaperWindow::WallpaperWindow(GdkMonitor *p_monitor)
     : m_label_box(Gtk::Orientation::VERTICAL, 10) {
   // Window configuration
-  set_title("Hyprland Background Widget");
+  set_title("Wayglance");
   set_child(m_overlay);
 
   // DrawingArea configuration
@@ -114,7 +114,7 @@ WallpaperWindow::WallpaperWindow(GdkMonitor *p_monitor)
   }
 
   if (!config_base_path.empty()) {
-    std::filesystem::path config_path = config_base_path /= "background-widget";
+    std::filesystem::path config_path = config_base_path /= "wayglance";
     std::filesystem::path css_path = config_path / "style.css";
 
     // Checking if path exists
@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
   std::setlocale(LC_ALL, "");
 
   // Creating an instance of the GTK app
-  auto app = Gtk::Application::create("com.svasco.background");
+  auto app = Gtk::Application::create("io.github.semanavasco.wayglance");
 
   // Reference to our windows
   std::vector<WallpaperWindow *> windows;

@@ -2,7 +2,7 @@
 CXX = g++
 
 # Final executable name
-TARGET = background-widget
+TARGET = wayglance
 
 # Source files
 SRCS = src/main.cpp
