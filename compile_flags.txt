@@ -34,3 +34,4 @@
 -I/usr/include/blkid
 -I/usr/include/sysprof-6
 -pthread
+-Isrc/vendor

@@ -13,9 +13,6 @@ extern "C" {
 int main(int argc, char *argv[]) {
   auto app = Gtk::Application::create("io.github.semanavasco.wayglance");
 
-  // Reference to our windows
-  std::vector<Wayglance *> windows;
-
   // Connecting to the activate signal on startup
   app->signal_activate().connect([&]() {
     // Getting the default display
@@ -52,7 +49,6 @@ int main(int argc, char *argv[]) {
       auto window = new Wayglance((GdkMonitor *)monitor->gobj());
       app->add_window(*window);
       window->show();
-      windows.push_back(window);
     }
   });
 

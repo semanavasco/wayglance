@@ -2,6 +2,7 @@
 #define DEF_WAYGLANCE_HPP
 
 #include "modules/DateModule.hpp"
+#include "vendor/json.hpp"
 #include <filesystem>
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
@@ -14,15 +15,15 @@ public:
 protected:
   Gtk::Overlay m_overlay;
   Gtk::DrawingArea m_drawing_area;
-
   Gtk::Box m_modules_box;
-  DateModule m_date_module;
 
   // Configuration
   std::filesystem::path m_config_dir_path;
+  nlohmann::json m_config;
 
   void setup_paths();
   void load_style();
+  void load_config();
   void load_modules();
 
   // General Methods

@@ -15,7 +15,7 @@ extern "C" {
 
 // Constructor
 Wayglance::Wayglance(GdkMonitor *p_monitor)
-    : m_modules_box(Gtk::Orientation::VERTICAL), m_date_module() {
+    : m_modules_box(Gtk::Orientation::VERTICAL) {
   // Window configuration
   set_title("Wayglance");
   set_child(m_overlay);
@@ -46,6 +46,7 @@ Wayglance::Wayglance(GdkMonitor *p_monitor)
   // Configuration
   setup_paths();
   load_style();
+  load_config();
   load_modules();
 }
 
@@ -121,37 +122,114 @@ void Wayglance::load_style() {
   auto css_provider = Gtk::CssProvider::create();
 
   // Finding which style to load
-  if (!m_config_dir_path.empty()) {
-    std::filesystem::path css_path = m_config_dir_path / "style.css";
+  const auto css_path = m_config_dir_path / "style.css";
+  bool load_from_file = true;
 
-    if (!std::filesystem::exists(css_path)) {
+  if (!std::filesystem::exists(css_path)) {
+    if (std::filesystem::exists(m_config_dir_path)) {
       try {
-        std::cout << "Warning: Stylesheet does not exist in the configuration "
-                     "directory, attempting to create a default one"
-                  << std::endl;
-
         std::ofstream css_file_stream(css_path);
         css_file_stream << default_css;
-        css_provider->load_from_path(css_path.string());
-      } catch (std::filesystem::filesystem_error &e) {
-        std::cerr << "Error: Couldn't create default stylesheet file : "
+        std::cout << "Warning: A default style.css file has been created at "
+                  << css_path << std::endl;
+      } catch (const std::exception &e) {
+        std::cerr << "Error: Couldn't create a style.css file, loading default "
+                     "stylesheet : "
                   << e.what() << std::endl;
+        load_from_file = false;
       }
     } else
-      css_provider->load_from_path(css_path.string());
-  } else
+      load_from_file = false;
+  }
+
+  // Set the appropriate css provider
+  if (load_from_file) {
+    css_provider->load_from_path(css_path.string());
+    std::cout << "Loaded stylesheet from style.css file" << std::endl;
+  } else {
     css_provider->load_from_data(default_css);
+    std::cout << "Loaded default stylesheet" << std::endl;
+  }
 
   // Applying the provider
   Gtk::StyleProvider::add_provider_for_display(
       get_display(), css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
+void Wayglance::load_config() {
+  // Defining the default config
+  const std::string default_config = R"JSON({
+  "modules": [ "date" ],
+  "date": {
+    "time_format": "%H:%M",
+    "date_format": "%A, %d %B %Y"
+  }
+})JSON";
+
+  bool load_from_mem = true;
+  std::string json_content_to_parse = default_config;
+
+  // Finding which config to load
+  if (!m_config_dir_path.empty()) {
+    const auto config_path = m_config_dir_path / "config.json";
+
+    if (std::filesystem::exists(config_path)) {
+      try {
+        std::ifstream file_stream(config_path);
+        json_content_to_parse.assign(
+            (std::istreambuf_iterator<char>(file_stream)),
+            (std::istreambuf_iterator<char>()));
+        load_from_mem = false;
+      } catch (const std::exception &e) {
+        std::cerr << "Error: Couldn't read the existing config.json, using "
+                     "default config : "
+                  << e.what() << std::endl;
+      }
+    } else {
+      try {
+        std::ofstream config_file_stream(config_path);
+        config_file_stream << default_config;
+        std::cout << "Warning: A default config.json file has been created at "
+                  << config_path << std::endl;
+        load_from_mem = false;
+      } catch (const std::exception &e) {
+        std::cerr
+            << "Error: Couldn't create a config.json file, loading default "
+               "configuration : "
+            << e.what() << std::endl;
+      }
+    }
+  }
+
+  // Parse the chosen json configuration
+  try {
+    m_config = nlohmann::json::parse(json_content_to_parse);
+    if (!load_from_mem)
+      std::cout << "Loaded configuration from config.json file" << std::endl;
+    else
+      std::cout << "Loaded default configuration" << std::endl;
+  } catch (const nlohmann::json::parse_error &e) {
+    std::cerr << "Error: Couldn't parse config.json file, using default "
+                 "configuration : "
+              << e.what() << std::endl;
+
+    m_config = nlohmann::json::parse(default_config);
+  }
+}
+
 void Wayglance::load_modules() {
   m_modules_box.set_valign(Gtk::Align::CENTER);
   m_modules_box.set_halign(Gtk::Align::CENTER);
 
-  m_modules_box.append(m_date_module);
+  if (m_config.contains("modules")) {
+    for (const auto &module_name : m_config["modules"]) {
+      if (module_name == "date") {
+        nlohmann::json date_config =
+            m_config.value("date", nlohmann::json::object());
+        m_modules_box.append(*Gtk::make_managed<DateModule>(date_config));
+      }
+    }
+  }
 }
 
 // Global Methods

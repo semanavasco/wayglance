@@ -10,7 +10,7 @@ SRCS = $(wildcard src/*.cpp) $(wildcard src/modules/*.cpp)
 # Compiler options (flags)
 # -std=c++20 : Use the C++20 norm
 # -g : Adds debugging info
-CXXFLAGS = -std=c++20 -g $(shell pkg-config --cflags gtkmm-4.0 gtk4-layer-shell-0)
+CXXFLAGS = -std=c++20 -Isrc/vendor -g $(shell pkg-config --cflags gtkmm-4.0 gtk4-layer-shell-0)
 
 # Linking editor options 
 LDFLAGS = $(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
