@@ -2,7 +2,7 @@
 CXX = g++
 
 # Final executable name
-TARGET = hyprwidget
+TARGET = background-widget
 
 # Source files
 SRCS = src/main.cpp

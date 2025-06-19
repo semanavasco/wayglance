@@ -35,7 +35,7 @@ protected:
 WallpaperWindow::WallpaperWindow(GdkMonitor *p_monitor)
     : m_label_box(Gtk::Orientation::VERTICAL, 10) {
   // Window configuration
-  set_title("Hyprland Widget");
+  set_title("Hyprland Background Widget");
   set_child(m_overlay);
 
   // DrawingArea configuration
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
   std::setlocale(LC_ALL, "");
 
   // Creating an instance of the GTK app
-  auto app = Gtk::Application::create("com.svasco.hyprwidget");
+  auto app = Gtk::Application::create("com.svasco.background");
 
   // Reference to our windows
   std::vector<WallpaperWindow *> windows;
