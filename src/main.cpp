@@ -1,7 +1,11 @@
 #include <cairomm/context.h>
 #include <chrono>
 #include <clocale>
+#include <cstdlib>
+#include <cstring>
+#include <filesystem>
 #include <format>
+#include <fstream>
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
@@ -75,7 +79,73 @@ WallpaperWindow::WallpaperWindow(GdkMonitor *p_monitor)
   m_time_label.add_css_class("time");
   m_date_label.add_css_class("date");
   auto css_provider = Gtk::CssProvider::create();
-  css_provider->load_from_path("style.css");
+
+  // Defining the default style
+  const std::string default_css = R"CSS(
+    #wallpaper_window {
+       background: none;
+    }
+    .time {
+       font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+       font-size: 120pt;
+       font-weight: bold;
+       color: #cba6f7;
+    }
+    .date {
+       font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+       font-size: 30pt;
+       font-weight: normal;
+       color: white;
+    }
+  )CSS";
+
+  // Determining which configuration path to use
+  std::filesystem::path config_base_path;
+  const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
+  const char *home_dir = getenv("HOME");
+
+  // Use XDG_CONFIG_HOME if it exists
+  if (xdg_config_home && std::strlen(xdg_config_home) > 0)
+    config_base_path = xdg_config_home;
+  // Use the HOME env var otherwise
+  else {
+    config_base_path = home_dir;
+    config_base_path /= ".config";
+  }
+
+  if (!config_base_path.empty()) {
+    std::filesystem::path config_path = config_base_path /= "background-widget";
+    std::filesystem::path css_path = config_path / "style.css";
+
+    // Checking if path exists
+    if (std::filesystem::exists(css_path)) {
+      std::cout << "Using stylesheet at " << css_path << std::endl;
+      css_provider->load_from_path(css_path.string());
+    } else {
+      std::cout << "Stylesheet not found at " << config_base_path
+                << ", attempting to create default config" << std::endl;
+
+      css_provider->load_from_data(default_css);
+
+      try {
+        std::filesystem::create_directories(config_path);
+        std::ofstream css_file_stream(css_path);
+        css_file_stream << default_css;
+        std::cout << "Created default configuration at " << css_path
+                  << std::endl;
+      } catch (const std::filesystem::filesystem_error &e) {
+        std::cerr << "Failed to create default configuration, error : "
+                  << e.what() << std::endl;
+      }
+    }
+  } else {
+    std::cerr << "Couldn't find environment variable $XDG_CONFIG_HOME nor "
+                 "$HOME, loading default configuration"
+              << std::endl;
+    css_provider->load_from_data(default_css);
+  }
+
+  // Applying the provider
   Gtk::StyleProvider::add_provider_for_display(
       get_display(), css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
 
@@ -91,8 +161,10 @@ WallpaperWindow::~WallpaperWindow() {}
 // Methods
 bool WallpaperWindow::update_labels() {
   const auto now = std::chrono::system_clock::now();
-  m_time_label.set_text(std::format("{:%H:%M}", now));
-  m_date_label.set_text(std::format("{:%A %d %B %Y}", now));
+  const std::chrono::zoned_time local_time{std::chrono::current_zone(), now};
+
+  m_time_label.set_text(std::format("{:%H:%M}", local_time));
+  m_date_label.set_text(std::format("{:%A %d %B %Y}", local_time));
 
   return true;
 }
@@ -131,7 +203,7 @@ int main(int argc, char *argv[]) {
     // Getting the number of monitors via the C function
     guint n_monitors = g_list_model_get_n_items(monitors->gobj());
 
-    std::cout << "Detected " << n_monitors << " monitors" << std::endl;
+    std::cout << "Detected " << n_monitors << " monitor(s)" << std::endl;
 
     for (guint i = 0; i < n_monitors; i++) {
       // Getting the raw C object
