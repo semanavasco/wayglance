@@ -8,6 +8,7 @@
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
 #include <iostream>
+#include <unordered_set>
 
 extern "C" {
 #include <gtk4-layer-shell.h>
@@ -217,14 +218,30 @@ void Wayglance::load_modules() {
   m_modules_box.set_valign(Gtk::Align::CENTER);
   m_modules_box.set_halign(Gtk::Align::CENTER);
 
-  if (m_config.contains("modules")) {
-    for (const auto &module_name : m_config["modules"]) {
-      if (module_name == "date") {
-        nlohmann::json date_config =
-            m_config.value("date", nlohmann::json::object());
-        m_modules_box.append(*Gtk::make_managed<DateModule>(date_config));
-      }
+  if (!m_config.contains("modules")) {
+    std::cerr << "Error: No modules list was found in the config" << std::endl;
+    return;
+  }
+
+  std::unordered_set<std::string> loaded_modules;
+
+  for (const auto &module_name_json : m_config["modules"]) {
+    std::string module_name = module_name_json.get<std::string>();
+
+    // Skip if module is already loaded
+    const auto [_, inserted] = loaded_modules.emplace(module_name);
+    if (!inserted) {
+      std::cerr << "Warning: Skipping duplicate module entry '" << module_name
+                << "'" << std::endl;
+      continue;
     }
+
+    if (module_name == "date")
+      m_modules_box.append(*Gtk::make_managed<DateModule>(
+          m_config.value("date", nlohmann::json::object())));
+    else
+      std::cerr << "Warning: Unrecognized module '" << module_name
+                << "' found, skipping it" << std::endl;
   }
 }
 
