@@ -1,5 +1,7 @@
 #include "PlayerModule.hpp"
 #include "../vendor/json.hpp"
+#include "glibmm/main.h"
+#include <cstdio>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -52,6 +54,15 @@ PlayerModule::PlayerModule(const nlohmann::json &config)
     m_next_button.set_icon_name(m_icon_next);
   }
 
+  // Progress box
+  m_progress_box.set_orientation(Gtk::Orientation::HORIZONTAL);
+  m_progress_box.set_halign(Gtk::Align::CENTER);
+  m_progress_box.set_spacing(10);
+
+  m_position_label.set_valign(Gtk::Align::CENTER);
+  m_progress_bar.set_valign(Gtk::Align::CENTER);
+  m_duration_label.set_valign(Gtk::Align::CENTER);
+
   // CSS classes and IDs
   set_name("module-player");
 
@@ -59,21 +70,31 @@ PlayerModule::PlayerModule(const nlohmann::json &config)
   m_track_label.add_css_class("player-labels");
 
   m_button_box.set_name("player-button-box");
-
   m_prev_button.add_css_class("player-buttons");
   m_prev_button.set_name("player-previous-button");
-
   m_play_pause_button.add_css_class("player-buttons");
   m_play_pause_button.set_name("player-play-pause-button");
-
   m_next_button.add_css_class("player-buttons");
   m_next_button.set_name("player-next-button");
+
+  m_progress_box.set_name("player-progress-box");
+  m_position_label.set_name("player-position-label");
+  m_position_label.add_css_class("player-labels");
+  m_duration_label.set_name("player-duration-label");
+  m_duration_label.add_css_class("player-labels");
+  m_progress_bar.set_name("player-progress-bar");
 
   // Adding widgets
   m_button_box.append(m_prev_button);
   m_button_box.append(m_play_pause_button);
   m_button_box.append(m_next_button);
+
+  m_progress_box.append(m_position_label);
+  m_progress_box.append(m_progress_bar);
+  m_progress_box.append(m_duration_label);
+
   append(m_track_label);
+  append(m_progress_box);
   append(m_button_box);
 
   // Registering event handlers
@@ -181,6 +202,7 @@ void PlayerModule::update() {
   // Update status and metadata
   get_status();
   get_metadata();
+  get_progress();
   update_info();
 }
 
@@ -237,6 +259,7 @@ void PlayerModule::get_metadata() {
 
     if (!dict_variant) {
       m_track = "Nothing's playing currently...";
+      m_duration = 0;
       return;
     }
 
@@ -271,10 +294,83 @@ void PlayerModule::get_metadata() {
         }
       }
     }
+
+    // Getting track duration
+    auto duration_it = metadata_map.find("mpris:length");
+    if (duration_it != metadata_map.end()) {
+      auto duration_variant =
+          Glib::VariantBase::cast_dynamic<Glib::Variant<guint64>>(
+              duration_it->second);
+
+      if (duration_variant)
+        m_duration = static_cast<gint64>(duration_variant.get());
+    }
   } catch (const Glib::Error &e) {
     std::cerr << "Error: Couldn't get metadata : " << e.what() << std::endl;
     m_track = "Nothing's playing currently...";
+    m_duration = 0;
   }
+}
+
+Glib::ustring PlayerModule::format_time(gint64 microseconds) {
+  if (microseconds == 0)
+    return "0:00";
+
+  gint64 seconds = microseconds / 1000000;
+  gint64 minutes = seconds / 60;
+  seconds %= 60;
+
+  char buffer[6];
+  std::snprintf(buffer, sizeof(buffer), "%ld:%02ld", minutes, seconds);
+  return buffer;
+}
+
+void PlayerModule::get_progress() {
+  if (!m_properties_proxy)
+    return;
+
+  try {
+    auto parameters = Glib::VariantContainerBase::create_tuple(
+        {Glib::create_variant(Glib::ustring("org.mpris.MediaPlayer2.Player")),
+         Glib::create_variant(Glib::ustring("Position"))});
+
+    auto call_result = m_properties_proxy->call_sync("Get", parameters);
+
+    Glib::Variant<Glib::VariantBase> property_value_variant;
+    call_result.get_child(property_value_variant, 0);
+
+    auto progress_variant =
+        Glib::VariantBase::cast_dynamic<Glib::Variant<gint64>>(
+            property_value_variant.get());
+
+    if (progress_variant)
+      m_position = progress_variant.get();
+    else
+      m_position = 0;
+  } catch (const Glib::Error &e) {
+    m_position = 0;
+  }
+}
+
+bool PlayerModule::update_progress() {
+  if (!m_playing)
+    return false;
+
+  // Add a second
+  m_position += 1000000;
+  m_position_label.set_text(format_time(m_position));
+
+  // Calculate progress bar
+  if (m_duration > 0) {
+    double fraction = static_cast<double>(m_position) / m_duration;
+    m_progress_bar.set_fraction(fraction);
+  } else
+    m_progress_bar.set_fraction(0.0);
+
+  if (static_cast<gint64>(m_position / 1000000) % 5 == 0)
+    get_progress();
+
+  return true;
 }
 
 void PlayerModule::update_info() {
@@ -283,15 +379,34 @@ void PlayerModule::update_info() {
       m_play_pause_button.set_label(m_icon_pause);
     else
       m_play_pause_button.set_icon_name(m_icon_pause);
+
+    // Start the progress timer
+    if (!m_progress_timeout.connected())
+      m_progress_timeout = Glib::signal_timeout().connect(
+          sigc::mem_fun(*this, &PlayerModule::update_progress), 1000);
   } else {
     if (m_use_nerd_font)
       m_play_pause_button.set_label(m_icon_play);
     else
       m_play_pause_button.set_icon_name(m_icon_play);
+
+    // Stop the progress timer
+    if (m_progress_timeout.connected())
+      m_progress_timeout.disconnect();
   }
 
   if (!m_track.empty())
     m_track_label.set_text(m_track);
   else
     m_track_label.set_text("Nothing's playing currently...");
+
+  // Update the progress infos
+  m_position_label.set_text(format_time(m_position));
+  m_duration_label.set_text(format_time(m_duration));
+
+  if (m_duration > 0) {
+    double fraction = static_cast<double>(m_position) / m_duration;
+    m_progress_bar.set_fraction(fraction);
+  } else
+    m_progress_bar.set_fraction(0.0);
 }

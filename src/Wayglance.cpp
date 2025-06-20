@@ -135,6 +135,18 @@ void Wayglance::load_style() {
 }
 .player-buttons:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+#player-progress-bar {
+  min-height: 6px;
+  min-width: 400px;
+}
+#player-progress-bar progress {
+  background-color: #cba6f7;
+  border-radius: 4px;
+}
+#player-progress-bar trough {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
 })CSS";
 
   auto css_provider = Gtk::CssProvider::create();
