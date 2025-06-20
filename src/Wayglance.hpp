@@ -1,11 +1,11 @@
 #ifndef DEF_WAYGLANCE_HPP
 #define DEF_WAYGLANCE_HPP
 
-#include "modules/DateModule.hpp"
 #include "vendor/json.hpp"
 #include <filesystem>
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
+#include <gtkmm.h>
 
 class Wayglance : public Gtk::ApplicationWindow {
 public:

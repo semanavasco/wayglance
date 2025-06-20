@@ -16,8 +16,14 @@ DateModule::DateModule(const nlohmann::json &config)
   append(m_time_label);
   append(m_date_label);
 
-  m_time_label.add_css_class("time");
-  m_date_label.add_css_class("date");
+  // Setting style classes and ids
+  set_name("module-date");
+
+  m_time_label.set_name("date-time-label");
+  m_time_label.add_css_class("date-labels");
+
+  m_date_label.set_name("date-date-label");
+  m_date_label.add_css_class("date-labels");
 
   // Configuring timer
   update_labels();

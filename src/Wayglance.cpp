@@ -19,7 +19,7 @@ Wayglance::Wayglance(GdkMonitor *p_monitor)
   // Window configuration
   set_title("Wayglance");
   set_child(m_overlay);
-  set_name("wallpaper_window");
+  set_name("wayglance");
 
   // DrawingArea configuration
   m_drawing_area.set_draw_func(sigc::mem_fun(*this, &Wayglance::on_draw));
@@ -101,24 +101,20 @@ void Wayglance::setup_paths() {
 
 void Wayglance::load_style() {
   // Defining the default style
-  const std::string default_css = R"CSS(
-    #wallpaper_window {
-       background: none;
-    }
-    .time {
-       font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
-       font-size: 120pt;
-       font-weight: bold;
-       color: #cba6f7;
-    }
-    .date {
-       font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
-       font-size: 30pt;
-       font-weight: normal;
-       color: white;
-    }
-  )CSS";
+  const std::string default_css = R"CSS(#wayglance {
+  background: none;
+}
 
+#date-time-label {
+  font-size: 120pt;
+  font-weight: bold;
+  color: #cba6f7;
+}
+#date-date-label {
+  font-size: 30pt;
+  font-weight: normal;
+  color: white;
+})CSS";
   auto css_provider = Gtk::CssProvider::create();
 
   // Finding which style to load
