@@ -1,5 +1,6 @@
 #include "Wayglance.hpp"
 #include "modules/DateModule.hpp"
+#include "modules/PlayerModule.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -115,7 +116,27 @@ void Wayglance::load_style() {
   font-size: 30pt;
   font-weight: normal;
   color: white;
+}
+
+#module-player {
+  margin-top: 50pt;
+}
+.player-labels {
+  font-size: 15pt;
+}
+#player-track-label {
+  margin-bottom: 15pt;
+}
+.player-buttons {
+  background-color: transparent;
+}
+.player-buttons:focus {
+  outline: none;
+}
+.player-buttons:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 })CSS";
+
   auto css_provider = Gtk::CssProvider::create();
 
   // Finding which style to load
@@ -156,10 +177,20 @@ void Wayglance::load_style() {
 void Wayglance::load_config() {
   // Defining the default config
   const std::string default_config = R"JSON({
-  "modules": [ "date" ],
+  "modules": ["date", "player"],
   "date": {
     "time_format": "%H:%M",
     "date_format": "%A, %d %B %Y"
+  },
+  "player": {
+    "player": "spotify",
+    "nerd-font": false,
+    "buttons": {
+      "previous": { "icon": "" },
+      "next": { "icon": "" },
+      "play": { "icon": "" },
+      "pause": { "icon": "" }
+    }
   }
 })JSON";
 
@@ -239,6 +270,9 @@ void Wayglance::load_modules() {
     if (module_name == "date")
       m_modules_box.append(*Gtk::make_managed<DateModule>(
           m_config.value("date", nlohmann::json::object())));
+    else if (module_name == "player")
+      m_modules_box.append(*Gtk::make_managed<PlayerModule>(
+          m_config.value("player", nlohmann::json::object())));
     else
       std::cerr << "Warning: Unrecognized module '" << module_name
                 << "' found, skipping it" << std::endl;
