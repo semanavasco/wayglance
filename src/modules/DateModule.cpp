@@ -11,8 +11,6 @@ DateModule::DateModule(const nlohmann::json &config)
       std::format("{{:{}}}", config.value("date_format", "%A %d %B %Y"));
 
   // Configuring module
-  set_valign(Gtk::Align::CENTER);
-  set_halign(Gtk::Align::CENTER);
   append(m_time_label);
   append(m_date_label);
 
