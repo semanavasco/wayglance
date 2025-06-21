@@ -356,19 +356,16 @@ bool PlayerModule::update_progress() {
   if (!m_playing)
     return false;
 
-  // Add a second
-  m_position += 1000000;
-  m_position_label.set_text(format_time(m_position));
+  // Asking for progress
+  get_progress();
 
-  // Calculate progress bar
+  // Updating display
+  m_position_label.set_text(format_time(m_position));
   if (m_duration > 0) {
     double fraction = static_cast<double>(m_position) / m_duration;
     m_progress_bar.set_fraction(fraction);
   } else
     m_progress_bar.set_fraction(0.0);
-
-  if (static_cast<gint64>(m_position / 1000000) % 5 == 0)
-    get_progress();
 
   return true;
 }
