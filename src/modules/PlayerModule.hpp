@@ -47,6 +47,7 @@ protected:
   Glib::RefPtr<Gio::DBus::Proxy> m_properties_proxy;
 
   // Methods
+  void load_config(const nlohmann::json &config);
   void get_player_proxy();
   void on_prev_clicked();
   void on_play_pause_clicked();

@@ -5,10 +5,7 @@
 // Constructor
 DateModule::DateModule(const nlohmann::json &config)
     : Gtk::Box(Gtk::Orientation::VERTICAL) {
-  // Reading config with default fallback
-  m_time_format = std::format("{{:{}}}", config.value("time_format", "%H:%M"));
-  m_date_format =
-      std::format("{{:{}}}", config.value("date_format", "%A %d %B %Y"));
+  load_config(config);
 
   // Configuring module
   append(m_time_label);
@@ -33,6 +30,12 @@ DateModule::DateModule(const nlohmann::json &config)
 DateModule::~DateModule() {}
 
 // Methods
+void DateModule::load_config(const nlohmann::json &config) {
+  m_time_format = std::format("{{:{}}}", config.value("time_format", "%H:%M"));
+  m_date_format =
+      std::format("{{:{}}}", config.value("date_format", "%A %d %B %Y"));
+}
+
 bool DateModule::update_labels() {
   const auto now = std::chrono::system_clock::now();
   const std::chrono::zoned_time local_time{std::chrono::current_zone(), now};

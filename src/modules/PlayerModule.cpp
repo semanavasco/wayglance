@@ -9,32 +9,7 @@
 // Constructor
 PlayerModule::PlayerModule(const nlohmann::json &config)
     : Gtk::Box(Gtk::Orientation::VERTICAL) {
-  // Reading config with default fallback
-  m_player_name = config.value("player", "any");
-  m_player_name == "any"
-      ? m_player_name = ""
-      : m_player_name = "org.mpris.MediaPlayer2." + m_player_name;
-
-  m_use_nerd_font = config.value("nerd-font", false);
-
-  const nlohmann::json buttons_config =
-      config.value("buttons", nlohmann::json::object());
-
-  const auto &btn_prev_cfg =
-      buttons_config.value("previous", nlohmann::json::object());
-  m_icon_prev = btn_prev_cfg.value("icon", "media-skip-backward-symbolic");
-
-  const auto &btn_next_cfg =
-      buttons_config.value("next", nlohmann::json::object());
-  m_icon_next = btn_next_cfg.value("icon", "media-skip-forward-symbolic");
-
-  const auto &btn_play_cfg =
-      buttons_config.value("play", nlohmann::json::object());
-  m_icon_play = btn_play_cfg.value("icon", "media-playback-start-symbolic");
-
-  const auto &btn_pause_cfg =
-      buttons_config.value("pause", nlohmann::json::object());
-  m_icon_pause = btn_pause_cfg.value("icon", "media-playback-pause-symbolic");
+  load_config(config);
 
   // Widgets
   m_track_label.set_text("Nothing's playing currently...");
@@ -113,6 +88,34 @@ PlayerModule::PlayerModule(const nlohmann::json &config)
 PlayerModule::~PlayerModule() {}
 
 // Methods
+void PlayerModule::load_config(const nlohmann::json &config) {
+  m_player_name = config.value("player", "any");
+  m_player_name == "any"
+      ? m_player_name = ""
+      : m_player_name = "org.mpris.MediaPlayer2." + m_player_name;
+
+  m_use_nerd_font = config.value("nerd-font", false);
+
+  const nlohmann::json buttons_config =
+      config.value("buttons", nlohmann::json::object());
+
+  const auto &btn_prev_cfg =
+      buttons_config.value("previous", nlohmann::json::object());
+  m_icon_prev = btn_prev_cfg.value("icon", "media-skip-backward-symbolic");
+
+  const auto &btn_next_cfg =
+      buttons_config.value("next", nlohmann::json::object());
+  m_icon_next = btn_next_cfg.value("icon", "media-skip-forward-symbolic");
+
+  const auto &btn_play_cfg =
+      buttons_config.value("play", nlohmann::json::object());
+  m_icon_play = btn_play_cfg.value("icon", "media-playback-start-symbolic");
+
+  const auto &btn_pause_cfg =
+      buttons_config.value("pause", nlohmann::json::object());
+  m_icon_pause = btn_pause_cfg.value("icon", "media-playback-pause-symbolic");
+}
+
 void PlayerModule::get_player_proxy() {
   // Service name, object path and MPRIS interfaces
   const Glib::ustring name = "org.mpris.MediaPlayer2.playerctld";

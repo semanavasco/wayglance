@@ -19,6 +19,7 @@ protected:
   Gtk::Label m_date_label;
 
   bool update_labels();
+  void load_config(const nlohmann::json &config);
 };
 
 #endif // !DEF_DATE_MODULE_HPP
