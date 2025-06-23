@@ -5,7 +5,7 @@ CXX = g++
 TARGET = wayglance
 
 # Source files
-SRCS = $(wildcard src/*.cpp) $(wildcard src/modules/*.cpp)
+SRCS = $(wildcard src/*.cpp) $(wildcard src/managers/*.cpp) $(wildcard src/modules/*.cpp)
 
 # Compiler options (flags)
 # -std=c++20 : Use the C++20 norm

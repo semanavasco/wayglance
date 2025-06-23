@@ -1,10 +1,6 @@
 #include "Wayglance.hpp"
 #include "modules/DateModule.hpp"
 #include "modules/PlayerModule.hpp"
-#include <cstdlib>
-#include <cstring>
-#include <filesystem>
-#include <fstream>
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
@@ -16,8 +12,10 @@ extern "C" {
 }
 
 // Constructor
-Wayglance::Wayglance(GdkMonitor *p_monitor)
-    : m_modules_box(Gtk::Orientation::VERTICAL) {
+Wayglance::Wayglance(std::shared_ptr<ConfigManager> config_manager,
+                     GdkMonitor *p_monitor)
+    : m_config_manager(config_manager),
+      m_modules_box(Gtk::Orientation::VERTICAL) {
   // Window configuration
   set_title("Wayglance");
   set_child(m_overlay);
@@ -46,9 +44,9 @@ Wayglance::Wayglance(GdkMonitor *p_monitor)
                               GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
 
   // Configuration
-  setup_paths();
-  load_style();
-  load_config();
+  Gtk::CssProvider::add_provider_for_display(
+      get_display(), m_config_manager->get_css_provider(),
+      GTK_STYLE_PROVIDER_PRIORITY_USER);
   load_modules();
 }
 
@@ -56,219 +54,20 @@ Wayglance::Wayglance(GdkMonitor *p_monitor)
 Wayglance::~Wayglance() {}
 
 // Configuration Methods
-void Wayglance::setup_paths() {
-  // Determining which configuration path to use
-  std::filesystem::path config_base_path;
-  const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
-  const char *home_dir = getenv("HOME");
-
-  // Use XDG_CONFIG_HOME if it exists
-  if (xdg_config_home && std::strlen(xdg_config_home) > 0)
-    config_base_path = xdg_config_home;
-  // Use the HOME env var otherwise
-  else {
-    config_base_path = home_dir;
-    config_base_path /= ".config";
-  }
-
-  if (config_base_path.empty()) {
-    std::cerr << "Error: Couldn't find a config directory environment variable."
-              << std::endl;
-    return;
-  }
-
-  m_config_dir_path = config_base_path / "wayglance";
-
-  if (std::filesystem::exists(m_config_dir_path)) {
-    std::cout << "Found configuration directory at " << m_config_dir_path
-              << std::endl;
-    return;
-  }
-
-  try {
-    std::cout << "Warning: Wayglance configuration directory does not exist, "
-                 "attempting to create it."
-              << std::endl;
-
-    std::filesystem::create_directories(m_config_dir_path);
-  } catch (const std::filesystem::filesystem_error &e) {
-    std::cerr << "Error: Couldn't create the configuration directory for "
-                 "Wayglance : "
-              << e.what() << std::endl;
-
-    // Invalidating the config path
-    m_config_dir_path.clear();
-  }
-}
-
-void Wayglance::load_style() {
-  // Defining the default style
-  const std::string default_css = R"CSS(#wayglance {
-  background: none;
-}
-
-#date-time-label {
-  font-size: 120pt;
-  font-weight: bold;
-  color: #cba6f7;
-}
-#date-date-label {
-  font-size: 30pt;
-  font-weight: normal;
-  color: white;
-}
-
-#module-player {
-  margin-top: 50pt;
-}
-.player-labels {
-  font-size: 15pt;
-}
-#player-track-label {
-  margin-bottom: 15pt;
-}
-.player-buttons {
-  background-color: transparent;
-}
-.player-buttons:focus {
-  outline: none;
-}
-.player-buttons:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-#player-progress-bar {
-  min-height: 6px;
-  min-width: 400px;
-}
-#player-progress-bar progress {
-  background-color: #cba6f7;
-  border-radius: 4px;
-}
-#player-progress-bar trough {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-})CSS";
-
-  auto css_provider = Gtk::CssProvider::create();
-
-  // Finding which style to load
-  const auto css_path = m_config_dir_path / "style.css";
-  bool load_from_file = true;
-
-  if (!std::filesystem::exists(css_path)) {
-    if (std::filesystem::exists(m_config_dir_path)) {
-      try {
-        std::ofstream css_file_stream(css_path);
-        css_file_stream << default_css;
-        std::cout << "Warning: A default style.css file has been created at "
-                  << css_path << std::endl;
-      } catch (const std::exception &e) {
-        std::cerr << "Error: Couldn't create a style.css file, loading default "
-                     "stylesheet : "
-                  << e.what() << std::endl;
-        load_from_file = false;
-      }
-    } else
-      load_from_file = false;
-  }
-
-  // Set the appropriate css provider
-  if (load_from_file) {
-    css_provider->load_from_path(css_path.string());
-    std::cout << "Loaded stylesheet from style.css file" << std::endl;
-  } else {
-    css_provider->load_from_data(default_css);
-    std::cout << "Loaded default stylesheet" << std::endl;
-  }
-
-  // Applying the provider
-  Gtk::StyleProvider::add_provider_for_display(
-      get_display(), css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
-}
-
-void Wayglance::load_config() {
-  // Defining the default config
-  const std::string default_config = R"JSON({
-  "modules": ["date", "player"],
-  "date": {
-    "time_format": "%H:%M",
-    "date_format": "%A, %d %B %Y"
-  },
-  "player": {
-    "player": "spotify",
-    "nerd-font": false,
-    "buttons": {
-      "previous": { "icon": "" },
-      "next": { "icon": "" },
-      "play": { "icon": "" },
-      "pause": { "icon": "" }
-    }
-  }
-})JSON";
-
-  bool load_from_mem = true;
-  std::string json_content_to_parse = default_config;
-
-  // Finding which config to load
-  if (!m_config_dir_path.empty()) {
-    const auto config_path = m_config_dir_path / "config.json";
-
-    if (std::filesystem::exists(config_path)) {
-      try {
-        std::ifstream file_stream(config_path);
-        json_content_to_parse.assign(
-            (std::istreambuf_iterator<char>(file_stream)),
-            (std::istreambuf_iterator<char>()));
-        load_from_mem = false;
-      } catch (const std::exception &e) {
-        std::cerr << "Error: Couldn't read the existing config.json, using "
-                     "default config : "
-                  << e.what() << std::endl;
-      }
-    } else {
-      try {
-        std::ofstream config_file_stream(config_path);
-        config_file_stream << default_config;
-        std::cout << "Warning: A default config.json file has been created at "
-                  << config_path << std::endl;
-        load_from_mem = false;
-      } catch (const std::exception &e) {
-        std::cerr
-            << "Error: Couldn't create a config.json file, loading default "
-               "configuration : "
-            << e.what() << std::endl;
-      }
-    }
-  }
-
-  // Parse the chosen json configuration
-  try {
-    m_config = nlohmann::json::parse(json_content_to_parse);
-    if (!load_from_mem)
-      std::cout << "Loaded configuration from config.json file" << std::endl;
-    else
-      std::cout << "Loaded default configuration" << std::endl;
-  } catch (const nlohmann::json::parse_error &e) {
-    std::cerr << "Error: Couldn't parse config.json file, using default "
-                 "configuration : "
-              << e.what() << std::endl;
-
-    m_config = nlohmann::json::parse(default_config);
-  }
-}
-
 void Wayglance::load_modules() {
   m_modules_box.set_valign(Gtk::Align::CENTER);
   m_modules_box.set_halign(Gtk::Align::CENTER);
 
-  if (!m_config.contains("modules")) {
+  auto config = m_config_manager->get_config();
+
+  if (!config.contains("modules")) {
     std::cerr << "Error: No modules list was found in the config" << std::endl;
     return;
   }
 
   std::unordered_set<std::string> loaded_modules;
 
-  for (const auto &module_name_json : m_config["modules"]) {
+  for (const auto &module_name_json : config["modules"]) {
     std::string module_name = module_name_json.get<std::string>();
 
     // Skip if module is already loaded
@@ -281,10 +80,10 @@ void Wayglance::load_modules() {
 
     if (module_name == "date")
       m_modules_box.append(*Gtk::make_managed<DateModule>(
-          m_config.value("date", nlohmann::json::object())));
+          config.value("date", nlohmann::json::object())));
     else if (module_name == "player")
       m_modules_box.append(*Gtk::make_managed<PlayerModule>(
-          m_config.value("player", nlohmann::json::object())));
+          config.value("player", nlohmann::json::object())));
     else
       std::cerr << "Warning: Unrecognized module '" << module_name
                 << "' found, skipping it" << std::endl;

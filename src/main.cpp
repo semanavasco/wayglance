@@ -1,4 +1,5 @@
 #include "Wayglance.hpp"
+#include "managers/ConfigManager.hpp"
 #include <cairomm/context.h>
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
@@ -12,6 +13,7 @@ extern "C" {
 // Main entry point
 int main(int argc, char *argv[]) {
   auto app = Gtk::Application::create("io.github.semanavasco.wayglance");
+  auto config_manager = std::make_shared<ConfigManager>();
 
   // Connecting to the activate signal on startup
   app->signal_activate().connect([&]() {
@@ -46,7 +48,8 @@ int main(int argc, char *argv[]) {
       std::cout << "Creating widget for monitor n°" << i << std::endl;
 
       // Creating a new instance
-      auto window = new Wayglance((GdkMonitor *)monitor->gobj());
+      auto window =
+          new Wayglance(config_manager, (GdkMonitor *)monitor->gobj());
       app->add_window(*window);
       window->show();
     }
