@@ -6,7 +6,10 @@
 
 // Constants
 const std::string DEFAULT_CONFIG = R"JSON({
-  "modules": ["date", "player"],
+  "modules": [
+    { "name": "date", "position": "middle-center" },
+    { "name": "player", "position": "middle-center" }
+  ],
   "date": {
     "time_format": "%H:%M",
     "date_format": "%A, %d %B %Y"

@@ -16,11 +16,19 @@ public:
 private:
   Gtk::Overlay m_overlay;
   Gtk::DrawingArea m_drawing_area;
-  Gtk::Box m_modules_box;
 
+  // Modules Areas
+  Gtk::Box m_top_left_box, m_top_center_box, m_top_right_box;
+  Gtk::Box m_middle_left_box, m_middle_center_box, m_middle_right_box;
+  Gtk::Box m_bottom_left_box, m_bottom_center_box, m_bottom_right_box;
+
+  // Configuration
   std::shared_ptr<ConfigManager> m_config_manager;
 
   // Methods
+  void setup_module_boxes();
+  void setup_module_box(Gtk::Box &box, const std::string &name,
+                        Gtk::Align halign, Gtk::Align valign);
   void load_modules();
   void on_draw(const Cairo::RefPtr<Cairo::Context> &cr, int width, int height);
 };

@@ -14,9 +14,7 @@ extern "C" {
 // Constructor
 Wayglance::Wayglance(std::shared_ptr<ConfigManager> config_manager,
                      GdkMonitor *p_monitor)
-    : m_config_manager(config_manager),
-      m_modules_box(Gtk::Orientation::VERTICAL) {
-  // Window configuration
+    : m_config_manager(config_manager) {
   set_title("Wayglance");
   set_child(m_overlay);
   set_name("wayglance");
@@ -26,7 +24,7 @@ Wayglance::Wayglance(std::shared_ptr<ConfigManager> config_manager,
 
   // Overlay configuration
   m_overlay.set_child(m_drawing_area);
-  m_overlay.add_overlay(m_modules_box);
+  setup_module_boxes();
 
   // Configuring layer shell
   gtk_layer_init_for_window((GtkWindow *)gobj());
@@ -53,11 +51,60 @@ Wayglance::Wayglance(std::shared_ptr<ConfigManager> config_manager,
 // Destructor
 Wayglance::~Wayglance() {}
 
-// Configuration Methods
-void Wayglance::load_modules() {
-  m_modules_box.set_valign(Gtk::Align::CENTER);
-  m_modules_box.set_halign(Gtk::Align::CENTER);
+// Methods
+void Wayglance::setup_module_boxes() {
+  setup_module_box(m_top_left_box, "top-left", Gtk::Align::START,
+                   Gtk::Align::START);
+  setup_module_box(m_top_center_box, "top-center", Gtk::Align::CENTER,
+                   Gtk::Align::START);
+  setup_module_box(m_top_right_box, "top-right", Gtk::Align::END,
+                   Gtk::Align::START);
 
+  setup_module_box(m_middle_left_box, "middle-left", Gtk::Align::START,
+                   Gtk::Align::CENTER);
+  setup_module_box(m_middle_center_box, "middle-center", Gtk::Align::CENTER,
+                   Gtk::Align::CENTER);
+  setup_module_box(m_middle_right_box, "middle-right", Gtk::Align::END,
+                   Gtk::Align::CENTER);
+
+  setup_module_box(m_bottom_left_box, "bottom-left", Gtk::Align::START,
+                   Gtk::Align::END);
+  setup_module_box(m_bottom_center_box, "bottom-center", Gtk::Align::CENTER,
+                   Gtk::Align::END);
+  setup_module_box(m_bottom_right_box, "bottom-right", Gtk::Align::END,
+                   Gtk::Align::END);
+}
+
+void Wayglance::setup_module_box(Gtk::Box &box, const std::string &name,
+                                 Gtk::Align halign, Gtk::Align valign) {
+  // Default configurations
+  const auto &config = m_config_manager->get_config();
+  Gtk::Orientation orientation = Gtk::Orientation::VERTICAL;
+  int spacing = 0;
+
+  // Looking for this box's configuration
+  if (config.contains("layout") && config["layout"].contains(name)) {
+    const auto &box_config = config["layout"][name];
+
+    std::string orientation_str = box_config.value("orientation", "vertical");
+    if (orientation_str == "horizontal")
+      orientation = Gtk::Orientation::HORIZONTAL;
+
+    spacing = box_config.value("spacing", 0);
+  }
+
+  // Configuring the box
+  box.set_orientation(orientation);
+  box.set_spacing(spacing);
+  box.set_halign(halign);
+  box.set_valign(valign);
+  box.set_name(name + "-box");
+
+  // Add the box to the overlay
+  m_overlay.add_overlay(box);
+}
+
+void Wayglance::load_modules() {
   auto config = m_config_manager->get_config();
 
   if (!config.contains("modules")) {
@@ -67,30 +114,51 @@ void Wayglance::load_modules() {
 
   std::unordered_set<std::string> loaded_modules;
 
-  for (const auto &module_name_json : config["modules"]) {
-    std::string module_name = module_name_json.get<std::string>();
+  for (const auto &module_config : config["modules"]) {
+    std::string name = module_config.value("name", "");
+    std::string position = module_config.value("position", "middle-center");
 
     // Skip if module is already loaded
-    const auto [_, inserted] = loaded_modules.emplace(module_name);
+    const auto [_, inserted] = loaded_modules.emplace(name);
     if (!inserted) {
-      std::cerr << "Warning: Skipping duplicate module entry '" << module_name
-                << "'" << std::endl;
+      std::cerr << "Warning: Skipping duplicate module entry '" << name << "'"
+                << std::endl;
       continue;
     }
 
-    if (module_name == "date")
-      m_modules_box.append(*Gtk::make_managed<DateModule>(
+    Gtk::Box *target_box = &m_middle_center_box;
+
+    if (position == "top-left")
+      target_box = &m_top_left_box;
+    else if (position == "top-center")
+      target_box = &m_top_center_box;
+    else if (position == "top-right")
+      target_box = &m_top_right_box;
+    else if (position == "middle-left")
+      target_box = &m_middle_left_box;
+    else if (position == "middle-center")
+      target_box = &m_middle_center_box;
+    else if (position == "middle-right")
+      target_box = &m_middle_right_box;
+    else if (position == "bottom-left")
+      target_box = &m_bottom_left_box;
+    else if (position == "bottom-center")
+      target_box = &m_bottom_center_box;
+    else if (position == "bottom-right")
+      target_box = &m_bottom_right_box;
+
+    if (name == "date")
+      target_box->append(*Gtk::make_managed<DateModule>(
           config.value("date", nlohmann::json::object())));
-    else if (module_name == "player")
-      m_modules_box.append(*Gtk::make_managed<PlayerModule>(
+    else if (name == "player")
+      target_box->append(*Gtk::make_managed<PlayerModule>(
           config.value("player", nlohmann::json::object())));
     else
-      std::cerr << "Warning: Unrecognized module '" << module_name
+      std::cerr << "Warning: Unrecognized module '" << name
                 << "' found, skipping it" << std::endl;
   }
 }
 
-// Global Methods
 void Wayglance::on_draw(const Cairo::RefPtr<Cairo::Context> &cr, int width,
                         int height) {
   cr->set_source_rgba(0.0, 0.0, 0.0, 0.0);
