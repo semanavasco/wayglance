@@ -1,6 +1,7 @@
 #include "Wayglance.hpp"
 #include "modules/DateModule.hpp"
 #include "modules/PlayerModule.hpp"
+#include "modules/SystemModule.hpp"
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
@@ -153,6 +154,9 @@ void Wayglance::load_modules() {
     else if (name == "player")
       target_box->append(*Gtk::make_managed<PlayerModule>(
           config.value("player", nlohmann::json::object())));
+    else if (name == "system")
+      target_box->append(*Gtk::make_managed<SystemModule>(
+          config.value("system", nlohmann::json::object())));
     else
       std::cerr << "Warning: Unrecognized module '" << name
                 << "' found, skipping it" << std::endl;

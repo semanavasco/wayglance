@@ -8,7 +8,8 @@
 const std::string DEFAULT_CONFIG = R"JSON({
   "modules": [
     { "name": "date", "position": "middle-center" },
-    { "name": "player", "position": "middle-center" }
+    { "name": "player", "position": "middle-center" },
+    { "name": "system", "position": "bottom-center" }
   ],
   "date": {
     "time_format": "%H:%M",
@@ -23,6 +24,12 @@ const std::string DEFAULT_CONFIG = R"JSON({
       "play": { "icon": "media-playback-start-symbolic" },
       "pause": { "icon": "media-playback-pause-symbolic" }
     }
+  },
+  "system": {
+    "update-interval": 1000,
+    "cpu": { "format": "CPU: {usage}%" },
+    "ram": { "format": "RAM: {usage}%" },
+    "net": { "format": "NET: {download} / {upload}", "interface": "wlan0" }
   }
 })JSON";
 
@@ -70,6 +77,10 @@ const std::string DEFAULT_STYLE = R"CSS(#wayglance {
 #player-progress-bar trough {
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
+}
+
+#module-system {
+  margin-bottom: 15pt;
 })CSS";
 
 // Constructor
