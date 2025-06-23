@@ -8,28 +8,32 @@ SystemModule::SystemModule(const nlohmann::json &config)
     : Gtk::Box(Gtk::Orientation::HORIZONTAL, 5) {
   set_halign(Gtk::Align::CENTER);
   set_valign(Gtk::Align::CENTER);
+  set_name("module-system");
 
   // Read config
   load_config(config);
 
   // Setup widgets
-  m_cpu_label.set_text("CPU: ...");
-  m_ram_label.set_text("RAM: ...");
-  m_net_label.set_text("NET: ...");
+  if (m_cpu_active) {
+    m_cpu_label.set_text("CPU: ...");
+    m_cpu_label.set_name("system-cpu-label");
+    m_cpu_label.add_css_class("system-labels");
+    append(m_cpu_label);
+  }
 
-  // Add css classes and Ids
-  set_name("module-system");
-  m_cpu_label.set_name("system-cpu-label");
-  m_cpu_label.add_css_class("system-labels");
-  m_ram_label.set_name("system-ram-label");
-  m_ram_label.add_css_class("system-labels");
-  m_net_label.set_name("system-net-label");
-  m_net_label.add_css_class("system-labels");
+  if (m_ram_active) {
+    m_ram_label.set_text("RAM: ...");
+    m_ram_label.set_name("system-ram-label");
+    m_ram_label.add_css_class("system-labels");
+    append(m_ram_label);
+  }
 
-  // Add widgets
-  append(m_cpu_label);
-  append(m_ram_label);
-  append(m_net_label);
+  if (m_net_active) {
+    m_net_label.set_text("NET: ...");
+    m_net_label.set_name("system-net-label");
+    m_net_label.add_css_class("system-labels");
+    append(m_net_label);
+  }
 
   // Start the timer
   on_update_timer();
@@ -46,22 +50,28 @@ void SystemModule::load_config(const nlohmann::json &config) {
 
   // CPU config
   const auto &cpu_config = config.value("cpu", nlohmann::json::object());
+  m_cpu_active = cpu_config.value("active", true);
   m_cpu_format = cpu_config.value("format", "CPU: {usage}%");
 
   // RAM config
   const auto &ram_config = config.value("ram", nlohmann::json::object());
+  m_ram_active = ram_config.value("active", true);
   m_ram_format = ram_config.value("format", "RAM: {usage}%");
 
   // Network config
   const auto &net_config = config.value("net", nlohmann::json::object());
+  m_net_active = net_config.value("active", true);
   m_net_format = net_config.value("format", "NET: {download} / {upload}");
   m_net_interface = net_config.value("interface", "wlan0");
 }
 
 bool SystemModule::on_update_timer() {
-  update_cpu_usage();
-  update_ram_usage();
-  update_net_usage();
+  if (m_cpu_active)
+    update_cpu_usage();
+  if (m_ram_active)
+    update_ram_usage();
+  if (m_net_active)
+    update_net_usage();
 
   return true;
 }

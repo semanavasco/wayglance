@@ -18,6 +18,9 @@ protected:
 
   // Configuration
   unsigned int m_update_interval;
+  bool m_cpu_active;
+  bool m_ram_active;
+  bool m_net_active;
   std::string m_cpu_format;
   std::string m_ram_format;
   std::string m_net_format;

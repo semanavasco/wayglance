@@ -27,9 +27,9 @@ const std::string DEFAULT_CONFIG = R"JSON({
   },
   "system": {
     "update-interval": 1000,
-    "cpu": { "format": "CPU: {usage}%" },
-    "ram": { "format": "RAM: {usage}%" },
-    "net": { "format": "NET: {download} / {upload}", "interface": "wlan0" }
+    "cpu": { "active": true, "format": "CPU: {usage}%" },
+    "ram": { "active": true, "format": "RAM: {usage}%" },
+    "net": { "active": true, "format": "NET: {download} / {upload}", "interface": "wlan0" }
   }
 })JSON";
 
