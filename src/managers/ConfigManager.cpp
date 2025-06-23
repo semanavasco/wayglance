@@ -15,10 +15,10 @@ const std::string DEFAULT_CONFIG = R"JSON({
     "player": "spotify",
     "nerd-font": false,
     "buttons": {
-      "previous": { "icon": "" },
-      "next": { "icon": "" },
-      "play": { "icon": "" },
-      "pause": { "icon": "" }
+      "previous": { "icon": "media-skip-backward-symbolic" },
+      "next": { "icon": "media-skip-backward-symbolic" },
+      "play": { "icon": "media-playback-start-symbolic" },
+      "pause": { "icon": "media-playback-pause-symbolic" }
     }
   }
 })JSON";
