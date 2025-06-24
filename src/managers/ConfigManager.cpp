@@ -15,6 +15,7 @@ const std::string DEFAULT_CONFIG = R"JSON({
     "h-align": "center",
     "v-align": "center",
     "orientation": "vertical",
+    "spacing": 0,
     "time_format": "%H:%M",
     "date_format": "%A, %d %B %Y"
   },
@@ -22,6 +23,7 @@ const std::string DEFAULT_CONFIG = R"JSON({
     "h-align": "center",
     "v-align": "center",
     "orientation": "vertical",
+    "spacing": 0,
     "player": "spotify",
     "nerd-font": false,
     "buttons": {
@@ -35,6 +37,7 @@ const std::string DEFAULT_CONFIG = R"JSON({
     "h-align": "center",
     "v-align": "center",
     "orientation": "horizontal",
+    "spacing": 10,
     "update-interval": 1000,
     "cpu": { "active": true, "format": "CPU: {usage}%" },
     "ram": { "active": true, "format": "RAM: {usage}%" },
@@ -93,11 +96,7 @@ const std::string DEFAULT_STYLE = R"CSS(#wayglance {
 })CSS";
 
 // Constructor
-ConfigManager::ConfigManager() {
-  setup_paths();
-  load_config();
-  load_style();
-}
+ConfigManager::ConfigManager() {}
 
 // Destructor
 ConfigManager::~ConfigManager() {}
@@ -107,6 +106,15 @@ const nlohmann::json &ConfigManager::get_config() { return m_config; }
 
 Glib::RefPtr<Gtk::CssProvider> ConfigManager::get_css_provider() {
   return m_style;
+}
+
+// Setters
+void ConfigManager::set_custom_config_path(const std::string &path) {
+  m_custom_config_path = path;
+}
+
+void ConfigManager::set_custom_style_path(const std::string &path) {
+  m_custom_style_path = path;
 }
 
 // Methods
@@ -157,31 +165,37 @@ void ConfigManager::setup_paths() {
 
 void ConfigManager::ensure_file_exists(const std::filesystem::path path,
                                        const std::string &default_content) {
-  if (!std::filesystem::exists(path)) {
-    std::cout << "Warning: Couldn't find " << path
-              << ", attempting to create it with default values" << std::endl;
+  if (std::filesystem::exists(path))
+    return;
 
-    try {
-      std::filesystem::create_directories(path.parent_path());
-      std::ofstream file_stream(path);
-      file_stream << default_content;
-    } catch (const std::exception &e) {
-      std::cerr << "Error: Couldn't create default file " << path << " : "
-                << e.what() << std::endl;
-    }
+  std::cout << "Warning: Couldn't find " << path
+            << ", attempting to create it with default values" << std::endl;
+
+  try {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream file_stream(path);
+    file_stream << default_content;
+  } catch (const std::exception &e) {
+    std::cerr << "Error: Couldn't create default file " << path << " : "
+              << e.what() << std::endl;
   }
 }
 
 void ConfigManager::load_config() {
-  if (m_config_dir_path.empty()) {
-    std::cerr << "Error: Configuration directory was not found, loading "
-                 "default configuration"
-              << std::endl;
-    m_config = nlohmann::json::parse(DEFAULT_CONFIG);
-    return;
+  auto config_path = m_custom_config_path;
+
+  if (config_path.empty()) {
+    if (m_config_dir_path.empty()) {
+      std::cerr << "Error: Configuration directory was not found, loading "
+                   "default configuration"
+                << std::endl;
+      m_config = nlohmann::json::parse(DEFAULT_CONFIG);
+      return;
+    }
+
+    config_path = m_config_dir_path / "config.json";
   }
 
-  const auto config_path = m_config_dir_path / "config.json";
   ensure_file_exists(config_path, DEFAULT_CONFIG);
 
   try {
@@ -204,15 +218,20 @@ void ConfigManager::load_config() {
 void ConfigManager::load_style() {
   m_style = Gtk::CssProvider::create();
 
-  if (m_config_dir_path.empty()) {
-    std::cerr << "Error: Configuration directory was not found, loading "
-                 "default stylesheet"
-              << std::endl;
-    m_style->load_from_data(DEFAULT_STYLE);
-    return;
+  auto css_path = m_custom_style_path;
+
+  if (css_path.empty()) {
+    if (m_config_dir_path.empty()) {
+      std::cerr << "Error: Configuration directory was not found, loading "
+                   "default stylesheet"
+                << std::endl;
+      m_style->load_from_data(DEFAULT_STYLE);
+      return;
+    }
+
+    css_path = m_config_dir_path / "style.css";
   }
 
-  const auto css_path = m_config_dir_path / "style.css";
   ensure_file_exists(css_path, DEFAULT_STYLE);
 
   m_style->load_from_path(css_path.string());
