@@ -10,13 +10,9 @@ extern "C" {
 #include <gtk4-layer-shell.h>
 }
 
-const std::string WAYGLANCE_VERSION = "0.0.27";
+const std::string WAYGLANCE_VERSION = "0.0.28";
 
 int main(int argc, char *argv[]) {
-  auto app =
-      Gtk::Application::create("io.github.semanavasco.wayglance",
-                               Gio::Application::Flags::HANDLES_COMMAND_LINE);
-
   // Options values
   bool cli_show_help = false;
   bool cli_show_version = false;
@@ -42,25 +38,26 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  if (cli_show_help) {
+    std::cout << cli << std::endl;
+    exit(0);
+  }
+
+  if (cli_show_version) {
+    std::cout << "Wayglance " << WAYGLANCE_VERSION << std::endl;
+    exit(0);
+  }
+
   // Creating managers
+  auto app =
+      Gtk::Application::create("io.github.semanavasco.wayglance",
+                               Gio::Application::Flags::HANDLES_COMMAND_LINE);
   auto config_manager = std::make_shared<ConfigManager>();
   AppManager app_manager(app, config_manager);
 
   // Handling options
   app->signal_command_line().connect(
       [&](const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd) -> int {
-        if (cli_show_help) {
-          std::cout << cli << std::endl;
-          app->quit();
-          return 0;
-        }
-
-        if (cli_show_version) {
-          std::cout << "Wayglance " << WAYGLANCE_VERSION << std::endl;
-          app->quit();
-          return 0;
-        }
-
         if (!cli_config_path.empty())
           config_manager->set_custom_config_path(cli_config_path);
 
