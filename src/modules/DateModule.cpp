@@ -3,8 +3,7 @@
 #include <format>
 
 // Constructor
-DateModule::DateModule(const nlohmann::json &config)
-    : Gtk::Box(Gtk::Orientation::VERTICAL) {
+DateModule::DateModule(const nlohmann::json &config) : BaseModule(config) {
   load_config(config);
 
   // Configuring module

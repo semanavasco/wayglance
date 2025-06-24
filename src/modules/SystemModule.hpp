@@ -2,15 +2,15 @@
 #define DEF_SYSTEM_MODULE_HPP
 
 #include "../vendor/json.hpp"
-#include <gtkmm.h>
+#include "BaseModule.hpp"
 #include <string>
 
-class SystemModule : public Gtk::Box {
+class SystemModule : public BaseModule {
 public:
   SystemModule(const nlohmann::json &config);
   ~SystemModule();
 
-protected:
+private:
   // Widgets
   Gtk::Label m_cpu_label;
   Gtk::Label m_ram_label;

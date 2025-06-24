@@ -12,10 +12,16 @@ const std::string DEFAULT_CONFIG = R"JSON({
     { "name": "system", "position": "bottom-center" }
   ],
   "date": {
+    "h-align": "center",
+    "v-align": "center",
+    "orientation": "vertical",
     "time_format": "%H:%M",
     "date_format": "%A, %d %B %Y"
   },
   "player": {
+    "h-align": "center",
+    "v-align": "center",
+    "orientation": "vertical",
     "player": "spotify",
     "nerd-font": false,
     "buttons": {
@@ -26,6 +32,9 @@ const std::string DEFAULT_CONFIG = R"JSON({
     }
   },
   "system": {
+    "h-align": "center",
+    "v-align": "center",
+    "orientation": "horizontal",
     "update-interval": 1000,
     "cpu": { "active": true, "format": "CPU: {usage}%" },
     "ram": { "active": true, "format": "RAM: {usage}%" },

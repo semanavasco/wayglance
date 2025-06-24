@@ -7,8 +7,7 @@
 #include <vector>
 
 // Constructor
-PlayerModule::PlayerModule(const nlohmann::json &config)
-    : Gtk::Box(Gtk::Orientation::VERTICAL) {
+PlayerModule::PlayerModule(const nlohmann::json &config) : BaseModule(config) {
   load_config(config);
 
   // Widgets

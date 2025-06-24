@@ -4,8 +4,7 @@
 #include <string>
 
 // Constructor
-SystemModule::SystemModule(const nlohmann::json &config)
-    : Gtk::Box(Gtk::Orientation::HORIZONTAL, 5) {
+SystemModule::SystemModule(const nlohmann::json &config) : BaseModule(config) {
   set_halign(Gtk::Align::CENTER);
   set_valign(Gtk::Align::CENTER);
   set_name("module-system");

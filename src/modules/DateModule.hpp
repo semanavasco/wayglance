@@ -2,14 +2,14 @@
 #define DEF_DATE_MODULE_HPP
 
 #include "../vendor/json.hpp"
-#include <gtkmm.h>
+#include "BaseModule.hpp"
 
-class DateModule : public Gtk::Box {
+class DateModule : public BaseModule {
 public:
   DateModule(const nlohmann::json &config);
   ~DateModule();
 
-protected:
+private:
   // Configuration
   std::string m_time_format = "{:%H:%M}";
   std::string m_date_format = "{:%A %d %B %Y}";

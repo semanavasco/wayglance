@@ -2,16 +2,14 @@
 #define PLAYER_MODULE_HPP
 
 #include "../vendor/json.hpp"
-#include <giomm.h>
-#include <glibmm.h>
-#include <gtkmm.h>
+#include "BaseModule.hpp"
 
-class PlayerModule : public Gtk::Box {
+class PlayerModule : public BaseModule {
 public:
   PlayerModule(const nlohmann::json &config);
   ~PlayerModule();
 
-protected:
+private:
   // Widgets
   Gtk::Label m_track_label;
 
