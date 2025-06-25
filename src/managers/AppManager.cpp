@@ -1,5 +1,5 @@
-#include "AppManager.hpp"
-#include "ConfigManager.hpp"
+#include "managers/AppManager.hpp"
+#include "managers/ConfigManager.hpp"
 #include <iostream>
 #include <unordered_set>
 

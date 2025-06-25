@@ -1,8 +1,8 @@
 #ifndef DEF_BASE_MODULE_HPP
 #define DEF_BASE_MODULE_HPP
 
-#include "../vendor/json.hpp"
 #include <gtkmm.h>
+#include <nlohmann/json.hpp>
 
 class BaseModule : public Gtk::Box {
 public:

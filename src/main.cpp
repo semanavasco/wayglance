@@ -1,16 +1,16 @@
 #include "managers/AppManager.hpp"
 #include "managers/ConfigManager.hpp"
-#include "vendor/lyra.hpp"
 #include <cairomm/context.h>
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
 #include <iostream>
+#include <lyra/lyra.hpp>
 extern "C" {
 #include <gtk4-layer-shell.h>
 }
 
-const std::string WAYGLANCE_VERSION = "0.0.28";
+const std::string WAYGLANCE_VERSION = "0.0.29";
 
 int main(int argc, char *argv[]) {
   // Options values

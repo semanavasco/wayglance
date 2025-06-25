@@ -1,9 +1,9 @@
 #ifndef DEF_CONFIG_MANAGER_HPP
 #define DEF_CONFIG_MANAGER_HPP
 
-#include "../vendor/json.hpp"
 #include <filesystem>
 #include <gtkmm.h>
+#include <nlohmann/json.hpp>
 
 class ConfigManager {
 public:

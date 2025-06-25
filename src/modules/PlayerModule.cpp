@@ -1,5 +1,4 @@
-#include "PlayerModule.hpp"
-#include "../vendor/json.hpp"
+#include "modules/PlayerModule.hpp"
 #include "glibmm/main.h"
 #include <cstdio>
 #include <iostream>

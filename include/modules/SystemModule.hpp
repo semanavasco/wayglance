@@ -1,7 +1,6 @@
 #ifndef DEF_SYSTEM_MODULE_HPP
 #define DEF_SYSTEM_MODULE_HPP
 
-#include "../vendor/json.hpp"
 #include "BaseModule.hpp"
 #include <string>
 

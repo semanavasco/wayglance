@@ -1,7 +1,6 @@
 #ifndef PLAYER_MODULE_HPP
 #define PLAYER_MODULE_HPP
 
-#include "../vendor/json.hpp"
 #include "BaseModule.hpp"
 
 class PlayerModule : public BaseModule {

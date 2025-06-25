@@ -1,7 +1,6 @@
 #ifndef DEF_DATE_MODULE_HPP
 #define DEF_DATE_MODULE_HPP
 
-#include "../vendor/json.hpp"
 #include "BaseModule.hpp"
 
 class DateModule : public BaseModule {

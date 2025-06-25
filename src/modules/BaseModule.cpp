@@ -1,4 +1,4 @@
-#include "BaseModule.hpp"
+#include "modules/BaseModule.hpp"
 
 // Constructor
 BaseModule::BaseModule(const nlohmann::json &config) : Gtk::Box() {

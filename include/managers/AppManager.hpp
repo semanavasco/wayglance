@@ -1,8 +1,8 @@
 #ifndef DEF_APP_MANAGER_HPP
 #define DEF_APP_MANAGER_HPP
 
-#include "../Wayglance.hpp"
 #include "ConfigManager.hpp"
+#include "Wayglance.hpp"
 #include <gtkmm.h>
 #include <map>
 #include <memory>
