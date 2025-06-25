@@ -10,12 +10,15 @@ extern "C" {
 #include <gtk4-layer-shell.h>
 }
 
-const std::string WAYGLANCE_VERSION = "0.0.29";
+const std::string WAYGLANCE_VERSION = "0.0.30";
 
 int main(int argc, char *argv[]) {
+  auto config_manager = std::make_shared<ConfigManager>();
+
   // Options values
   bool cli_show_help = false;
   bool cli_show_version = false;
+  bool cli_create_defaults = false;
   Glib::ustring cli_config_path;
   Glib::ustring cli_style_path;
 
@@ -30,7 +33,10 @@ int main(int argc, char *argv[]) {
              lyra::opt(cli_style_path, "path")["-s"]["--style"](
                  "Overrides default style path (default: "
                  "$XDG_CONFIG_HOME/wayglance/style.css or "
-                 "$HOME/.config/wayglance/style.css)");
+                 "$HOME/.config/wayglance/style.css)") |
+             lyra::opt(cli_create_defaults)["-d"]["--create-defaults"](
+                 "Creates a default configuration at "
+                 "$XDG_CONFIG_HOME/wayglance or $HOME/.config/wayglance");
 
   auto result = cli.parse({argc, argv});
   if (!result) {
@@ -48,25 +54,40 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  // Creating managers
+  if (cli_create_defaults) {
+    if (config_manager->create_defaults())
+      exit(0);
+    else
+      exit(1);
+  }
+
+  // Creating app
   auto app =
       Gtk::Application::create("io.github.semanavasco.wayglance",
                                Gio::Application::Flags::HANDLES_COMMAND_LINE);
-  auto config_manager = std::make_shared<ConfigManager>();
   AppManager app_manager(app, config_manager);
 
   // Handling options
   app->signal_command_line().connect(
       [&](const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd) -> int {
-        if (!cli_config_path.empty())
-          config_manager->set_custom_config_path(cli_config_path);
+        if (!cli_config_path.empty()) {
+          if (!config_manager->set_custom_config_path(cli_config_path)) {
+            std::cerr << "Error: Couldn't find " << cli_config_path
+                      << std::endl;
+            app->quit();
+            return 1;
+          }
+        }
 
-        if (!cli_style_path.empty())
-          config_manager->set_custom_style_path(cli_style_path);
+        if (!cli_style_path.empty()) {
+          if (!config_manager->set_custom_style_path(cli_style_path)) {
+            std::cerr << "Error: Couldn't find " << cli_style_path << std::endl;
+            app->quit();
+            return 1;
+          }
+        }
 
-        config_manager->setup_paths();
-        config_manager->load_config();
-        config_manager->load_style();
+        config_manager->load();
 
         app->activate();
         return 0;

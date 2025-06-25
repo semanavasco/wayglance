@@ -1,11 +1,11 @@
 #include "managers/ConfigManager.hpp"
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-// Constants
-const std::string DEFAULT_CONFIG = R"JSON({
+namespace {
+
+constexpr std::string_view DEFAULT_CONFIG = R"JSON({
   "modules": [
     { "name": "date", "position": "middle-center" },
     { "name": "player", "position": "middle-center" },
@@ -45,7 +45,7 @@ const std::string DEFAULT_CONFIG = R"JSON({
   }
 })JSON";
 
-const std::string DEFAULT_STYLE = R"CSS(#wayglance {
+constexpr std::string_view DEFAULT_STYLE = R"CSS(#wayglance {
   background: none;
 }
 
@@ -95,145 +95,133 @@ const std::string DEFAULT_STYLE = R"CSS(#wayglance {
   margin-bottom: 15pt;
 })CSS";
 
+} // namespace
+
 // Constructor
-ConfigManager::ConfigManager() {}
-
-// Destructor
-ConfigManager::~ConfigManager() {}
-
-// Getters
-const nlohmann::json &ConfigManager::get_config() { return m_config; }
-
-Glib::RefPtr<Gtk::CssProvider> ConfigManager::get_css_provider() {
-  return m_style;
-}
-
-// Setters
-void ConfigManager::set_custom_config_path(const std::string &path) {
-  m_custom_config_path = path;
-}
-
-void ConfigManager::set_custom_style_path(const std::string &path) {
-  m_custom_style_path = path;
-}
-
-// Methods
-void ConfigManager::setup_paths() {
+ConfigManager::ConfigManager() {
   // Determining which configuration path to use
-  std::filesystem::path config_base_path;
+  fs::path config_base_path;
   const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
-  const char *home_dir = getenv("HOME");
 
   // Use XDG_CONFIG_HOME if it exists
   if (xdg_config_home && std::strlen(xdg_config_home) > 0)
     config_base_path = xdg_config_home;
   // Use the HOME env var otherwise
   else {
-    config_base_path = home_dir;
-    config_base_path /= ".config";
-  }
-
-  if (config_base_path.empty()) {
-    std::cerr << "Error: Couldn't find a config directory environment variable."
-              << std::endl;
-    return;
-  }
-
-  m_config_dir_path = config_base_path / "wayglance";
-
-  if (std::filesystem::exists(m_config_dir_path)) {
-    std::cout << "Found configuration directory at " << m_config_dir_path
-              << std::endl;
-    return;
-  }
-
-  try {
-    std::cout << "Warning: Wayglance configuration directory does not exist, "
-                 "attempting to create it."
-              << std::endl;
-
-    std::filesystem::create_directories(m_config_dir_path);
-  } catch (const std::filesystem::filesystem_error &e) {
-    std::cerr << "Error: Couldn't create the configuration directory for "
-                 "Wayglance : "
-              << e.what() << std::endl;
-
-    // Invalidating the config path
-    m_config_dir_path.clear();
-  }
-}
-
-void ConfigManager::ensure_file_exists(const std::filesystem::path path,
-                                       const std::string &default_content) {
-  if (std::filesystem::exists(path))
-    return;
-
-  std::cout << "Warning: Couldn't find " << path
-            << ", attempting to create it with default values" << std::endl;
-
-  try {
-    std::filesystem::create_directories(path.parent_path());
-    std::ofstream file_stream(path);
-    file_stream << default_content;
-  } catch (const std::exception &e) {
-    std::cerr << "Error: Couldn't create default file " << path << " : "
-              << e.what() << std::endl;
-  }
-}
-
-void ConfigManager::load_config() {
-  auto config_path = m_custom_config_path;
-
-  if (config_path.empty()) {
-    if (m_config_dir_path.empty()) {
-      std::cerr << "Error: Configuration directory was not found, loading "
-                   "default configuration"
-                << std::endl;
-      m_config = nlohmann::json::parse(DEFAULT_CONFIG);
-      return;
+    const char *home_dir = getenv("HOME");
+    if (home_dir) {
+      config_base_path = home_dir;
+      config_base_path /= ".config";
     }
-
-    config_path = m_config_dir_path / "config.json";
   }
 
-  ensure_file_exists(config_path, DEFAULT_CONFIG);
+  if (config_base_path.empty())
+    return;
+
+  // Setting m_wayglance_path
+  fs::path wayglance_path = config_base_path / "wayglance";
+  if (fs::exists(wayglance_path))
+    m_wayglance_path = wayglance_path;
+}
+
+// Destructor
+ConfigManager::~ConfigManager() {}
+
+// Methods
+void ConfigManager::load() {
+  fs::path config_path = m_custom_config_path;
+  fs::path style_path = m_custom_style_path;
+  m_provider = Gtk::CssProvider::create();
+
+  // Laoding config.json
+  if (config_path.empty() && !m_wayglance_path.empty())
+    config_path = m_wayglance_path / "config.json";
 
   try {
     std::ifstream file_stream(config_path);
     m_config = nlohmann::json::parse(file_stream);
     std::cout << "Loaded " << config_path << " configuration" << std::endl;
-    return;
-  } catch (const nlohmann::json::parse_error &e) {
-    std::cerr << "Error: Couldn't parse " << config_path
-              << " file : " << e.what() << std::endl;
   } catch (const std::exception &e) {
     std::cerr << "Error: Couldn't read " << config_path
               << " file : " << e.what() << std::endl;
+    m_config = nlohmann::json::parse(DEFAULT_CONFIG);
+    std::cout << "Loaded default configuration" << std::endl;
   }
 
-  m_config = nlohmann::json::parse(DEFAULT_CONFIG);
-  std::cout << "Loaded default configuration" << std::endl;
+  // Loading style.css
+  if (style_path.empty() && !m_wayglance_path.empty())
+    style_path = m_wayglance_path / "style.css";
+
+  if (!style_path.empty()) {
+    m_provider->load_from_path(style_path);
+    std::cout << "Loaded " << style_path << " stylesheet" << std::endl;
+  } else {
+    m_provider->load_from_data(std::string(DEFAULT_STYLE));
+    std::cout << "Loaded default stylesheet" << std::endl;
+  }
 }
 
-void ConfigManager::load_style() {
-  m_style = Gtk::CssProvider::create();
+bool ConfigManager::create_defaults() {
+  fs::path config_path = m_wayglance_path / "config.json";
+  fs::path style_path = m_wayglance_path / "style.css";
 
-  auto css_path = m_custom_style_path;
+  std::cout << "Creating " << config_path << " file... ";
+  bool config = create_default_file(config_path, DEFAULT_CONFIG);
+  if (config)
+    std::cout << "Ok" << std::endl;
+  else
+    std::cerr << std::endl
+              << "Error: Couldn't create config.json file. Check your "
+                 "$XDG_CONFIG_HOME or $HOME environment variables."
+              << std::endl;
 
-  if (css_path.empty()) {
-    if (m_config_dir_path.empty()) {
-      std::cerr << "Error: Configuration directory was not found, loading "
-                   "default stylesheet"
-                << std::endl;
-      m_style->load_from_data(DEFAULT_STYLE);
-      return;
-    }
+  std::cout << "Creating " << style_path << " file... ";
+  bool style = create_default_file(style_path, DEFAULT_STYLE);
+  if (style)
+    std::cout << "Ok" << std::endl;
+  else
+    std::cerr << std::endl
+              << "Error: Couldn't create style.css file. Check your "
+                 "$XDG_CONFIG_HOME or $HOME environment variables."
+              << std::endl;
 
-    css_path = m_config_dir_path / "style.css";
-  }
+  return config && style;
+}
 
-  ensure_file_exists(css_path, DEFAULT_STYLE);
+// Setters
+bool ConfigManager::set_custom_config_path(const std::string &path) {
+  if (!fs::exists(path))
+    return false;
 
-  m_style->load_from_path(css_path.string());
-  std::cout << "Loaded " << css_path << " stylesheet" << std::endl;
+  m_custom_config_path = path;
+  return true;
+}
+
+bool ConfigManager::set_custom_style_path(const std::string &path) {
+  if (!fs::exists(path))
+    return false;
+
+  m_custom_style_path = path;
+  return true;
+}
+
+// Getters
+const nlohmann::json &ConfigManager::get_config() { return m_config; }
+
+Glib::RefPtr<Gtk::CssProvider> ConfigManager::get_provider() {
+  return m_provider;
+}
+
+// Helpers
+bool ConfigManager::create_default_file(const fs::path &path,
+                                        std::string_view content) {
+  if (!fs::exists(path.parent_path()))
+    fs::create_directories(path.parent_path());
+
+  std::ofstream output_file(path);
+  if (!output_file)
+    return false;
+
+  output_file << content;
+  return true;
 }

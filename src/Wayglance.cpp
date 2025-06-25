@@ -43,9 +43,9 @@ Wayglance::Wayglance(std::shared_ptr<ConfigManager> config_manager,
                               GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
 
   // Configuration
-  Gtk::CssProvider::add_provider_for_display(
-      get_display(), m_config_manager->get_css_provider(),
-      GTK_STYLE_PROVIDER_PRIORITY_USER);
+  Gtk::CssProvider::add_provider_for_display(get_display(),
+                                             m_config_manager->get_provider(),
+                                             GTK_STYLE_PROVIDER_PRIORITY_USER);
   load_modules();
 }
 
