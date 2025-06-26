@@ -1,6 +1,5 @@
-#include "managers/AppManager.hpp"
-#include "managers/ConfigManager.hpp"
-#include <cairomm/context.h>
+#include "managers/client.hpp"
+#include "managers/config.hpp"
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
@@ -13,7 +12,7 @@ extern "C" {
 const std::string WAYGLANCE_VERSION = "0.0.30";
 
 int main(int argc, char *argv[]) {
-  auto config_manager = std::make_shared<ConfigManager>();
+  auto config_manager = std::make_shared<wayglance::managers::Config>();
 
   // Options values
   bool cli_show_help = false;
@@ -65,7 +64,7 @@ int main(int argc, char *argv[]) {
   auto app =
       Gtk::Application::create("io.github.semanavasco.wayglance",
                                Gio::Application::Flags::HANDLES_COMMAND_LINE);
-  AppManager app_manager(app, config_manager);
+  wayglance::managers::Client client(app, config_manager);
 
   // Handling options
   app->signal_command_line().connect(
@@ -95,7 +94,7 @@ int main(int argc, char *argv[]) {
       false);
 
   // Starting app
-  app->signal_activate().connect([&]() { app_manager.run(); });
+  app->signal_activate().connect([&]() { client.run(); });
 
   return app->run(argc, argv);
 }

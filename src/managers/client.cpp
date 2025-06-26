@@ -1,18 +1,20 @@
-#include "managers/AppManager.hpp"
-#include "managers/ConfigManager.hpp"
+#include "managers/client.hpp"
+#include "managers/config.hpp"
 #include <iostream>
 #include <unordered_set>
 
+using namespace wayglance;
+
 // Constructor
-AppManager::AppManager(Glib::RefPtr<Gtk::Application> app,
-                       std::shared_ptr<ConfigManager> config_manager)
+managers::Client::Client(Glib::RefPtr<Gtk::Application> app,
+                         std::shared_ptr<Config> config_manager)
     : m_app(app), m_config_manager(config_manager) {}
 
 // Destructor
-AppManager::~AppManager() {}
+managers::Client::~Client() {}
 
 // Methods
-void AppManager::run() {
+void managers::Client::run() {
   // Getting the default display manager
   auto display = Gdk::Display::get_default();
   if (!display) {
@@ -35,7 +37,7 @@ void AppManager::run() {
   update_monitors();
 }
 
-void AppManager::update_monitors() {
+void managers::Client::update_monitors() {
   // Getting the current monitors list
   auto display = Gdk::Display::get_default();
   if (!display)
@@ -70,7 +72,7 @@ void AppManager::update_monitors() {
   }
 }
 
-void AppManager::add_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
+void managers::Client::add_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
   if (m_windows.count(monitor->gobj())) {
     std::cout << "Warning: A window for this monitor already exists, ignoring"
               << std::endl;
@@ -80,7 +82,7 @@ void AppManager::add_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
   std::cout << "Creating a Wayglance window for a monitor" << std::endl;
 
   // Creating a window instance
-  auto window = new Wayglance(m_config_manager, monitor->gobj());
+  auto window = new wayglance::Glance(m_config_manager, monitor->gobj());
   m_app->add_window(*window);
   window->show();
 
@@ -88,14 +90,15 @@ void AppManager::add_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
   m_windows[monitor->gobj()] = window;
 }
 
-void AppManager::remove_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
+void managers::Client::remove_monitor(
+    const Glib::RefPtr<Gdk::Monitor> &monitor) {
   std::cout << "Monitor removed signal received" << std::endl;
 
   // Find the window associated with the removed monitor
   auto it = m_windows.find(monitor->gobj());
 
   if (it != m_windows.end()) {
-    Wayglance *window_to_remove = it->second;
+    wayglance::Glance *window_to_remove = it->second;
     std::cout << "Closing Wayglance window for the removed monitor"
               << std::endl;
 

@@ -1,13 +1,14 @@
-#ifndef DEF_SYSTEM_MODULE_HPP
-#define DEF_SYSTEM_MODULE_HPP
+#pragma once
 
-#include "BaseModule.hpp"
+#include "module.hpp"
 #include <string>
 
-class SystemModule : public BaseModule {
+namespace wayglance::modules {
+
+class System : public wayglance::Module {
 public:
-  SystemModule(const nlohmann::json &config);
-  ~SystemModule();
+  System(const nlohmann::json &config);
+  ~System();
 
 private:
   // Widgets
@@ -44,4 +45,4 @@ private:
   Glib::ustring format_speed(double speed_bps);
 };
 
-#endif // !DEF_SYSTEM_MODULE_HPP
+} // namespace wayglance::modules

@@ -1,12 +1,13 @@
-#ifndef PLAYER_MODULE_HPP
-#define PLAYER_MODULE_HPP
+#pragma once
 
-#include "BaseModule.hpp"
+#include "module.hpp"
 
-class PlayerModule : public BaseModule {
+namespace wayglance::modules {
+
+class Player : public wayglance::Module {
 public:
-  PlayerModule(const nlohmann::json &config);
-  ~PlayerModule();
+  Player(const nlohmann::json &config);
+  ~Player();
 
 private:
   // Widgets
@@ -57,5 +58,4 @@ private:
   bool update_progress();
   Glib::ustring format_time(gint64 microseconds);
 };
-
-#endif // PLAYER_MODULE_HPP
+} // namespace wayglance::modules

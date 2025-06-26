@@ -1,9 +1,11 @@
-#include "modules/DateModule.hpp"
+#include "modules/date.hpp"
 #include <chrono>
 #include <format>
 
+using namespace wayglance;
+
 // Constructor
-DateModule::DateModule(const nlohmann::json &config) : BaseModule(config) {
+modules::Date::Date(const nlohmann::json &config) : Module(config) {
   load_config(config);
 
   // Configuring module
@@ -21,21 +23,21 @@ DateModule::DateModule(const nlohmann::json &config) : BaseModule(config) {
 
   // Configuring timer
   update_labels();
-  Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &DateModule::update_labels), 1000);
+  Glib::signal_timeout().connect(sigc::mem_fun(*this, &Date::update_labels),
+                                 1000);
 }
 
 // Destructor
-DateModule::~DateModule() {}
+modules::Date::~Date() {}
 
 // Methods
-void DateModule::load_config(const nlohmann::json &config) {
+void modules::Date::load_config(const nlohmann::json &config) {
   m_time_format = std::format("{{:{}}}", config.value("time_format", "%H:%M"));
   m_date_format =
       std::format("{{:{}}}", config.value("date_format", "%A %d %B %Y"));
 }
 
-bool DateModule::update_labels() {
+bool modules::Date::update_labels() {
   const auto now = std::chrono::system_clock::now();
   const std::chrono::zoned_time local_time{std::chrono::current_zone(), now};
 

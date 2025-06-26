@@ -1,10 +1,12 @@
-#include "modules/SystemModule.hpp"
+#include "modules/system.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
 
+using namespace wayglance;
+
 // Constructor
-SystemModule::SystemModule(const nlohmann::json &config) : BaseModule(config) {
+modules::System::System(const nlohmann::json &config) : Module(config) {
   set_halign(Gtk::Align::CENTER);
   set_valign(Gtk::Align::CENTER);
   set_name("module-system");
@@ -36,15 +38,15 @@ SystemModule::SystemModule(const nlohmann::json &config) : BaseModule(config) {
 
   // Start the timer
   on_update_timer();
-  Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &SystemModule::on_update_timer), m_update_interval);
+  Glib::signal_timeout().connect(sigc::mem_fun(*this, &System::on_update_timer),
+                                 m_update_interval);
 }
 
 // Destructor
-SystemModule::~SystemModule() {}
+modules::System::~System() {}
 
 // Methods
-void SystemModule::load_config(const nlohmann::json &config) {
+void modules::System::load_config(const nlohmann::json &config) {
   m_update_interval = config.value("update-interval", 1000);
 
   // CPU config
@@ -64,7 +66,7 @@ void SystemModule::load_config(const nlohmann::json &config) {
   m_net_interface = net_config.value("interface", "wlan0");
 }
 
-bool SystemModule::on_update_timer() {
+bool modules::System::on_update_timer() {
   if (m_cpu_active)
     update_cpu_usage();
   if (m_ram_active)
@@ -75,7 +77,7 @@ bool SystemModule::on_update_timer() {
   return true;
 }
 
-void SystemModule::update_cpu_usage() {
+void modules::System::update_cpu_usage() {
   std::ifstream stat_file("/proc/stat");
   std::string line;
   long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
@@ -119,7 +121,7 @@ void SystemModule::update_cpu_usage() {
   m_prev_idle_time = current_idle_time;
 }
 
-void SystemModule::update_ram_usage() {
+void modules::System::update_ram_usage() {
   long mem_total(0), mem_available(0);
 
   std::ifstream stat_file("/proc/meminfo");
@@ -157,7 +159,7 @@ void SystemModule::update_ram_usage() {
     m_ram_label.set_text("RAM: N/A");
 }
 
-void SystemModule::update_net_usage() {
+void modules::System::update_net_usage() {
   long long new_bytes_received = 0;
   long long new_bytes_sent = 0;
 
@@ -208,8 +210,9 @@ void SystemModule::update_net_usage() {
   m_prev_bytes_sent = new_bytes_sent;
 }
 
-Glib::ustring SystemModule::format_label(const std::string &format,
-                                         const std::string &key, double value) {
+Glib::ustring modules::System::format_label(const std::string &format,
+                                            const std::string &key,
+                                            double value) {
   std::string formatted_text = format;
   std::string value_str =
       Glib::ustring::format(std::fixed, std::setprecision(1), value);
@@ -221,7 +224,8 @@ Glib::ustring SystemModule::format_label(const std::string &format,
   return formatted_text;
 }
 
-Glib::ustring SystemModule::format_net_label(double download, double upload) {
+Glib::ustring modules::System::format_net_label(double download,
+                                                double upload) {
   std::string net_text = m_net_format;
 
   size_t pos = net_text.find("{download}");
@@ -237,7 +241,7 @@ Glib::ustring SystemModule::format_net_label(double download, double upload) {
   return net_text;
 }
 
-Glib::ustring SystemModule::format_speed(double speed_bps) {
+Glib::ustring modules::System::format_speed(double speed_bps) {
   if (speed_bps < 1024)
     return Glib::ustring::format(std::fixed, std::setprecision(0), speed_bps) +
            " B/s";

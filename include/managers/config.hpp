@@ -1,5 +1,4 @@
-#ifndef DEF_CONFIG_MANAGER_CPP
-#define DEF_CONFIG_MANAGER_CPP
+#pragma once
 
 #include "glibmm/refptr.h"
 #include "gtkmm/cssprovider.h"
@@ -10,15 +9,17 @@
 
 namespace fs = std::filesystem;
 
+namespace wayglance::managers {
+
 /**
- * @class ConfigManager
- * @brief The ConfigManager handles configuration loading, creation and default
+ * @class Config
+ * @brief The Config handles configuration loading, creation and default
  * fallbacks.
  */
-class ConfigManager {
+class Config {
 public:
-  ConfigManager();
-  ~ConfigManager();
+  Config();
+  ~Config();
 
   // --- Methods ---
   /**
@@ -81,4 +82,4 @@ private:
   bool create_default_file(const fs::path &path, std::string_view content);
 };
 
-#endif // !DEF_CONFIG_MANAGER_CPP
+} // namespace wayglance::managers

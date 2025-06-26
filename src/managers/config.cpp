@@ -1,4 +1,4 @@
-#include "managers/ConfigManager.hpp"
+#include "managers/config.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -97,8 +97,10 @@ constexpr std::string_view DEFAULT_STYLE = R"CSS(#wayglance {
 
 } // namespace
 
+using namespace wayglance;
+
 // Constructor
-ConfigManager::ConfigManager() {
+managers::Config::Config() {
   // Determining which configuration path to use
   fs::path config_base_path;
   const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
@@ -125,10 +127,10 @@ ConfigManager::ConfigManager() {
 }
 
 // Destructor
-ConfigManager::~ConfigManager() {}
+managers::Config::~Config() {}
 
 // Methods
-void ConfigManager::load() {
+void managers::Config::load() {
   fs::path config_path = m_custom_config_path;
   fs::path style_path = m_custom_style_path;
   m_provider = Gtk::CssProvider::create();
@@ -161,7 +163,7 @@ void ConfigManager::load() {
   }
 }
 
-bool ConfigManager::create_defaults() {
+bool managers::Config::create_defaults() {
   fs::path config_path = m_wayglance_path / "config.json";
   fs::path style_path = m_wayglance_path / "style.css";
 
@@ -189,7 +191,7 @@ bool ConfigManager::create_defaults() {
 }
 
 // Setters
-bool ConfigManager::set_custom_config_path(const std::string &path) {
+bool managers::Config::set_custom_config_path(const std::string &path) {
   if (!fs::exists(path))
     return false;
 
@@ -197,7 +199,7 @@ bool ConfigManager::set_custom_config_path(const std::string &path) {
   return true;
 }
 
-bool ConfigManager::set_custom_style_path(const std::string &path) {
+bool managers::Config::set_custom_style_path(const std::string &path) {
   if (!fs::exists(path))
     return false;
 
@@ -206,15 +208,15 @@ bool ConfigManager::set_custom_style_path(const std::string &path) {
 }
 
 // Getters
-const nlohmann::json &ConfigManager::get_config() { return m_config; }
+const nlohmann::json &managers::Config::get_config() { return m_config; }
 
-Glib::RefPtr<Gtk::CssProvider> ConfigManager::get_provider() {
+Glib::RefPtr<Gtk::CssProvider> managers::Config::get_provider() {
   return m_provider;
 }
 
 // Helpers
-bool ConfigManager::create_default_file(const fs::path &path,
-                                        std::string_view content) {
+bool managers::Config::create_default_file(const fs::path &path,
+                                           std::string_view content) {
   if (!fs::exists(path.parent_path()))
     fs::create_directories(path.parent_path());
 

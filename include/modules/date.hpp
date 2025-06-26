@@ -1,12 +1,13 @@
-#ifndef DEF_DATE_MODULE_HPP
-#define DEF_DATE_MODULE_HPP
+#pragma once
 
-#include "BaseModule.hpp"
+#include "module.hpp"
 
-class DateModule : public BaseModule {
+namespace wayglance::modules {
+
+class Date : public wayglance::Module {
 public:
-  DateModule(const nlohmann::json &config);
-  ~DateModule();
+  Date(const nlohmann::json &config);
+  ~Date();
 
 private:
   // Configuration
@@ -21,4 +22,4 @@ private:
   void load_config(const nlohmann::json &config);
 };
 
-#endif // !DEF_DATE_MODULE_HPP
+} // namespace wayglance::modules

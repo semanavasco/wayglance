@@ -1,12 +1,14 @@
-#include "modules/PlayerModule.hpp"
+#include "modules/player.hpp"
 #include "glibmm/main.h"
 #include <cstdio>
 #include <iostream>
 #include <map>
 #include <vector>
 
+using namespace wayglance;
+
 // Constructor
-PlayerModule::PlayerModule(const nlohmann::json &config) : BaseModule(config) {
+modules::Player::Player(const nlohmann::json &config) : Module(config) {
   load_config(config);
 
   // Widgets
@@ -72,21 +74,21 @@ PlayerModule::PlayerModule(const nlohmann::json &config) : BaseModule(config) {
 
   // Registering event handlers
   m_prev_button.signal_clicked().connect(
-      sigc::mem_fun(*this, &PlayerModule::on_prev_clicked));
+      sigc::mem_fun(*this, &Player::on_prev_clicked));
   m_play_pause_button.signal_clicked().connect(
-      sigc::mem_fun(*this, &PlayerModule::on_play_pause_clicked));
+      sigc::mem_fun(*this, &Player::on_play_pause_clicked));
   m_next_button.signal_clicked().connect(
-      sigc::mem_fun(*this, &PlayerModule::on_next_clicked));
+      sigc::mem_fun(*this, &Player::on_next_clicked));
 
   // Setting up proxy
   get_player_proxy();
 }
 
 // Destructor
-PlayerModule::~PlayerModule() {}
+modules::Player::~Player() {}
 
 // Methods
-void PlayerModule::load_config(const nlohmann::json &config) {
+void modules::Player::load_config(const nlohmann::json &config) {
   m_player_name = config.value("player", "any");
   m_player_name == "any"
       ? m_player_name = ""
@@ -114,7 +116,7 @@ void PlayerModule::load_config(const nlohmann::json &config) {
   m_icon_pause = btn_pause_cfg.value("icon", "media-playback-pause-symbolic");
 }
 
-void PlayerModule::get_player_proxy() {
+void modules::Player::get_player_proxy() {
   // Service name, object path and MPRIS interfaces
   const Glib::ustring name = "org.mpris.MediaPlayer2.playerctld";
   const Glib::ustring path = "/org/mpris/MediaPlayer2";
@@ -176,22 +178,22 @@ void PlayerModule::get_player_proxy() {
   }
 }
 
-void PlayerModule::on_prev_clicked() {
+void modules::Player::on_prev_clicked() {
   if (m_player_proxy)
     m_player_proxy->call("Previous");
 }
 
-void PlayerModule::on_play_pause_clicked() {
+void modules::Player::on_play_pause_clicked() {
   if (m_player_proxy)
     m_player_proxy->call("PlayPause");
 }
 
-void PlayerModule::on_next_clicked() {
+void modules::Player::on_next_clicked() {
   if (m_player_proxy)
     m_player_proxy->call("Next");
 }
 
-void PlayerModule::update() {
+void modules::Player::update() {
   // Set defaults if proxys weren't created
   if (!m_player_proxy || !m_properties_proxy) {
     m_status = "Unavailable";
@@ -207,7 +209,7 @@ void PlayerModule::update() {
   update_info();
 }
 
-void PlayerModule::get_status() {
+void modules::Player::get_status() {
   try {
     auto parameters = Glib::VariantContainerBase::create_tuple(
         {Glib::create_variant(Glib::ustring("org.mpris.MediaPlayer2.Player")),
@@ -243,7 +245,7 @@ void PlayerModule::get_status() {
   }
 }
 
-void PlayerModule::get_metadata() {
+void modules::Player::get_metadata() {
   try {
     auto parameters = Glib::VariantContainerBase::create_tuple(
         {Glib::create_variant(Glib::ustring("org.mpris.MediaPlayer2.Player")),
@@ -313,7 +315,7 @@ void PlayerModule::get_metadata() {
   }
 }
 
-Glib::ustring PlayerModule::format_time(gint64 microseconds) {
+Glib::ustring modules::Player::format_time(gint64 microseconds) {
   if (microseconds == 0)
     return "0:00";
 
@@ -326,7 +328,7 @@ Glib::ustring PlayerModule::format_time(gint64 microseconds) {
   return buffer;
 }
 
-void PlayerModule::get_progress() {
+void modules::Player::get_progress() {
   if (!m_properties_proxy)
     return;
 
@@ -353,7 +355,7 @@ void PlayerModule::get_progress() {
   }
 }
 
-bool PlayerModule::update_progress() {
+bool modules::Player::update_progress() {
   if (!m_playing)
     return false;
 
@@ -371,7 +373,7 @@ bool PlayerModule::update_progress() {
   return true;
 }
 
-void PlayerModule::update_info() {
+void modules::Player::update_info() {
   if (m_status == "Playing") {
     if (m_use_nerd_font)
       m_play_pause_button.set_label(m_icon_pause);
@@ -381,7 +383,7 @@ void PlayerModule::update_info() {
     // Start the progress timer
     if (!m_progress_timeout.connected())
       m_progress_timeout = Glib::signal_timeout().connect(
-          sigc::mem_fun(*this, &PlayerModule::update_progress), 1000);
+          sigc::mem_fun(*this, &Player::update_progress), 1000);
   } else {
     if (m_use_nerd_font)
       m_play_pause_button.set_label(m_icon_play);

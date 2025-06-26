@@ -1,7 +1,7 @@
-#include "Wayglance.hpp"
-#include "modules/DateModule.hpp"
-#include "modules/PlayerModule.hpp"
-#include "modules/SystemModule.hpp"
+#include "glance.hpp"
+#include "modules/date.hpp"
+#include "modules/player.hpp"
+#include "modules/system.hpp"
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
@@ -13,18 +13,14 @@ extern "C" {
 }
 
 // Constructor
-Wayglance::Wayglance(std::shared_ptr<ConfigManager> config_manager,
-                     GdkMonitor *p_monitor)
+wayglance::Glance::Glance(std::shared_ptr<managers::Config> config_manager,
+                          GdkMonitor *p_monitor)
     : m_config_manager(config_manager) {
   set_title("Wayglance");
   set_child(m_overlay);
   set_name("wayglance");
 
-  // DrawingArea configuration
-  m_drawing_area.set_draw_func(sigc::mem_fun(*this, &Wayglance::on_draw));
-
   // Overlay configuration
-  m_overlay.set_child(m_drawing_area);
   setup_module_boxes();
 
   // Configuring layer shell
@@ -50,10 +46,10 @@ Wayglance::Wayglance(std::shared_ptr<ConfigManager> config_manager,
 }
 
 // Destructor
-Wayglance::~Wayglance() {}
+wayglance::Glance::~Glance() {}
 
 // Methods
-void Wayglance::setup_module_boxes() {
+void wayglance::Glance::setup_module_boxes() {
   setup_module_box(m_top_left_box, "top-left", Gtk::Align::START,
                    Gtk::Align::START);
   setup_module_box(m_top_center_box, "top-center", Gtk::Align::CENTER,
@@ -76,8 +72,8 @@ void Wayglance::setup_module_boxes() {
                    Gtk::Align::END);
 }
 
-void Wayglance::setup_module_box(Gtk::Box &box, const std::string &name,
-                                 Gtk::Align halign, Gtk::Align valign) {
+void wayglance::Glance::setup_module_box(Gtk::Box &box, const std::string &name,
+                                         Gtk::Align halign, Gtk::Align valign) {
   // Default configurations
   const auto &config = m_config_manager->get_config();
   Gtk::Orientation orientation = Gtk::Orientation::VERTICAL;
@@ -105,7 +101,7 @@ void Wayglance::setup_module_box(Gtk::Box &box, const std::string &name,
   m_overlay.add_overlay(box);
 }
 
-void Wayglance::load_modules() {
+void wayglance::Glance::load_modules() {
   auto config = m_config_manager->get_config();
 
   if (!config.contains("modules")) {
@@ -149,22 +145,16 @@ void Wayglance::load_modules() {
       target_box = &m_bottom_right_box;
 
     if (name == "date")
-      target_box->append(*Gtk::make_managed<DateModule>(
+      target_box->append(*Gtk::make_managed<wayglance::modules::Date>(
           config.value("date", nlohmann::json::object())));
     else if (name == "player")
-      target_box->append(*Gtk::make_managed<PlayerModule>(
+      target_box->append(*Gtk::make_managed<wayglance::modules::Player>(
           config.value("player", nlohmann::json::object())));
     else if (name == "system")
-      target_box->append(*Gtk::make_managed<SystemModule>(
+      target_box->append(*Gtk::make_managed<wayglance::modules::System>(
           config.value("system", nlohmann::json::object())));
     else
       std::cerr << "Warning: Unrecognized module '" << name
                 << "' found, skipping it" << std::endl;
   }
-}
-
-void Wayglance::on_draw(const Cairo::RefPtr<Cairo::Context> &cr, int width,
-                        int height) {
-  cr->set_source_rgba(0.0, 0.0, 0.0, 0.0);
-  cr->paint();
 }
