@@ -9,14 +9,14 @@
 namespace wayglance {
 
 /**
- * @class Glance
- * @brief The background widget.
+ * @class Shell
+ * @brief The background shell.
  */
-class Glance : public Gtk::ApplicationWindow {
+class Shell : public Gtk::ApplicationWindow {
 public:
-  Glance(std::shared_ptr<wayglance::managers::Config> config_manager,
-         GdkMonitor *p_monitor);
-  virtual ~Glance();
+  Shell(std::shared_ptr<wayglance::managers::Config> config_manager,
+        GdkMonitor *p_monitor);
+  virtual ~Shell();
 
 private:
   Gtk::Overlay m_overlay;
@@ -41,8 +41,8 @@ private:
    * etc, from the configuration file if existing.
    * @param box The Gtk::Box to configure.
    * @param name The name of the box to configure (top-left, ...)
-   * @param halign The halign to position itself in the glance object.
-   * @param valign The halign to position itself in the glance object.
+   * @param halign The halign to position itself in the shell object.
+   * @param valign The halign to position itself in the shell object.
    */
   void setup_module_box(Gtk::Box &box, const std::string &name,
                         Gtk::Align halign, Gtk::Align valign);

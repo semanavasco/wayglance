@@ -1,7 +1,7 @@
-#include "glance.hpp"
 #include "modules/date.hpp"
 #include "modules/player.hpp"
 #include "modules/system.hpp"
+#include "shell.hpp"
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
@@ -13,8 +13,8 @@ extern "C" {
 }
 
 // Constructor
-wayglance::Glance::Glance(std::shared_ptr<managers::Config> config_manager,
-                          GdkMonitor *p_monitor)
+wayglance::Shell::Shell(std::shared_ptr<managers::Config> config_manager,
+                        GdkMonitor *p_monitor)
     : m_config_manager(config_manager) {
   set_title("Wayglance");
   set_child(m_overlay);
@@ -46,10 +46,10 @@ wayglance::Glance::Glance(std::shared_ptr<managers::Config> config_manager,
 }
 
 // Destructor
-wayglance::Glance::~Glance() {}
+wayglance::Shell::~Shell() {}
 
 // Methods
-void wayglance::Glance::setup_module_boxes() {
+void wayglance::Shell::setup_module_boxes() {
   setup_module_box(m_top_left_box, "top-left", Gtk::Align::START,
                    Gtk::Align::START);
   setup_module_box(m_top_center_box, "top-center", Gtk::Align::CENTER,
@@ -72,8 +72,8 @@ void wayglance::Glance::setup_module_boxes() {
                    Gtk::Align::END);
 }
 
-void wayglance::Glance::setup_module_box(Gtk::Box &box, const std::string &name,
-                                         Gtk::Align halign, Gtk::Align valign) {
+void wayglance::Shell::setup_module_box(Gtk::Box &box, const std::string &name,
+                                        Gtk::Align halign, Gtk::Align valign) {
   // Default configurations
   const auto &config = m_config_manager->get_config();
   Gtk::Orientation orientation = Gtk::Orientation::VERTICAL;
@@ -101,7 +101,7 @@ void wayglance::Glance::setup_module_box(Gtk::Box &box, const std::string &name,
   m_overlay.add_overlay(box);
 }
 
-void wayglance::Glance::load_modules() {
+void wayglance::Shell::load_modules() {
   auto config = m_config_manager->get_config();
 
   if (!config.contains("modules")) {

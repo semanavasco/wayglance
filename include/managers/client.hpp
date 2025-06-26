@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.hpp"
-#include "glance.hpp"
+#include "shell.hpp"
 #include <gtkmm.h>
 #include <map>
 #include <memory>
@@ -26,7 +26,7 @@ public:
 private:
   Glib::RefPtr<Gtk::Application> m_app;
   std::shared_ptr<Config> m_config_manager;
-  std::map<GdkMonitor *, wayglance::Glance *> m_windows;
+  std::map<GdkMonitor *, wayglance::Shell *> m_windows;
 
   /**
    * @brief Creates a window for a monitor and adds it to the handled monitors

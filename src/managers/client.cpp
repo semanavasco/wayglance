@@ -82,7 +82,7 @@ void managers::Client::add_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
   std::cout << "Creating a Wayglance window for a monitor" << std::endl;
 
   // Creating a window instance
-  auto window = new wayglance::Glance(m_config_manager, monitor->gobj());
+  auto window = new wayglance::Shell(m_config_manager, monitor->gobj());
   m_app->add_window(*window);
   window->show();
 
@@ -98,7 +98,7 @@ void managers::Client::remove_monitor(
   auto it = m_windows.find(monitor->gobj());
 
   if (it != m_windows.end()) {
-    wayglance::Glance *window_to_remove = it->second;
+    wayglance::Shell *window_to_remove = it->second;
     std::cout << "Closing Wayglance window for the removed monitor"
               << std::endl;
 
