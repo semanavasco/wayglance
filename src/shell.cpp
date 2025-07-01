@@ -1,7 +1,7 @@
+#include "shell.hpp"
 #include "modules/date.hpp"
 #include "modules/player.hpp"
 #include "modules/system.hpp"
-#include "shell.hpp"
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
@@ -14,7 +14,7 @@ extern "C" {
 
 // Constructor
 wayglance::Shell::Shell(std::shared_ptr<managers::Config> config_manager,
-                        GdkMonitor *p_monitor)
+                        GdkMonitor *monitor)
     : m_config_manager(config_manager) {
   set_title("Wayglance");
   set_child(m_overlay);
@@ -26,8 +26,8 @@ wayglance::Shell::Shell(std::shared_ptr<managers::Config> config_manager,
   // Configuring layer shell
   gtk_layer_init_for_window((GtkWindow *)gobj());
 
-  if (p_monitor)
-    gtk_layer_set_monitor((GtkWindow *)gobj(), p_monitor);
+  if (monitor)
+    gtk_layer_set_monitor((GtkWindow *)gobj(), monitor);
 
   gtk_layer_set_layer((GtkWindow *)gobj(), GTK_LAYER_SHELL_LAYER_BACKGROUND);
   gtk_layer_set_anchor((GtkWindow *)gobj(), GTK_LAYER_SHELL_EDGE_LEFT, true);
@@ -115,6 +115,11 @@ void wayglance::Shell::load_modules() {
     std::string name = module_config.value("name", "");
     std::string position = module_config.value("position", "middle-center");
 
+    if (name.empty()) {
+      std::cerr << "Warning: Skipping malformed module entry" << std::endl;
+      continue;
+    }
+
     // Skip if module is already loaded
     const auto [_, inserted] = loaded_modules.emplace(name);
     if (!inserted) {
@@ -143,6 +148,12 @@ void wayglance::Shell::load_modules() {
       target_box = &m_bottom_center_box;
     else if (position == "bottom-right")
       target_box = &m_bottom_right_box;
+    else {
+      std::cout << "Warning: Unrecognized module position \"" << position
+                << "\" for module \"" << name
+                << "\", defaulting to middle-center" << std::endl;
+      target_box = &m_middle_center_box;
+    }
 
     if (name == "date")
       target_box->append(*Gtk::make_managed<wayglance::modules::Date>(

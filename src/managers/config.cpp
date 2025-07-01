@@ -1,7 +1,9 @@
 #include "managers/config.hpp"
+#include "glibmm/error.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 namespace {
 
@@ -100,7 +102,13 @@ constexpr std::string_view DEFAULT_STYLE = R"CSS(#wayglance {
 using namespace wayglance;
 
 // Constructor
-managers::Config::Config() {
+managers::Config::Config() { setup(); }
+
+// Destructor
+managers::Config::~Config() {}
+
+// Methods
+void managers::Config::setup() {
   // Determining which configuration path to use
   fs::path config_base_path;
   const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
@@ -111,13 +119,13 @@ managers::Config::Config() {
   // Use the HOME env var otherwise
   else {
     const char *home_dir = getenv("HOME");
-    if (home_dir) {
+    if (home_dir && std::strlen(home_dir) > 0) {
       config_base_path = home_dir;
       config_base_path /= ".config";
     }
   }
 
-  if (config_base_path.empty())
+  if (config_base_path.empty() || !fs::exists(config_base_path))
     return;
 
   // Setting m_wayglance_path
@@ -126,10 +134,6 @@ managers::Config::Config() {
     m_wayglance_path = wayglance_path;
 }
 
-// Destructor
-managers::Config::~Config() {}
-
-// Methods
 void managers::Config::load() {
   fs::path config_path = m_custom_config_path;
   fs::path style_path = m_custom_style_path;
@@ -141,6 +145,10 @@ void managers::Config::load() {
 
   try {
     std::ifstream file_stream(config_path);
+    if (!file_stream)
+      throw std::runtime_error("Couldn't open configuration file at \"" +
+                               config_path.string() + "\"");
+
     m_config = nlohmann::json::parse(file_stream);
     std::cout << "Loaded " << config_path << " configuration" << std::endl;
   } catch (const std::exception &e) {
@@ -154,10 +162,16 @@ void managers::Config::load() {
   if (style_path.empty() && !m_wayglance_path.empty())
     style_path = m_wayglance_path / "style.css";
 
-  if (!style_path.empty()) {
-    m_provider->load_from_path(style_path);
-    std::cout << "Loaded " << style_path << " stylesheet" << std::endl;
-  } else {
+  try {
+    if (fs::exists(style_path)) {
+      m_provider->load_from_path(style_path);
+      std::cout << "Loaded " << style_path << " stylesheet" << std::endl;
+    } else {
+      m_provider->load_from_data(std::string(DEFAULT_STYLE));
+      std::cout << "Loaded default stylesheet" << std::endl;
+    }
+  } catch (const Glib::Error &e) {
+    std::cerr << "Error: Coudln't load stylesheet: " << e.what() << std::endl;
     m_provider->load_from_data(std::string(DEFAULT_STYLE));
     std::cout << "Loaded default stylesheet" << std::endl;
   }

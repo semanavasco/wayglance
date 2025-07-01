@@ -1,5 +1,6 @@
 #include "managers/client.hpp"
 #include "managers/config.hpp"
+#include <cstdlib>
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
@@ -9,7 +10,7 @@ extern "C" {
 #include <gtk4-layer-shell.h>
 }
 
-const std::string WAYGLANCE_VERSION = "0.0.31";
+const std::string WAYGLANCE_VERSION = "0.0.32";
 
 int main(int argc, char *argv[]) {
   auto config_manager = std::make_shared<wayglance::managers::Config>();
@@ -40,24 +41,24 @@ int main(int argc, char *argv[]) {
   auto result = cli.parse({argc, argv});
   if (!result) {
     std::cerr << "Error: " << result.message() << std::endl;
-    exit(1);
+    return EXIT_FAILURE;
   }
 
   if (cli_show_help) {
     std::cout << cli << std::endl;
-    exit(0);
+    return EXIT_SUCCESS;
   }
 
   if (cli_show_version) {
     std::cout << "Wayglance " << WAYGLANCE_VERSION << std::endl;
-    exit(0);
+    return EXIT_SUCCESS;
   }
 
   if (cli_create_defaults) {
     if (config_manager->create_defaults())
-      exit(0);
+      return EXIT_SUCCESS;
     else
-      exit(1);
+      return EXIT_FAILURE;
   }
 
   // Creating app
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]) {
             std::cerr << "Error: Couldn't find " << cli_config_path
                       << std::endl;
             app->quit();
-            return 1;
+            return EXIT_FAILURE;
           }
         }
 
@@ -82,14 +83,14 @@ int main(int argc, char *argv[]) {
           if (!config_manager->set_custom_style_path(cli_style_path)) {
             std::cerr << "Error: Couldn't find " << cli_style_path << std::endl;
             app->quit();
-            return 1;
+            return EXIT_FAILURE;
           }
         }
 
         config_manager->load();
 
         app->activate();
-        return 0;
+        return EXIT_SUCCESS;
       },
       false);
 

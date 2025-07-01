@@ -79,6 +79,9 @@ bool modules::System::on_update_timer() {
 
 void modules::System::update_cpu_usage() {
   std::ifstream stat_file("/proc/stat");
+  if (!stat_file.is_open())
+    return;
+
   std::string line;
   long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
 

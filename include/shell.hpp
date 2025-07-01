@@ -15,7 +15,7 @@ namespace wayglance {
 class Shell : public Gtk::ApplicationWindow {
 public:
   Shell(std::shared_ptr<wayglance::managers::Config> config_manager,
-        GdkMonitor *p_monitor);
+        GdkMonitor *monitor);
   virtual ~Shell();
 
 private:

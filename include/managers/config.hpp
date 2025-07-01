@@ -23,6 +23,11 @@ public:
 
   // --- Methods ---
   /**
+   * @brief Sets up default paths for wayglance's configuration.
+   */
+  void setup();
+
+  /**
    * @brief Loads the configuration.
    * * Parses the available json configuration file or fallbacks to defaults.
    * The config is stored in the m_config.

@@ -179,18 +179,33 @@ void modules::Player::get_player_proxy() {
 }
 
 void modules::Player::on_prev_clicked() {
-  if (m_player_proxy)
-    m_player_proxy->call("Previous");
+  try {
+    if (m_player_proxy)
+      m_player_proxy->call("Previous");
+  } catch (const std::exception &e) {
+    std::cerr << "Error: Couldn't jump to previous track: " << e.what()
+              << std::endl;
+  }
 }
 
 void modules::Player::on_play_pause_clicked() {
-  if (m_player_proxy)
-    m_player_proxy->call("PlayPause");
+  try {
+    if (m_player_proxy)
+      m_player_proxy->call("PlayPause");
+  } catch (const std::exception &e) {
+    std::cerr << "Error: Couldn't toggle play/pause on track: " << e.what()
+              << std::endl;
+  }
 }
 
 void modules::Player::on_next_clicked() {
-  if (m_player_proxy)
-    m_player_proxy->call("Next");
+  try {
+    if (m_player_proxy)
+      m_player_proxy->call("Next");
+  } catch (const std::exception &e) {
+    std::cerr << "Error: Couldn't jump to next track: " << e.what()
+              << std::endl;
+  }
 }
 
 void modules::Player::update() {
