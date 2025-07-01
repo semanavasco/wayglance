@@ -3,8 +3,8 @@
 #include "config.hpp"
 #include "shell.hpp"
 #include <gtkmm.h>
-#include <map>
 #include <memory>
+#include <unordered_map>
 
 namespace wayglance::managers {
 
@@ -26,7 +26,7 @@ public:
 private:
   Glib::RefPtr<Gtk::Application> m_app;
   std::shared_ptr<Config> m_config_manager;
-  std::map<GdkMonitor *, wayglance::Shell *> m_windows;
+  std::unordered_map<GdkMonitor *, std::unique_ptr<Shell>> m_windows;
 
   /**
    * @brief Creates a window for a monitor and adds it to the handled monitors

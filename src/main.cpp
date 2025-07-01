@@ -9,7 +9,7 @@ extern "C" {
 #include <gtk4-layer-shell.h>
 }
 
-const std::string WAYGLANCE_VERSION = "0.0.30";
+const std::string WAYGLANCE_VERSION = "0.0.31";
 
 int main(int argc, char *argv[]) {
   auto config_manager = std::make_shared<wayglance::managers::Config>();

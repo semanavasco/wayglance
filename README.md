@@ -2,18 +2,18 @@
 
 <div align="center">
 
-![Wayglance](https://img.shields.io/badge/version-0.0.30-red)
+![Wayglance](https://img.shields.io/badge/version-0.0.31-red)
 ![C++](https://img.shields.io/badge/C%2B%2B-20-blue?logo=cplusplus)
 ![CMake](https://img.shields.io/badge/CMake-3.15+-blue?logo=cmake)
 ![GTK](https://img.shields.io/badge/GTK-4.0-blue?logo=gtk)
 
-*A desktop overlay widget for Wayland that brings system information and media controls directly to your wallpaper!*
+_A desktop overlay widget for Wayland that brings system information and media controls directly to your wallpaper!_
 
 </div>
 
 ## ⚠️ Disclaimer
 
-**This project was created as a learning exercise and is my first-ever C++ project!** 
+**This project was created as a learning exercise and is my first-ever C++ project!**
 
 While I've put significant effort into following modern C++ best practices and creating a well-structured codebase, please be aware that:
 
@@ -40,11 +40,13 @@ If you're interested in helping me learn C++, Wayland development, or modern sof
 Wayglance is a desktop overlay application for Wayland compositors that displays customizable widgets directly on your desktop background. It creates a transparent layer-shell window that shows:
 
 ### 🕒 Date & Time Module
+
 - Large, customizable clock display
 - Configurable date formats
 - Real-time updates
 
-### 🎵 Media Player Module  
+### 🎵 Media Player Module
+
 - Current track information
 - Playback controls (play/pause/previous/next)
 - Progress bar with time display
@@ -52,8 +54,9 @@ Wayglance is a desktop overlay application for Wayland compositors that displays
 - Support for Nerd Fonts icons
 
 ### 📊 System Monitor Module
+
 - **CPU Usage** - Real-time processor utilization
-- **RAM Usage** - Memory consumption monitoring  
+- **RAM Usage** - Memory consumption monitoring
 - **Network Stats** - Download/upload speeds per interface
 
 All modules are **highly configurable** through JSON configuration files and **fully stylable** with CSS. Many modules are to come.
@@ -71,6 +74,7 @@ All modules are **highly configurable** through JSON configuration files and **f
 ### Prerequisites
 
 **System Requirements:**
+
 - Linux with Wayland compositor
 - GTK4 development libraries
 - gtk4-layer-shell
@@ -108,11 +112,13 @@ cmake --build .
 ### Initial Setup
 
 Create default configuration files:
+
 ```bash
 ./wayglance --create-defaults
 ```
 
 This creates:
+
 - `~/.config/wayglance/config.json` - Main configuration
 - `~/.config/wayglance/style.css` - Stylesheet
 
@@ -139,7 +145,7 @@ The main configuration is in `~/.config/wayglance/config.json`:
 {
   "modules": [
     { "name": "date", "position": "middle-center" },
-    { "name": "player", "position": "middle-center" }, 
+    { "name": "player", "position": "middle-center" },
     { "name": "system", "position": "bottom-center" }
   ],
   "date": {
@@ -154,18 +160,19 @@ The main configuration is in `~/.config/wayglance/config.json`:
     "update-interval": 1000,
     "cpu": { "active": true, "format": "CPU: {usage}%" },
     "ram": { "active": true, "format": "RAM: {usage}%" },
-    "net": { 
-      "active": true, 
+    "net": {
+      "active": true,
       "format": "NET: {download} / {upload}",
-      "interface": "wlan0" 
+      "interface": "wlan0"
     }
   }
 }
 ```
 
 ### Position Options
+
 - `top-left`, `top-center`, `top-right`
-- `middle-left`, `middle-center`, `middle-right`  
+- `middle-left`, `middle-center`, `middle-right`
 - `bottom-left`, `bottom-center`, `bottom-right`
 
 ### Styling
@@ -216,14 +223,16 @@ wayglance/
 As a learning project, there are several areas I'm aware need improvement:
 
 - Memory management could be more robust
-- Error handling needs expansion  
+- Error handling needs expansion
 - Configuration validation is minimal
 - No unit tests yet
 - Performance optimizations needed
 - And more...
 
 ## 🎯 Roadmap
+
 **Short-term goals:**
+
 - [🔄] Add proper exception handling and validation
 - [⏳] Improve managers
 - [⏳] Implement configuration validation
@@ -232,6 +241,7 @@ As a learning project, there are several areas I'm aware need improvement:
 - [⏳] Performance optimizations
 
 **Long-term goals:**
+
 - [⏳] Hot-reload configuration
 - [⏳] Pomodoro module
 - [⏳] Weather module with API integration

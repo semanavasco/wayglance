@@ -1,6 +1,7 @@
 #include "managers/client.hpp"
 #include "managers/config.hpp"
 #include <iostream>
+#include <memory>
 #include <unordered_set>
 
 using namespace wayglance;
@@ -82,12 +83,12 @@ void managers::Client::add_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
   std::cout << "Creating a Wayglance window for a monitor" << std::endl;
 
   // Creating a window instance
-  auto window = new wayglance::Shell(m_config_manager, monitor->gobj());
+  auto window = std::make_unique<Shell>(m_config_manager, monitor->gobj());
   m_app->add_window(*window);
   window->show();
 
   // Store the window
-  m_windows[monitor->gobj()] = window;
+  m_windows[monitor->gobj()] = std::move(window);
 }
 
 void managers::Client::remove_monitor(
@@ -98,12 +99,11 @@ void managers::Client::remove_monitor(
   auto it = m_windows.find(monitor->gobj());
 
   if (it != m_windows.end()) {
-    wayglance::Shell *window_to_remove = it->second;
     std::cout << "Closing Wayglance window for the removed monitor"
               << std::endl;
 
     // Close the window (GTK manages its destruction)
-    window_to_remove->close();
+    it->second->close();
 
     // Remove the window from our managed windows
     m_windows.erase(it);
