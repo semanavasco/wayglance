@@ -17,9 +17,9 @@ _A desktop overlay widget for Wayland that brings system information and media c
 
 While I've put significant effort into following modern C++ best practices and creating a well-structured codebase, please be aware that:
 
-- 🐛 **Bugs are expected** - There WILL be memory leaks, crashes, or unexpected behavior (and I will fix them eventually)
-- 🔧 **Not production-ready** - This is NOT recommended for everyday use
-- 📚 **Learning in progress** - I'm still learning C++ and HAVE made rookie mistakes
+- 🐛 **Bugs are expected** - There **WILL** be memory leaks, crashes, or unexpected behavior (and I will fix them eventually)
+- 🔧 **Not production-ready** - This is **NOT** recommended for everyday use
+- 📚 **Learning in progress** - I'm still learning C++ and **HAVE** made rookie mistakes
 - 🚧 **Work in Progress** - The project will continue to evolve as I learn more, eventually reaching a usable state
 
 **My goal is to keep improving this project until it becomes truly usable!** Every mistake is a learning opportunity, and I'm committed to making this better over time.
