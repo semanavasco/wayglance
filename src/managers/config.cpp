@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 namespace {
@@ -30,7 +31,7 @@ constexpr std::string_view DEFAULT_CONFIG = R"JSON({
     "nerd-font": false,
     "buttons": {
       "previous": { "icon": "media-skip-backward-symbolic" },
-      "next": { "icon": "media-skip-backward-symbolic" },
+      "next": { "icon": "media-skip-forward-symbolic" },
       "play": { "icon": "media-playback-start-symbolic" },
       "pause": { "icon": "media-playback-pause-symbolic" }
     }
@@ -102,13 +103,7 @@ constexpr std::string_view DEFAULT_STYLE = R"CSS(#wayglance {
 using namespace wayglance;
 
 // Constructor
-managers::Config::Config() { setup(); }
-
-// Destructor
-managers::Config::~Config() {}
-
-// Methods
-void managers::Config::setup() {
+managers::Config::Config() {
   // Determining which configuration path to use
   fs::path config_base_path;
   const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
@@ -119,21 +114,20 @@ void managers::Config::setup() {
   // Use the HOME env var otherwise
   else {
     const char *home_dir = getenv("HOME");
-    if (home_dir && std::strlen(home_dir) > 0) {
+    if (home_dir) {
       config_base_path = home_dir;
       config_base_path /= ".config";
     }
   }
 
-  if (config_base_path.empty() || !fs::exists(config_base_path))
-    return;
-
-  // Setting m_wayglance_path
-  fs::path wayglance_path = config_base_path / "wayglance";
-  if (fs::exists(wayglance_path))
-    m_wayglance_path = wayglance_path;
+  if (!config_base_path.empty())
+    m_wayglance_path = config_base_path / "wayglance";
 }
 
+// Destructor
+managers::Config::~Config() {}
+
+// Methods
 void managers::Config::load() {
   fs::path config_path = m_custom_config_path;
   fs::path style_path = m_custom_style_path;
@@ -150,12 +144,12 @@ void managers::Config::load() {
                                config_path.string() + "\"");
 
     m_config = nlohmann::json::parse(file_stream);
-    std::cout << "Loaded " << config_path << " configuration" << std::endl;
+    spdlog::info("Loaded \"{}\" configuration", config_path.string());
   } catch (const std::exception &e) {
-    std::cerr << "Error: Couldn't read " << config_path
-              << " file : " << e.what() << std::endl;
+    spdlog::error("Couldn't read \"{}\" file : {}", config_path.string(),
+                  e.what());
     m_config = nlohmann::json::parse(DEFAULT_CONFIG);
-    std::cout << "Loaded default configuration" << std::endl;
+    spdlog::info("Loaded default configuration");
   }
 
   // Loading style.css
@@ -163,62 +157,88 @@ void managers::Config::load() {
     style_path = m_wayglance_path / "style.css";
 
   try {
-    if (fs::exists(style_path)) {
+    if (!style_path.empty() && fs::exists(style_path)) {
       m_provider->load_from_path(style_path);
-      std::cout << "Loaded " << style_path << " stylesheet" << std::endl;
+      spdlog::info("Loaded \"{}\" stylesheet", style_path.string());
     } else {
       m_provider->load_from_data(std::string(DEFAULT_STYLE));
-      std::cout << "Loaded default stylesheet" << std::endl;
+      spdlog::info("Loaded default stylesheet");
     }
   } catch (const Glib::Error &e) {
-    std::cerr << "Error: Coudln't load stylesheet: " << e.what() << std::endl;
+    spdlog::error("Couldn't load stylesheet \"{}\": {}", style_path.string(),
+                  e.what());
     m_provider->load_from_data(std::string(DEFAULT_STYLE));
-    std::cout << "Loaded default stylesheet" << std::endl;
+    spdlog::info("Loaded default stylesheet as fallback");
   }
 }
 
-bool managers::Config::create_defaults() {
+fs::path managers::Config::create_defaults() {
+  if (m_wayglance_path.empty())
+    throw std::runtime_error(
+        "Couldn't find default configuration path. Check your $XDG_CONFIG_HOME "
+        "or $HOME environment variables");
+
+  try {
+    if (!fs::exists(m_wayglance_path)) {
+      fs::create_directories(m_wayglance_path);
+      spdlog::debug("Created directory: {}", m_wayglance_path.string());
+    }
+  } catch (const fs::filesystem_error &e) {
+    throw std::runtime_error("Failed to create directory \"" +
+                             m_wayglance_path.string() + "\": " + e.what());
+  }
+
   fs::path config_path = m_wayglance_path / "config.json";
   fs::path style_path = m_wayglance_path / "style.css";
 
-  std::cout << "Creating " << config_path << " file... ";
+  spdlog::info("Creating \"{}\" file...", config_path.string());
   bool config = create_default_file(config_path, DEFAULT_CONFIG);
   if (config)
-    std::cout << "Ok" << std::endl;
+    spdlog::info("Ok");
   else
-    std::cerr << std::endl
-              << "Error: Couldn't create config.json file. Check your "
-                 "$XDG_CONFIG_HOME or $HOME environment variables."
-              << std::endl;
+    throw std::runtime_error("Couldn't create config.json file");
 
-  std::cout << "Creating " << style_path << " file... ";
+  spdlog::info("Creating \"{}\" file...", style_path.string());
   bool style = create_default_file(style_path, DEFAULT_STYLE);
   if (style)
-    std::cout << "Ok" << std::endl;
+    spdlog::info("Ok");
   else
-    std::cerr << std::endl
-              << "Error: Couldn't create style.css file. Check your "
-                 "$XDG_CONFIG_HOME or $HOME environment variables."
-              << std::endl;
+    throw std::runtime_error("Couldn't create style.css file");
 
-  return config && style;
+  return m_wayglance_path;
 }
 
 // Setters
-bool managers::Config::set_custom_config_path(const std::string &path) {
+void managers::Config::set_custom_config_path(const std::string &path) {
   if (!fs::exists(path))
-    return false;
+    throw std::runtime_error("Path \"" + path + "\" does not exist");
+
+  if (fs::is_directory(path))
+    throw std::runtime_error("Path \"" + path +
+                             "\" is a directory, expected a file");
+
+  if (!path.ends_with(".json"))
+    throw std::runtime_error(
+        "Path \"" + path +
+        "\" doesn't have .json extension, expected a json file");
 
   m_custom_config_path = path;
-  return true;
 }
 
-bool managers::Config::set_custom_style_path(const std::string &path) {
+void managers::Config::set_custom_style_path(const std::string &path) {
   if (!fs::exists(path))
-    return false;
+    throw std::runtime_error("Path \"" + path + "\" does not exist");
+
+  if (fs::is_directory(path))
+    throw std::runtime_error("Path \"" + path +
+                             "\" is a directory, expected a file");
+
+  if (!path.ends_with(".css"))
+    throw std::runtime_error(
+        "Path \"" + path +
+        "\" doesn't have .css extension, expected a css file");
 
   m_custom_style_path = path;
-  return true;
 }
 
 // Getters

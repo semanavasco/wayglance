@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Wayglance](https://img.shields.io/badge/version-0.0.31-red)
+![Wayglance](https://img.shields.io/badge/version-0.0.33-red)
 ![C++](https://img.shields.io/badge/C%2B%2B-20-blue?logo=cplusplus)
 ![CMake](https://img.shields.io/badge/CMake-3.15+-blue?logo=cmake)
 ![GTK](https://img.shields.io/badge/GTK-4.0-blue?logo=gtk)
@@ -234,7 +234,7 @@ As a learning project, there are several areas I'm aware need improvement:
 **Short-term goals:**
 
 - [🔄] Add proper exception handling and validation
-- [⏳] Improve managers
+- [🔄] Improve managers
 - [⏳] Implement configuration validation
 - [⏳] Add logging system
 - [⏳] Create unit tests

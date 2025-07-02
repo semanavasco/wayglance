@@ -28,6 +28,7 @@ pkg_check_modules(GTKMM REQUIRED gtkmm-4.0 gtk4-layer-shell-0)
 
 # VCPKG dependencies
 find_package(nlohmann_json REQUIRED)
+find_package(spdlog REQUIRED)
 
 
 # --- Creating the executable ---
@@ -46,6 +47,7 @@ target_include_directories(wayglance PUBLIC ${GTKMM_INCLUDE_DIRS})
 target_link_libraries(wayglance PUBLIC
         ${GTKMM_LIBRARIES}
         nlohmann_json::nlohmann_json
+	spdlog::spdlog
 )
 
 # Message once CMake is done

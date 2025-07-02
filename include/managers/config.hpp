@@ -13,59 +13,75 @@ namespace wayglance::managers {
 
 /**
  * @class Config
- * @brief The Config handles configuration loading, creation and default
- * fallbacks.
+ * @brief Configuration manager that handles loading, parsing, and providing
+ * access to the application's configuration.
+ *
+ * The Config class manages all configuration aspects of Wayglance including:
+ * - JSON configuration file loading and parsing
+ * - CSS stylesheet loading and management
+ * - Default configuration files creation
+ * - Custom configuration and style path handling
+ * - Fallback to default values when configuration is missing
  */
 class Config {
 public:
+  /**
+   * @brief Constructs a Config manager and initializes default paths.
+   */
   Config();
+
+  /**
+   * @brief Destructor for the Config manager.
+   */
   ~Config();
 
   // --- Methods ---
   /**
-   * @brief Sets up default paths for wayglance's configuration.
-   */
-  void setup();
-
-  /**
-   * @brief Loads the configuration.
-   * * Parses the available json configuration file or fallbacks to defaults.
-   * The config is stored in the m_config.
-   * * Loads the available css stylesheet file or fallbacks to defaults. The
-   * stylesheet is stored in the m_provider.
+   * @brief Loads the configuration and stylesheet files.
+   *
+   * This method performs the following operations:
+   * - Parses the JSON configuration file
+   * - Loads the CSS stylesheet file
+   * - Stores the parsed configuration in m_config and stylesheet in m_provider
+   * - Handles fallback to defaults when files are not found or invalid
    */
   void load();
 
   /**
-   * @brief Creates default configuration files, overriding the current
-   * configuration if existing.
-   * @return true if the creation succeeded, false otherwise.
+   * @brief Creates default configuration files, overriding existing files.
+   * @return The path where the configuration files were created.
+   * @throws std::runtime_error if configuration path cannot be determined or
+   * files cannot be created.
    */
-  bool create_defaults();
+  fs::path create_defaults();
 
   // --- Setters ---
   /**
    * @brief Sets the configuration file path to use.
    * @param path The path to use as config.json
-   * @return true if it was applied, false otherwise.
+   * @throws std::runtime_error if the path doesn't exist, is a directory, or
+   * doesn't have .json extension
    */
-  bool set_custom_config_path(const std::string &path);
+  void set_custom_config_path(const std::string &path);
 
   /**
    * @brief Sets the stylesheet file path to use.
    * @param path The path to use as style.css
-   * @return true if it was applied, false otherwise.
+   * @throws std::runtime_error if the path doesn't exist, is a directory, or
+   * doesn't have .css extension
    */
-  bool set_custom_style_path(const std::string &path);
+  void set_custom_style_path(const std::string &path);
 
   // --- Getters ---
   /**
-   * @brief Get the parsed configuration.
+   * @brief Gets the parsed JSON configuration object.
+   * @return Const reference to the loaded configuration.
    */
   const nlohmann::json &get_config();
 
   /**
-   * @brief Get the css provider.
+   * @brief Gets the CSS provider containing the loaded stylesheet.
+   * @return RefPtr to the GTK CSS provider with the loaded styles.
    */
   Glib::RefPtr<Gtk::CssProvider> get_provider();
 
