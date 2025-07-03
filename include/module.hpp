@@ -34,6 +34,17 @@ public:
 
 protected:
   /**
+   * @brief Converts a string orientation to a Gtk::Orientation enum value.
+   * @param orientation String representation of orientation ("horizontal" or
+   * "vertical").
+   * @return The corresponding Gtk::Orientation enum value.
+   *
+   * This utility function helps parse orientation configurations from JSON
+   * strings into the appropriate GTK orientation constants for widgets.
+   */
+  Gtk::Orientation string_to_orientation(const std::string &orientation);
+
+  /**
    * @brief Converts a string alignment to a Gtk::Align enum value.
    * @param align String representation of alignment ("start", "center", "end",
    * "fill").

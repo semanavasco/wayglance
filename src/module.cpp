@@ -1,11 +1,11 @@
 #include "module.hpp"
+#include <spdlog/spdlog.h>
 
 // Constructor
 wayglance::Module::Module(const nlohmann::json &config) : Gtk::Box() {
   // Read orientation from config
-  std::string orientation = config.value("orientation", "vertical");
-  set_orientation(orientation == "horizontal" ? Gtk::Orientation::HORIZONTAL
-                                              : Gtk::Orientation::VERTICAL);
+  set_orientation(
+      string_to_orientation(config.value("orientation", "vertical")));
 
   // Read alignment from config
   set_halign(string_to_align(config.value("h-align", "center")));
@@ -19,14 +19,29 @@ wayglance::Module::Module(const nlohmann::json &config) : Gtk::Box() {
 wayglance::Module::~Module() {}
 
 // Methods
+Gtk::Orientation
+wayglance::Module::string_to_orientation(const std::string &orientation) {
+  if (orientation == "horizontal")
+    return Gtk::Orientation::HORIZONTAL;
+
+  if (orientation != "vertical")
+    spdlog::warn("Incorrect orientation, falling back to \"vertical\"");
+
+  return Gtk::Orientation::VERTICAL;
+}
+
 Gtk::Align wayglance::Module::string_to_align(const std::string &align) {
   if (align == "start")
     return Gtk::Align::START;
+
   if (align == "end")
     return Gtk::Align::END;
+
   if (align == "fill")
     return Gtk::Align::FILL;
-  if (align == "center")
-    return Gtk::Align::CENTER;
+
+  if (align != "center")
+    spdlog::warn("Incorrect alignment, falling back to \"center\"");
+
   return Gtk::Align::CENTER;
 }
