@@ -89,7 +89,7 @@ All modules are **highly configurable** through JSON configuration files and **f
 sudo pacman -S base-devel gtkmm-4.0 gtk4-layer-shell cmake vcpkg
 
 # VCPKG dependencies
-vcpkg install nlohmann-json bfgroup-lyra
+vcpkg install nlohmann-json bfgroup-lyra spdlog
 ```
 
 ### Building
