@@ -5,7 +5,8 @@
 #include <gdkmm/display.h>
 #include <gdkmm/monitor.h>
 #include <gtkmm.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
+#include <stdexcept>
 #include <unordered_set>
 
 extern "C" {
@@ -42,7 +43,11 @@ wayglance::Shell::Shell(std::shared_ptr<managers::Config> config_manager,
   Gtk::CssProvider::add_provider_for_display(get_display(),
                                              m_config_manager->get_provider(),
                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
-  load_modules();
+  try {
+    load_modules();
+  } catch (const std::exception &e) {
+    spdlog::error("Couldn't load modules : {}", e.what());
+  }
 }
 
 // Destructor
@@ -104,10 +109,9 @@ void wayglance::Shell::setup_module_box(Gtk::Box &box, const std::string &name,
 void wayglance::Shell::load_modules() {
   auto config = m_config_manager->get_config();
 
-  if (!config.contains("modules")) {
-    std::cerr << "Error: No modules list was found in the config" << std::endl;
-    return;
-  }
+  if (!config.contains("modules"))
+    throw std::runtime_error(
+        "No modules list was found in the configuration file");
 
   std::unordered_set<std::string> loaded_modules;
 
@@ -116,15 +120,14 @@ void wayglance::Shell::load_modules() {
     std::string position = module_config.value("position", "middle-center");
 
     if (name.empty()) {
-      std::cerr << "Warning: Skipping malformed module entry" << std::endl;
+      spdlog::warn("Skipping malformed module entry");
       continue;
     }
 
     // Skip if module is already loaded
     const auto [_, inserted] = loaded_modules.emplace(name);
     if (!inserted) {
-      std::cerr << "Warning: Skipping duplicate module entry '" << name << "'"
-                << std::endl;
+      spdlog::warn("Skipping duplicate module entry \"{}\"", name);
       continue;
     }
 
@@ -149,9 +152,9 @@ void wayglance::Shell::load_modules() {
     else if (position == "bottom-right")
       target_box = &m_bottom_right_box;
     else {
-      std::cout << "Warning: Unrecognized module position \"" << position
-                << "\" for module \"" << name
-                << "\", defaulting to middle-center" << std::endl;
+      spdlog::warn("Warning: Unrecognized module position \"{}\" for module "
+                   "\"{}\", defaulting to middle-center",
+                   position, name);
       target_box = &m_middle_center_box;
     }
 
@@ -165,7 +168,6 @@ void wayglance::Shell::load_modules() {
       target_box->append(*Gtk::make_managed<wayglance::modules::System>(
           config.value("system", nlohmann::json::object())));
     else
-      std::cerr << "Warning: Unrecognized module '" << name
-                << "' found, skipping it" << std::endl;
+      spdlog::warn("Unrecognized module \"{}\" found, skipping it", name);
   }
 }

@@ -1,8 +1,8 @@
 #include "modules/player.hpp"
 #include "glibmm/main.h"
 #include <cstdio>
-#include <iostream>
 #include <map>
+#include <spdlog/spdlog.h>
 #include <vector>
 
 using namespace wayglance;
@@ -131,11 +131,10 @@ void modules::Player::get_player_proxy() {
           m_player_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
 
           if (!m_player_proxy) {
-            std::cerr << "Error: Couldn't connect to media player via DBus"
-                      << std::endl;
+            spdlog::error("Couldn't connect to media player via DBus");
             return;
           }
-          std::cout << "Successfully connected to media player" << std::endl;
+          spdlog::debug("Successfully connected to media player");
 
           try {
             auto bus =
@@ -157,9 +156,9 @@ void modules::Player::get_player_proxy() {
                   path);
             }
           } catch (const Glib::Error &e) {
-            std::cerr
-                << "Error: Couldn't subscribe to DBus PropertiesChanged signal"
-                << e.what() << std::endl;
+            spdlog::error(
+                "Couldn't subscribe to DBus PropertiesChanged signal : {}",
+                e.what());
           }
 
           // Setting initial state
@@ -171,7 +170,7 @@ void modules::Player::get_player_proxy() {
         Gio::DBus::BusType::SESSION, name, path, properties_interface);
 
   } catch (const Glib::Error &e) {
-    std::cerr << "Error: Couldn't create DBus proxys" << e.what() << std::endl;
+    spdlog::error("Couldn't create DBus proxys : {}", e.what());
     // Set pointers to nullptr to indicate failure
     m_player_proxy.reset();
     m_properties_proxy.reset();
@@ -183,8 +182,7 @@ void modules::Player::on_prev_clicked() {
     if (m_player_proxy)
       m_player_proxy->call("Previous");
   } catch (const std::exception &e) {
-    std::cerr << "Error: Couldn't jump to previous track: " << e.what()
-              << std::endl;
+    spdlog::error("Couldn't jump to previous track : {}", e.what());
   }
 }
 
@@ -193,8 +191,7 @@ void modules::Player::on_play_pause_clicked() {
     if (m_player_proxy)
       m_player_proxy->call("PlayPause");
   } catch (const std::exception &e) {
-    std::cerr << "Error: Couldn't toggle play/pause on track: " << e.what()
-              << std::endl;
+    spdlog::error("Couldn't toggle play/pause on track : {}", e.what());
   }
 }
 
@@ -203,8 +200,7 @@ void modules::Player::on_next_clicked() {
     if (m_player_proxy)
       m_player_proxy->call("Next");
   } catch (const std::exception &e) {
-    std::cerr << "Error: Couldn't jump to next track: " << e.what()
-              << std::endl;
+    spdlog::error("Couldn't jump to next track : {}", e.what());
   }
 }
 
@@ -253,7 +249,7 @@ void modules::Player::get_status() {
       }
     }
   } catch (const Glib::Error &e) {
-    std::cerr << "Error: Couldn't get status : " << e.what() << std::endl;
+    spdlog::error("Error: Couldn't get status : {}", e.what());
     m_status = "Error";
     m_playing = false;
     m_paused = false;
@@ -324,7 +320,7 @@ void modules::Player::get_metadata() {
         m_duration = static_cast<gint64>(duration_variant.get());
     }
   } catch (const Glib::Error &e) {
-    std::cerr << "Error: Couldn't get metadata : " << e.what() << std::endl;
+    spdlog::error("Error: Couldn't get metadata : {}", e.what());
     m_track = "Nothing's playing currently...";
     m_duration = 0;
   }
