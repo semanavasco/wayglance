@@ -233,10 +233,10 @@ As a learning project, there are several areas I'm aware need improvement:
 
 **Short-term goals:**
 
+- [✅] Add logging system
 - [🔄] Add proper exception handling and validation
 - [🔄] Improve managers
 - [⏳] Implement configuration validation
-- [⏳] Add logging system
 - [⏳] Create unit tests
 - [⏳] Performance optimizations
 
