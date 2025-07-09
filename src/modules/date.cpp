@@ -23,12 +23,15 @@ modules::Date::Date(const nlohmann::json &config) : Module(config) {
 
   // Configuring timer
   update_labels();
-  Glib::signal_timeout().connect(sigc::mem_fun(*this, &Date::update_labels),
-                                 1000);
+  m_update_timer = Glib::signal_timeout().connect(
+      sigc::mem_fun(*this, &Date::update_labels), 1000);
 }
 
 // Destructor
-modules::Date::~Date() {}
+modules::Date::~Date() {
+  if (m_update_timer.connected())
+    m_update_timer.disconnect();
+}
 
 // Methods
 void modules::Date::load_config(const nlohmann::json &config) {

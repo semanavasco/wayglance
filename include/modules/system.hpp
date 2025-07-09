@@ -1,6 +1,7 @@
 #pragma once
 
 #include "module.hpp"
+#include "sigc++/connection.h"
 #include <string>
 
 namespace wayglance::modules {
@@ -49,6 +50,8 @@ private:
   std::string m_net_interface;
 
   // State
+  sigc::connection m_update_timer;
+
   long m_prev_idle_time = 0;
   long m_prev_total_time = 0;
 

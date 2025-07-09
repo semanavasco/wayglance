@@ -16,7 +16,7 @@
 using namespace wayglance;
 
 namespace {
-constexpr std::string_view WAYGLANCE_VERSION = "0.0.35";
+constexpr std::string_view WAYGLANCE_VERSION = "0.0.36";
 }
 
 // Methods

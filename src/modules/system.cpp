@@ -38,12 +38,15 @@ modules::System::System(const nlohmann::json &config) : Module(config) {
 
   // Start the timer
   on_update_timer();
-  Glib::signal_timeout().connect(sigc::mem_fun(*this, &System::on_update_timer),
-                                 m_update_interval);
+  m_update_timer = Glib::signal_timeout().connect(
+      sigc::mem_fun(*this, &System::on_update_timer), m_update_interval);
 }
 
 // Destructor
-modules::System::~System() {}
+modules::System::~System() {
+  if (m_update_timer.connected())
+    m_update_timer.disconnect();
+}
 
 // Methods
 void modules::System::load_config(const nlohmann::json &config) {

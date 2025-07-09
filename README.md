@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Wayglance](https://img.shields.io/badge/version-0.0.35-red)
+![Wayglance](https://img.shields.io/badge/version-0.0.36-red)
 ![C++](https://img.shields.io/badge/C%2B%2B-20-blue?logo=cplusplus)
 ![CMake](https://img.shields.io/badge/CMake-3.15+-blue?logo=cmake)
 ![GTK](https://img.shields.io/badge/GTK-4.0-blue?logo=gtk)
