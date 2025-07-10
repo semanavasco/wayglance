@@ -90,12 +90,9 @@ private:
   Glib::RefPtr<Gio::DBus::Proxy> m_properties_proxy;
 
   // Interface names
-  static constexpr const char *MPRIS_PLAYER_INTERFACE =
-      "org.mpris.MediaPlayer2.Player";
-  static constexpr const char *MPRIS_PROPERTIES_INTERFACE =
-      "org.freedesktop.DBus.Properties";
-  static constexpr const char *MPRIS_PLAYER_SERVICE =
-      "org.mpris.MediaPlayer2.playerctld";
+  static constexpr const char *MPRIS_PLAYER_INTERFACE = "org.mpris.MediaPlayer2.Player";
+  static constexpr const char *MPRIS_PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties";
+  static constexpr const char *MPRIS_PLAYER_SERVICE = "org.mpris.MediaPlayer2.playerctld";
   static constexpr const char *MPRIS_OBJECT_PATH = "/org/mpris/MediaPlayer2";
   static constexpr const char *MPRIS_BASE_INTERFACE = "org.mpris.MediaPlayer2";
 
@@ -170,8 +167,7 @@ private:
    * @param state The new connection state.
    * @param error_message Optional error message for Error state.
    */
-  void set_connection_state(ConnectionState state,
-                            const std::string &error_message = "");
+  void set_connection_state(ConnectionState state, const std::string &error_message = "");
 
   /**
    * @brief Gets the current connection state.

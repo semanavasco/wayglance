@@ -69,12 +69,12 @@ modules::Player::Player(const nlohmann::json &config) : Module(config) {
   append(m_button_box);
 
   // Registering event handlers
-  m_prev_connection = m_prev_button.signal_clicked().connect(
-      sigc::mem_fun(*this, &Player::on_prev_clicked));
+  m_prev_connection =
+      m_prev_button.signal_clicked().connect(sigc::mem_fun(*this, &Player::on_prev_clicked));
   m_play_pause_connection = m_play_pause_button.signal_clicked().connect(
       sigc::mem_fun(*this, &Player::on_play_pause_clicked));
-  m_next_connection = m_next_button.signal_clicked().connect(
-      sigc::mem_fun(*this, &Player::on_next_clicked));
+  m_next_connection =
+      m_next_button.signal_clicked().connect(sigc::mem_fun(*this, &Player::on_next_clicked));
 
   // Setting up proxy
   get_player_proxy();
@@ -111,13 +111,11 @@ void modules::Player::load_config(const nlohmann::json &config) {
   else {
     // Validate player name format
     if (player_name_str.empty()) {
-      spdlog::warn(
-          "Player: Empty player name provided, using automatic detection");
+      spdlog::warn("Player: Empty player name provided, using automatic detection");
       m_player_name = "";
     } else {
       m_player_name = "org.mpris.MediaPlayer2." + player_name_str;
-      spdlog::debug("Player: Using specific player: {}",
-                    std::string(m_player_name));
+      spdlog::debug("Player: Using specific player: {}", std::string(m_player_name));
     }
   }
 
@@ -125,23 +123,18 @@ void modules::Player::load_config(const nlohmann::json &config) {
   m_use_nerd_font = config.value("nerd-font", false);
 
   // Load button configurations with defaults
-  const nlohmann::json buttons_config =
-      config.value("buttons", nlohmann::json::object());
+  const nlohmann::json buttons_config = config.value("buttons", nlohmann::json::object());
 
-  const auto &btn_prev_cfg =
-      buttons_config.value("previous", nlohmann::json::object());
+  const auto &btn_prev_cfg = buttons_config.value("previous", nlohmann::json::object());
   m_icon_prev = btn_prev_cfg.value("icon", "media-skip-backward-symbolic");
 
-  const auto &btn_next_cfg =
-      buttons_config.value("next", nlohmann::json::object());
+  const auto &btn_next_cfg = buttons_config.value("next", nlohmann::json::object());
   m_icon_next = btn_next_cfg.value("icon", "media-skip-forward-symbolic");
 
-  const auto &btn_play_cfg =
-      buttons_config.value("play", nlohmann::json::object());
+  const auto &btn_play_cfg = buttons_config.value("play", nlohmann::json::object());
   m_icon_play = btn_play_cfg.value("icon", "media-playback-start-symbolic");
 
-  const auto &btn_pause_cfg =
-      buttons_config.value("pause", nlohmann::json::object());
+  const auto &btn_pause_cfg = buttons_config.value("pause", nlohmann::json::object());
   m_icon_pause = btn_pause_cfg.value("icon", "media-playback-pause-symbolic");
 }
 
@@ -163,39 +156,32 @@ void modules::Player::get_player_proxy() {
           m_player_proxy = Gio::DBus::Proxy::create_for_bus_finish(result);
 
           if (!m_player_proxy) {
-            set_connection_state(ConnectionState::Error,
-                                 "Failed to create player proxy");
+            set_connection_state(ConnectionState::Error, "Failed to create player proxy");
             schedule_reconnection();
             return;
           }
           spdlog::debug("Player: Successfully connected to media player");
 
           try {
-            auto bus =
-                Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SESSION);
+            auto bus = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SESSION);
             if (bus) {
               bus->signal_subscribe(
-                  [=,
-                   this](const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                         const Glib::ustring &sender_name,
-                         const Glib::ustring &object_path,
-                         const Glib::ustring &interface_name,
-                         const Glib::ustring &signal_name,
-                         const Glib::VariantContainerBase &parameters) {
+                  [=, this](const Glib::RefPtr<Gio::DBus::Connection> &connection,
+                            const Glib::ustring &sender_name, const Glib::ustring &object_path,
+                            const Glib::ustring &interface_name, const Glib::ustring &signal_name,
+                            const Glib::VariantContainerBase &parameters) {
                     if (interface_name == properties_interface &&
                         signal_name == "PropertiesChanged")
                       update();
                   },
-                  m_player_name, properties_interface, "PropertiesChanged",
-                  path);
+                  m_player_name, properties_interface, "PropertiesChanged", path);
             }
           } catch (const Glib::Error &e) {
             spdlog::error("Player: Couldn't subscribe to DBus "
                           "PropertiesChanged signal : {}",
                           e.what());
-            set_connection_state(
-                ConnectionState::Error,
-                std::string("Failed to subscribe to signals: ") + e.what());
+            set_connection_state(ConnectionState::Error,
+                                 std::string("Failed to subscribe to signals: ") + e.what());
             return;
           }
 
@@ -205,8 +191,8 @@ void modules::Player::get_player_proxy() {
         });
 
     // Creating properties interface proxy
-    m_properties_proxy = Gio::DBus::Proxy::create_for_bus_sync(
-        Gio::DBus::BusType::SESSION, name, path, properties_interface);
+    m_properties_proxy = Gio::DBus::Proxy::create_for_bus_sync(Gio::DBus::BusType::SESSION, name,
+                                                               path, properties_interface);
   } catch (const Glib::Error &e) {
     spdlog::error("Player: Couldn't create DBus proxies : {}", e.what());
     m_player_proxy.reset();
@@ -278,8 +264,7 @@ void modules::Player::get_status() {
     call_result.get_child(property_value_variant, 0);
 
     auto status_variant_string =
-        Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::ustring>>(
-            property_value_variant.get());
+        Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::ustring>>(property_value_variant.get());
 
     if (status_variant_string) {
       m_status = status_variant_string.get();
@@ -299,12 +284,10 @@ void modules::Player::get_status() {
     m_status = "Unknown";
     m_playing = false;
     m_paused = false;
-    set_connection_state(ConnectionState::Error,
-                         "Failed to get status: " + std::string(e.what()));
+    set_connection_state(ConnectionState::Error, "Failed to get status: " + std::string(e.what()));
   } catch (const std::exception &e) {
     spdlog::error("Player: Unexpected error getting status: {}", e.what());
-    set_connection_state(ConnectionState::Error,
-                         "Unexpected error: " + std::string(e.what()));
+    set_connection_state(ConnectionState::Error, "Unexpected error: " + std::string(e.what()));
   }
 }
 
@@ -319,9 +302,9 @@ void modules::Player::get_metadata() {
     Glib::Variant<Glib::VariantBase> property_value_variant;
     call_result.get_child(property_value_variant, 0);
 
-    auto dict_variant = Glib::VariantBase::cast_dynamic<
-        Glib::Variant<std::map<Glib::ustring, Glib::VariantBase>>>(
-        property_value_variant.get());
+    auto dict_variant =
+        Glib::VariantBase::cast_dynamic<Glib::Variant<std::map<Glib::ustring, Glib::VariantBase>>>(
+            property_value_variant.get());
 
     if (!dict_variant) {
       m_track = "Nothing's playing currently...";
@@ -338,8 +321,7 @@ void modules::Player::get_metadata() {
     auto title_it = metadata_map.find("xesam:title");
     if (title_it != metadata_map.end()) {
       auto title_variant =
-          Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::ustring>>(
-              title_it->second);
+          Glib::VariantBase::cast_dynamic<Glib::Variant<Glib::ustring>>(title_it->second);
       if (title_variant)
         m_track = title_variant.get();
     }
@@ -347,8 +329,9 @@ void modules::Player::get_metadata() {
     // Getting the artist(s)
     auto artist_it = metadata_map.find("xesam:artist");
     if (artist_it != metadata_map.end()) {
-      auto artist_variant = Glib::VariantBase::cast_dynamic<
-          Glib::Variant<std::vector<Glib::ustring>>>(artist_it->second);
+      auto artist_variant =
+          Glib::VariantBase::cast_dynamic<Glib::Variant<std::vector<Glib::ustring>>>(
+              artist_it->second);
       if (artist_variant) {
         auto artists = artist_variant.get();
 
@@ -373,8 +356,7 @@ void modules::Player::get_metadata() {
     auto duration_it = metadata_map.find("mpris:length");
     if (duration_it != metadata_map.end()) {
       auto duration_variant =
-          Glib::VariantBase::cast_dynamic<Glib::Variant<guint64>>(
-              duration_it->second);
+          Glib::VariantBase::cast_dynamic<Glib::Variant<guint64>>(duration_it->second);
 
       if (duration_variant)
         m_duration = static_cast<gint64>(duration_variant.get());
@@ -389,8 +371,7 @@ void modules::Player::get_metadata() {
     spdlog::error("Player: Unexpected error getting metadata: {}", e.what());
     m_track = "Nothing's playing currently...";
     m_duration = 0;
-    set_connection_state(ConnectionState::Error,
-                         "Unexpected error: " + std::string(e.what()));
+    set_connection_state(ConnectionState::Error, "Unexpected error: " + std::string(e.what()));
   }
 }
 
@@ -422,8 +403,7 @@ void modules::Player::get_progress() {
     call_result.get_child(property_value_variant, 0);
 
     auto progress_variant =
-        Glib::VariantBase::cast_dynamic<Glib::Variant<gint64>>(
-            property_value_variant.get());
+        Glib::VariantBase::cast_dynamic<Glib::Variant<gint64>>(property_value_variant.get());
 
     if (progress_variant)
       m_position = progress_variant.get();
@@ -466,8 +446,7 @@ void modules::Player::update_info() {
     // Start the progress timer
     if (!m_progress_timeout.connected())
       m_progress_timeout = Glib::signal_timeout().connect(
-          sigc::mem_fun(*this, &Player::update_progress),
-          PROGRESS_UPDATE_INTERVAL);
+          sigc::mem_fun(*this, &Player::update_progress), PROGRESS_UPDATE_INTERVAL);
   } else {
     if (m_use_nerd_font)
       m_play_pause_button.set_label(m_icon_play);
@@ -495,8 +474,8 @@ void modules::Player::update_info() {
     m_progress_bar.set_fraction(0.0);
 }
 
-void modules::Player::set_connection_state(
-    modules::Player::ConnectionState state, const std::string &error_message) {
+void modules::Player::set_connection_state(modules::Player::ConnectionState state,
+                                           const std::string &error_message) {
   // Only update if state actually changed
   if (m_connection_state == state && error_message == m_last_error_message)
     return;
@@ -506,24 +485,23 @@ void modules::Player::set_connection_state(
 
   // Log state transitions
   switch (state) {
-  case ConnectionState::Disconnected:
-    spdlog::debug("Player: Connection state changed to Disconnected");
-    stop_health_check();
-    break;
-  case ConnectionState::Connecting:
-    spdlog::debug("Player: Connection state changed to Connecting");
-    break;
-  case ConnectionState::Connected:
-    spdlog::debug("Player: Connection state changed to Connected");
-    start_health_check();
-    reset_retry_logic();
-    break;
-  case ConnectionState::Error:
-    spdlog::error("Player: Connection state changed to Error - {}",
-                  error_message);
-    stop_health_check();
-    schedule_reconnection();
-    break;
+    case ConnectionState::Disconnected:
+      spdlog::debug("Player: Connection state changed to Disconnected");
+      stop_health_check();
+      break;
+    case ConnectionState::Connecting:
+      spdlog::debug("Player: Connection state changed to Connecting");
+      break;
+    case ConnectionState::Connected:
+      spdlog::debug("Player: Connection state changed to Connected");
+      start_health_check();
+      reset_retry_logic();
+      break;
+    case ConnectionState::Error:
+      spdlog::error("Player: Connection state changed to Error - {}", error_message);
+      stop_health_check();
+      schedule_reconnection();
+      break;
   }
 
   // Update UI to reflect connection state
@@ -555,8 +533,7 @@ bool modules::Player::check_connection_health() {
     return true;
   } catch (const Glib::Error &e) {
     spdlog::error("Player: Health check failed: {}", e.what());
-    set_connection_state(ConnectionState::Error,
-                         std::string("Health check failed: ") + e.what());
+    set_connection_state(ConnectionState::Error, std::string("Health check failed: ") + e.what());
     return false;
   }
 }
@@ -568,8 +545,7 @@ void modules::Player::start_health_check() {
 
   spdlog::debug("Player: Starting health check timer");
   m_health_check_timer = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &Player::check_connection_health),
-      HEALTH_CHECK_INTERVAL);
+      sigc::mem_fun(*this, &Player::check_connection_health), HEALTH_CHECK_INTERVAL);
 }
 
 void modules::Player::stop_health_check() {
@@ -584,39 +560,39 @@ void modules::Player::update_connection_ui() {
   std::string connection_status;
 
   switch (m_connection_state) {
-  case ConnectionState::Disconnected:
-    connection_status = "Media Player Disconnected";
-    // Disable control buttons
-    m_prev_button.set_sensitive(false);
-    m_play_pause_button.set_sensitive(false);
-    m_next_button.set_sensitive(false);
-    break;
+    case ConnectionState::Disconnected:
+      connection_status = "Media Player Disconnected";
+      // Disable control buttons
+      m_prev_button.set_sensitive(false);
+      m_play_pause_button.set_sensitive(false);
+      m_next_button.set_sensitive(false);
+      break;
 
-  case ConnectionState::Connecting:
-    connection_status = "Connecting to Media Player...";
-    // Disable control buttons during connection
-    m_prev_button.set_sensitive(false);
-    m_play_pause_button.set_sensitive(false);
-    m_next_button.set_sensitive(false);
-    break;
+    case ConnectionState::Connecting:
+      connection_status = "Connecting to Media Player...";
+      // Disable control buttons during connection
+      m_prev_button.set_sensitive(false);
+      m_play_pause_button.set_sensitive(false);
+      m_next_button.set_sensitive(false);
+      break;
 
-  case ConnectionState::Connected:
-    // Don't show connection status when connected, show actual track info
-    connection_status = "";
+    case ConnectionState::Connected:
+      // Don't show connection status when connected, show actual track info
+      connection_status = "";
 
-    // Enable control buttons
-    m_prev_button.set_sensitive(true);
-    m_play_pause_button.set_sensitive(true);
-    m_next_button.set_sensitive(true);
-    break;
+      // Enable control buttons
+      m_prev_button.set_sensitive(true);
+      m_play_pause_button.set_sensitive(true);
+      m_next_button.set_sensitive(true);
+      break;
 
-  case ConnectionState::Error:
-    connection_status = "Media Player Error, retrying...";
-    // Disable control buttons on error
-    m_prev_button.set_sensitive(false);
-    m_play_pause_button.set_sensitive(false);
-    m_next_button.set_sensitive(false);
-    break;
+    case ConnectionState::Error:
+      connection_status = "Media Player Error, retrying...";
+      // Disable control buttons on error
+      m_prev_button.set_sensitive(false);
+      m_play_pause_button.set_sensitive(false);
+      m_next_button.set_sensitive(false);
+      break;
   }
 
   // Update track label with connection status when not connected
@@ -638,8 +614,7 @@ void modules::Player::schedule_reconnection() {
   // Calculate the delay
   unsigned int delay = std::min(1000u << m_retry_count, MAX_RETRY_DELAY);
 
-  spdlog::debug("Player: Scheduling reconnection attempt {} in {}ms",
-                m_retry_count + 1, delay);
+  spdlog::debug("Player: Scheduling reconnection attempt {} in {}ms", m_retry_count + 1, delay);
 
   m_retry_timer = Glib::signal_timeout().connect(
       [this]() {

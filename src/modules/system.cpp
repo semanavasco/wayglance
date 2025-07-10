@@ -38,8 +38,8 @@ modules::System::System(const nlohmann::json &config) : Module(config) {
 
   // Start the timer
   on_update_timer();
-  m_update_timer = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &System::on_update_timer), m_update_interval);
+  m_update_timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &System::on_update_timer),
+                                                  m_update_interval);
 }
 
 // Destructor
@@ -95,13 +95,12 @@ void modules::System::update_cpu_usage() {
   // Using a string stream to easily parse the numbers
   std::stringstream ss(line);
   std::string cpu_str;
-  ss >> cpu_str >> user >> nice >> system >> idle >> iowait >> irq >> softirq >>
-      steal >> guest >> guest_nice;
+  ss >> cpu_str >> user >> nice >> system >> idle >> iowait >> irq >> softirq >> steal >> guest >>
+      guest_nice;
 
   // Calculate total times
   long current_idle_time = idle + iowait;
-  long current_total_time =
-      user + nice + system + current_idle_time + irq + softirq + steal;
+  long current_total_time = user + nice + system + current_idle_time + irq + softirq + steal;
 
   // If it's the first time, store the values
   if (m_prev_total_time == 0) {
@@ -178,15 +177,13 @@ void modules::System::update_net_usage() {
   while (std::getline(stat_file, line)) {
     if (line.find(m_net_interface + ":") != std::string::npos) {
       std::string interface_str;
-      long packets_r, errs_r, drop_r, fifo_r, frame_r, compressed_r,
-          multicast_r, packets_s, errs_s, drop_s, fifo_s, colls_s, carrier_s,
-          compressed_s;
+      long packets_r, errs_r, drop_r, fifo_r, frame_r, compressed_r, multicast_r, packets_s, errs_s,
+          drop_s, fifo_s, colls_s, carrier_s, compressed_s;
 
       std::stringstream ss(line);
-      ss >> interface_str >> new_bytes_received >> packets_r >> errs_r >>
-          drop_r >> fifo_r >> frame_r >> compressed_r >> multicast_r >>
-          new_bytes_sent >> packets_s >> errs_s >> drop_s >> fifo_s >>
-          colls_s >> carrier_s >> compressed_s;
+      ss >> interface_str >> new_bytes_received >> packets_r >> errs_r >> drop_r >> fifo_r >>
+          frame_r >> compressed_r >> multicast_r >> new_bytes_sent >> packets_s >> errs_s >>
+          drop_s >> fifo_s >> colls_s >> carrier_s >> compressed_s;
 
       found_interface = true;
       break;
@@ -202,10 +199,8 @@ void modules::System::update_net_usage() {
   if (m_prev_bytes_received > 0 && m_prev_bytes_sent > 0) {
     double interval_s = m_update_interval / 1000.0;
     double download_spd_bps =
-        static_cast<double>(new_bytes_received - m_prev_bytes_received) /
-        interval_s;
-    double upload_spd_bps =
-        static_cast<double>(new_bytes_sent - m_prev_bytes_sent) / interval_s;
+        static_cast<double>(new_bytes_received - m_prev_bytes_received) / interval_s;
+    double upload_spd_bps = static_cast<double>(new_bytes_sent - m_prev_bytes_sent) / interval_s;
 
     // Updating label
     m_net_label.set_text(format_net_label(download_spd_bps, upload_spd_bps));
@@ -216,12 +211,10 @@ void modules::System::update_net_usage() {
   m_prev_bytes_sent = new_bytes_sent;
 }
 
-Glib::ustring modules::System::format_label(const std::string &format,
-                                            const std::string &key,
+Glib::ustring modules::System::format_label(const std::string &format, const std::string &key,
                                             double value) {
   std::string formatted_text = format;
-  std::string value_str =
-      Glib::ustring::format(std::fixed, std::setprecision(1), value);
+  std::string value_str = Glib::ustring::format(std::fixed, std::setprecision(1), value);
 
   size_t pos = formatted_text.find(key);
   if (pos != std::string::npos)
@@ -230,33 +223,26 @@ Glib::ustring modules::System::format_label(const std::string &format,
   return formatted_text;
 }
 
-Glib::ustring modules::System::format_net_label(double download,
-                                                double upload) {
+Glib::ustring modules::System::format_net_label(double download, double upload) {
   std::string net_text = m_net_format;
 
   size_t pos = net_text.find("{download}");
   if (pos != std::string::npos)
-    net_text.replace(pos, std::string("{download}").length(),
-                     format_speed(download));
+    net_text.replace(pos, std::string("{download}").length(), format_speed(download));
 
   pos = net_text.find("{upload}");
   if (pos != std::string::npos)
-    net_text.replace(pos, std::string("{upload}").length(),
-                     format_speed(upload));
+    net_text.replace(pos, std::string("{upload}").length(), format_speed(upload));
 
   return net_text;
 }
 
 Glib::ustring modules::System::format_speed(double speed_bps) {
   if (speed_bps < 1024)
-    return Glib::ustring::format(std::fixed, std::setprecision(0), speed_bps) +
-           " B/s";
+    return Glib::ustring::format(std::fixed, std::setprecision(0), speed_bps) + " B/s";
   else if (speed_bps < 1024 * 1024)
-    return Glib::ustring::format(std::fixed, std::setprecision(1),
-                                 speed_bps / 1024) +
-           " KB/s";
+    return Glib::ustring::format(std::fixed, std::setprecision(1), speed_bps / 1024) + " KB/s";
   else
-    return Glib::ustring::format(std::fixed, std::setprecision(1),
-                                 speed_bps / (1024 * 1024)) +
+    return Glib::ustring::format(std::fixed, std::setprecision(1), speed_bps / (1024 * 1024)) +
            " MB/s";
 }

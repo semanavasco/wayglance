@@ -26,8 +26,7 @@ public:
    * @param config_manager Shared pointer to the configuration manager.
    * @param monitor The GDK monitor this shell window will be displayed on.
    */
-  Shell(std::shared_ptr<wayglance::managers::Config> config_manager,
-        GdkMonitor *monitor);
+  Shell(std::shared_ptr<wayglance::managers::Config> config_manager, GdkMonitor *monitor);
 
   /**
    * @brief Destructor for the Shell window.
@@ -68,8 +67,8 @@ private:
    * Applies configuration settings such as orientation, spacing, margins, and
    * CSS classes based on the box name and configuration file.
    */
-  void setup_module_box(Gtk::Box &box, const std::string &name,
-                        Gtk::Align halign, Gtk::Align valign);
+  void setup_module_box(Gtk::Box &box, const std::string &name, Gtk::Align halign,
+                        Gtk::Align valign);
 
   /**
    * @brief Loads and instantiates modules into their configured positions.

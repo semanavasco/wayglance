@@ -94,8 +94,7 @@ private:
    * @param value The numeric value to insert.
    * @return Formatted label string.
    */
-  Glib::ustring format_label(const std::string &format, const std::string &key,
-                             double value);
+  Glib::ustring format_label(const std::string &format, const std::string &key, double value);
 
   /**
    * @brief Formats the network usage label with download and upload speeds.

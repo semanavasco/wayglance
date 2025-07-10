@@ -4,8 +4,7 @@
 // Constructor
 wayglance::Module::Module(const nlohmann::json &config) : Gtk::Box() {
   // Read orientation from config
-  set_orientation(
-      string_to_orientation(config.value("orientation", "vertical")));
+  set_orientation(string_to_orientation(config.value("orientation", "vertical")));
 
   // Read alignment from config
   set_halign(string_to_align(config.value("h-align", "center")));
@@ -19,8 +18,7 @@ wayglance::Module::Module(const nlohmann::json &config) : Gtk::Box() {
 wayglance::Module::~Module() {}
 
 // Methods
-Gtk::Orientation
-wayglance::Module::string_to_orientation(const std::string &orientation) {
+Gtk::Orientation wayglance::Module::string_to_orientation(const std::string &orientation) {
   if (orientation == "horizontal")
     return Gtk::Orientation::HORIZONTAL;
 

@@ -37,20 +37,15 @@ int managers::Client::run(int argc, char *argv[]) {
   // Options
   auto cli =
       lyra::cli() | lyra::help(show_help) |
-      lyra::opt(show_version)["-v"]["--version"](
-          "Show Wayglance version and exit") |
-      lyra::opt(
-          log_level,
-          "trace|debug|info|warning|error|critical|off")["-l"]["--log-level"](
+      lyra::opt(show_version)["-v"]["--version"]("Show Wayglance version and exit") |
+      lyra::opt(log_level, "trace|debug|info|warning|error|critical|off")["-l"]["--log-level"](
           "Defines the log level to display") |
-      lyra::opt(config_path, "path")["-c"]["--config"](
-          "Overrides default config path (default: "
-          "$XDG_CONFIG_HOME/wayglance/config.json or "
-          "$HOME/.config/wayglance/config.json)") |
-      lyra::opt(style_path, "path")["-s"]["--style"](
-          "Overrides default style path (default: "
-          "$XDG_CONFIG_HOME/wayglance/style.css or "
-          "$HOME/.config/wayglance/style.css)") |
+      lyra::opt(config_path, "path")["-c"]["--config"]("Overrides default config path (default: "
+                                                       "$XDG_CONFIG_HOME/wayglance/config.json or "
+                                                       "$HOME/.config/wayglance/config.json)") |
+      lyra::opt(style_path, "path")["-s"]["--style"]("Overrides default style path (default: "
+                                                     "$XDG_CONFIG_HOME/wayglance/style.css or "
+                                                     "$HOME/.config/wayglance/style.css)") |
       lyra::opt(create_defaults)["-d"]["--create-defaults"](
           "Creates a default configuration at "
           "$XDG_CONFIG_HOME/wayglance or $HOME/.config/wayglance");
@@ -75,9 +70,8 @@ int managers::Client::run(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::from_str(log_level));
 
   // Creating app
-  m_gtk_app =
-      Gtk::Application::create("io.github.semanavasco.wayglance",
-                               Gtk::Application::Flags::HANDLES_COMMAND_LINE);
+  m_gtk_app = Gtk::Application::create("io.github.semanavasco.wayglance",
+                                       Gtk::Application::Flags::HANDLES_COMMAND_LINE);
 
   m_gdk_display = Gdk::Display::get_default();
   if (!m_gdk_display)
@@ -92,12 +86,10 @@ int managers::Client::run(int argc, char *argv[]) {
   if (create_defaults) {
     try {
       fs::path config_path = m_config_manager->create_defaults();
-      spdlog::info("Created default configuration files at \"{}\"",
-                   config_path.string());
+      spdlog::info("Created default configuration files at \"{}\"", config_path.string());
       return EXIT_SUCCESS;
     } catch (const std::exception &e) {
-      spdlog::error("Couldn't create default configuration files : {}",
-                    e.what());
+      spdlog::error("Couldn't create default configuration files : {}", e.what());
       return EXIT_FAILURE;
     }
   }
@@ -142,9 +134,7 @@ void managers::Client::handle_monitors() {
 
   // Connect to monitors change signal
   monitors->signal_items_changed().connect(
-      [this](guint position, guint removed, guint added) {
-        update_monitors();
-      });
+      [this](guint position, guint removed, guint added) { update_monitors(); });
 
   update_monitors();
 }
@@ -159,8 +149,7 @@ void managers::Client::update_monitors() {
   std::unordered_set<GdkMonitor *> current_monitor_set;
   for (guint i = 0; i < current_monitors_list->get_n_items(); ++i) {
     auto monitor_obj = current_monitors_list->get_object(i);
-    current_monitor_set.insert(
-        reinterpret_cast<GdkMonitor *>(monitor_obj->gobj()));
+    current_monitor_set.insert(reinterpret_cast<GdkMonitor *>(monitor_obj->gobj()));
   }
 
   // Removing monitors that are no longer available
@@ -198,8 +187,7 @@ void managers::Client::add_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
   m_windows[monitor->gobj()] = std::move(window);
 }
 
-void managers::Client::remove_monitor(
-    const Glib::RefPtr<Gdk::Monitor> &monitor) {
+void managers::Client::remove_monitor(const Glib::RefPtr<Gdk::Monitor> &monitor) {
   spdlog::info("Monitor removed signal received");
 
   // Find the window associated with the removed monitor

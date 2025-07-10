@@ -14,8 +14,7 @@ extern "C" {
 }
 
 // Constructor
-wayglance::Shell::Shell(std::shared_ptr<managers::Config> config_manager,
-                        GdkMonitor *monitor)
+wayglance::Shell::Shell(std::shared_ptr<managers::Config> config_manager, GdkMonitor *monitor)
     : m_config_manager(config_manager) {
   set_title("Wayglance");
   set_child(m_overlay);
@@ -36,12 +35,10 @@ wayglance::Shell::Shell(std::shared_ptr<managers::Config> config_manager,
   gtk_layer_set_anchor((GtkWindow *)gobj(), GTK_LAYER_SHELL_EDGE_TOP, true);
   gtk_layer_set_anchor((GtkWindow *)gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, true);
 
-  gtk_layer_set_keyboard_mode((GtkWindow *)gobj(),
-                              GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
+  gtk_layer_set_keyboard_mode((GtkWindow *)gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
 
   // Configuration
-  Gtk::CssProvider::add_provider_for_display(get_display(),
-                                             m_config_manager->get_provider(),
+  Gtk::CssProvider::add_provider_for_display(get_display(), m_config_manager->get_provider(),
                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
   try {
     load_modules();
@@ -55,30 +52,21 @@ wayglance::Shell::~Shell() {}
 
 // Methods
 void wayglance::Shell::setup_module_boxes() {
-  setup_module_box(m_top_left_box, "top-left", Gtk::Align::START,
-                   Gtk::Align::START);
-  setup_module_box(m_top_center_box, "top-center", Gtk::Align::CENTER,
-                   Gtk::Align::START);
-  setup_module_box(m_top_right_box, "top-right", Gtk::Align::END,
-                   Gtk::Align::START);
+  setup_module_box(m_top_left_box, "top-left", Gtk::Align::START, Gtk::Align::START);
+  setup_module_box(m_top_center_box, "top-center", Gtk::Align::CENTER, Gtk::Align::START);
+  setup_module_box(m_top_right_box, "top-right", Gtk::Align::END, Gtk::Align::START);
 
-  setup_module_box(m_middle_left_box, "middle-left", Gtk::Align::START,
-                   Gtk::Align::CENTER);
-  setup_module_box(m_middle_center_box, "middle-center", Gtk::Align::CENTER,
-                   Gtk::Align::CENTER);
-  setup_module_box(m_middle_right_box, "middle-right", Gtk::Align::END,
-                   Gtk::Align::CENTER);
+  setup_module_box(m_middle_left_box, "middle-left", Gtk::Align::START, Gtk::Align::CENTER);
+  setup_module_box(m_middle_center_box, "middle-center", Gtk::Align::CENTER, Gtk::Align::CENTER);
+  setup_module_box(m_middle_right_box, "middle-right", Gtk::Align::END, Gtk::Align::CENTER);
 
-  setup_module_box(m_bottom_left_box, "bottom-left", Gtk::Align::START,
-                   Gtk::Align::END);
-  setup_module_box(m_bottom_center_box, "bottom-center", Gtk::Align::CENTER,
-                   Gtk::Align::END);
-  setup_module_box(m_bottom_right_box, "bottom-right", Gtk::Align::END,
-                   Gtk::Align::END);
+  setup_module_box(m_bottom_left_box, "bottom-left", Gtk::Align::START, Gtk::Align::END);
+  setup_module_box(m_bottom_center_box, "bottom-center", Gtk::Align::CENTER, Gtk::Align::END);
+  setup_module_box(m_bottom_right_box, "bottom-right", Gtk::Align::END, Gtk::Align::END);
 }
 
-void wayglance::Shell::setup_module_box(Gtk::Box &box, const std::string &name,
-                                        Gtk::Align halign, Gtk::Align valign) {
+void wayglance::Shell::setup_module_box(Gtk::Box &box, const std::string &name, Gtk::Align halign,
+                                        Gtk::Align valign) {
   // Default configurations
   const auto &config = m_config_manager->get_config();
   Gtk::Orientation orientation = Gtk::Orientation::VERTICAL;
@@ -110,8 +98,7 @@ void wayglance::Shell::load_modules() {
   auto config = m_config_manager->get_config();
 
   if (!config.contains("modules"))
-    throw std::runtime_error(
-        "No modules list was found in the configuration file");
+    throw std::runtime_error("No modules list was found in the configuration file");
 
   std::unordered_set<std::string> loaded_modules;
 
