@@ -134,7 +134,7 @@ void managers::Client::handle_monitors() {
 
   // Connect to monitors change signal
   monitors->signal_items_changed().connect(
-      [this](guint position, guint removed, guint added) { update_monitors(); });
+      [this](guint /* position */, guint /* removed */, guint /* added */) { update_monitors(); });
 
   update_monitors();
 }

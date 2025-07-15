@@ -1,4 +1,5 @@
 #include "modules/player.hpp"
+#include <format>
 #include <spdlog/spdlog.h>
 
 using namespace wayglance;
@@ -166,10 +167,11 @@ void modules::Player::get_player_proxy() {
             auto bus = Gio::DBus::Connection::get_sync(Gio::DBus::BusType::SESSION);
             if (bus) {
               bus->signal_subscribe(
-                  [=, this](const Glib::RefPtr<Gio::DBus::Connection> &connection,
-                            const Glib::ustring &sender_name, const Glib::ustring &object_path,
+                  [=, this](const Glib::RefPtr<Gio::DBus::Connection> & /* connection */,
+                            const Glib::ustring & /* sender_name */,
+                            const Glib::ustring & /* object_path */,
                             const Glib::ustring &interface_name, const Glib::ustring &signal_name,
-                            const Glib::VariantContainerBase &parameters) {
+                            const Glib::VariantContainerBase & /* parameters */) {
                     if (interface_name == properties_interface &&
                         signal_name == "PropertiesChanged")
                       update();
@@ -339,7 +341,7 @@ void modules::Player::get_metadata() {
           if (!m_track.empty())
             m_track += " - ";
 
-          for (int i = 0; i < artists.size(); i++) {
+          for (size_t i = 0; i < artists.size(); i++) {
             m_track += artists[i];
             if (i < artists.size() - 1)
               m_track += ", ";
@@ -383,9 +385,7 @@ Glib::ustring modules::Player::format_time(gint64 microseconds) const {
   gint64 minutes = seconds / 60;
   seconds %= 60;
 
-  char buffer[6];
-  std::snprintf(buffer, sizeof(buffer), "%ld:%02ld", minutes, seconds);
-  return buffer;
+  return std::format("{}:{:02}", minutes, seconds);
 }
 
 void modules::Player::get_progress() {
