@@ -4,6 +4,6 @@
     "checkThirdParty": false
   },
   "diagnostics": {
-    "globals": ["Label", "Container", "Button"]
+    "globals": ["Label", "Container", "Button", "wayglance"]
   }
 }

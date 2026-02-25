@@ -1,7 +1,10 @@
 local function make_builder(type_name, primary_field)
   return function(first, second)
     local config
-    if type(first) == "table" and (not primary_field or first.type == nil) then
+    -- If first is a table, it could be the config OR a value (if primary_field is set)
+    -- We consider it a full config if it doesn't have a type (not a widget)
+    -- and isn't wayglance-generated (which would have __wayglance_gen set)
+    if type(first) == "table" and (not primary_field or (first.type == nil and not first.__wayglance_gen)) then
       config = first
     else
       config = second or {}

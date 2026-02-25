@@ -27,8 +27,6 @@ end
 local WORKSPACES = 5
 local ActiveWS = active_workspace()
 local WinTitle = window_title()
-local Clock = os.date("%H:%M")
-local Date = os.date("%a %d %b")
 
 -- widgets -------------------------------------------------------------------
 
@@ -70,11 +68,21 @@ local function title_widget()
 end
 
 local function clock_widget()
-  return Label(Clock, { id = "clock", valign = "center" })
+  return Label(
+    wayglance.setInterval(function()
+      return os.date("%H:%M")
+    end, 1000),
+    { id = "clock", valign = "center" }
+  )
 end
 
 local function date_widget()
-  return Label(Date, { id = "date", valign = "center" })
+  return Label(
+    wayglance.setInterval(function()
+      return os.date("%a %d %b")
+    end, 60000),
+    { id = "date", valign = "center" }
+  )
 end
 
 local function spacer()
@@ -87,8 +95,6 @@ end
 return function()
   ActiveWS = active_workspace()
   WinTitle = window_title()
-  Clock = os.date("%H:%M")
-  Date = os.date("%a %d %b")
 
   return {
     title = "Bar",

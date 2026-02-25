@@ -50,6 +50,7 @@ impl Config {
 
         let lua = Lua::new();
 
+        lua.load(include_str!("../../res/config.lua")).exec()?;
         lua.load(include_str!("../../res/widgets.lua")).exec()?;
 
         let value: Value = lua.load(&content).set_name("data").eval()?;
