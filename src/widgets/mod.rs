@@ -6,7 +6,10 @@ use anyhow::Result;
 use gtk4::{glib::object::IsA, prelude::WidgetExt};
 use mlua::FromLua;
 
-use crate::shell::gtk_bindings::Alignment;
+use crate::{
+    dynamic::{MaybeDynamic, bind_interval},
+    shell::gtk_bindings::Alignment,
+};
 
 pub trait Widget {
     fn build(&self) -> Result<gtk4::Widget>;
@@ -50,46 +53,142 @@ impl FromLua for Box<dyn Widget> {
 }
 
 struct Properties {
-    pub id: Option<String>,
-    pub class_list: Vec<String>,
-    pub halign: Option<Alignment>,
-    pub valign: Option<Alignment>,
-    pub hexpand: bool,
-    pub vexpand: bool,
+    pub id: MaybeDynamic<Option<String>>,
+    pub class_list: MaybeDynamic<Vec<String>>,
+    pub halign: MaybeDynamic<Option<Alignment>>,
+    pub valign: MaybeDynamic<Option<Alignment>>,
+    pub hexpand: MaybeDynamic<bool>,
+    pub vexpand: MaybeDynamic<bool>,
 }
 
 impl Properties {
     fn parse(table: &mlua::Table) -> mlua::Result<Self> {
         Ok(Properties {
-            id: table.get("id")?,
+            id: table
+                .get::<Option<MaybeDynamic<Option<String>>>>("id")?
+                .unwrap_or(MaybeDynamic::Static(None)),
             class_list: table
-                .get::<Option<Vec<String>>>("class_list")?
-                .unwrap_or_default(),
-            halign: table.get("halign")?,
-            valign: table.get("valign")?,
-            hexpand: table.get::<Option<bool>>("hexpand")?.unwrap_or(false),
-            vexpand: table.get::<Option<bool>>("vexpand")?.unwrap_or(false),
+                .get::<Option<MaybeDynamic<Vec<String>>>>("class_list")?
+                .unwrap_or(MaybeDynamic::Static(Vec::new())),
+            halign: table
+                .get::<Option<MaybeDynamic<Option<Alignment>>>>("halign")?
+                .unwrap_or(MaybeDynamic::Static(None)),
+            valign: table
+                .get::<Option<MaybeDynamic<Option<Alignment>>>>("valign")?
+                .unwrap_or(MaybeDynamic::Static(None)),
+            hexpand: table
+                .get::<Option<MaybeDynamic<bool>>>("hexpand")?
+                .unwrap_or(MaybeDynamic::Static(false)),
+            vexpand: table
+                .get::<Option<MaybeDynamic<bool>>>("vexpand")?
+                .unwrap_or(MaybeDynamic::Static(false)),
         })
     }
 
-    pub fn apply(&self, widget: &impl IsA<gtk4::Widget>) {
-        if let Some(id) = &self.id {
-            widget.set_widget_name(id);
+    pub fn apply(&self, widget: &impl IsA<gtk4::Widget>) -> Result<()> {
+        match &self.id {
+            MaybeDynamic::Static(Some(id)) => widget.set_widget_name(id),
+            MaybeDynamic::Interval { callback, interval } => {
+                bind_interval(
+                    widget,
+                    callback,
+                    *interval,
+                    "id",
+                    |w, id: Option<String>| {
+                        if let Some(id) = id {
+                            w.set_widget_name(&id);
+                        }
+                    },
+                )?;
+            }
+            _ => {}
         }
 
-        for class in &self.class_list {
-            widget.add_css_class(class);
+        match &self.class_list {
+            MaybeDynamic::Static(classes) => {
+                let class_refs: Vec<&str> = classes.iter().map(|s| s.as_str()).collect();
+                widget.set_css_classes(&class_refs);
+            }
+            MaybeDynamic::Interval { callback, interval } => {
+                bind_interval(
+                    widget,
+                    callback,
+                    *interval,
+                    "class_list",
+                    |w, classes: Vec<String>| {
+                        let class_refs: Vec<&str> = classes.iter().map(|s| s.as_str()).collect();
+                        w.set_css_classes(&class_refs);
+                    },
+                )?;
+            }
         }
 
-        if let Some(halign) = self.halign {
-            widget.set_halign(halign.into());
+        match &self.halign {
+            MaybeDynamic::Static(Some(halign)) => widget.set_halign((*halign).into()),
+            MaybeDynamic::Interval { callback, interval } => {
+                bind_interval(
+                    widget,
+                    callback,
+                    *interval,
+                    "halign",
+                    |w, halign: Option<Alignment>| {
+                        if let Some(halign) = halign {
+                            w.set_halign(halign.into());
+                        }
+                    },
+                )?;
+            }
+            _ => {}
         }
 
-        if let Some(valign) = self.valign {
-            widget.set_valign(valign.into());
+        match &self.valign {
+            MaybeDynamic::Static(Some(valign)) => widget.set_valign((*valign).into()),
+            MaybeDynamic::Interval { callback, interval } => {
+                bind_interval(
+                    widget,
+                    callback,
+                    *interval,
+                    "valign",
+                    |w, valign: Option<Alignment>| {
+                        if let Some(valign) = valign {
+                            w.set_valign(valign.into());
+                        }
+                    },
+                )?;
+            }
+            _ => {}
         }
 
-        widget.set_hexpand(self.hexpand);
-        widget.set_vexpand(self.vexpand);
+        match &self.hexpand {
+            MaybeDynamic::Static(hexpand) => widget.set_hexpand(*hexpand),
+            MaybeDynamic::Interval { callback, interval } => {
+                bind_interval(
+                    widget,
+                    callback,
+                    *interval,
+                    "hexpand",
+                    |w, hexpand: bool| {
+                        w.set_hexpand(hexpand);
+                    },
+                )?;
+            }
+        }
+
+        match &self.vexpand {
+            MaybeDynamic::Static(vexpand) => widget.set_vexpand(*vexpand),
+            MaybeDynamic::Interval { callback, interval } => {
+                bind_interval(
+                    widget,
+                    callback,
+                    *interval,
+                    "vexpand",
+                    |w, vexpand: bool| {
+                        w.set_vexpand(vexpand);
+                    },
+                )?;
+            }
+        }
+
+        Ok(())
     }
 }

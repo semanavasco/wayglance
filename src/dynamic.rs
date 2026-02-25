@@ -1,6 +1,14 @@
-use std::any::type_name;
+use std::cell::Cell;
+use std::{any::type_name, time::Duration};
 
+use anyhow::{Context, Result};
+use gtk4::{
+    glib::{self, object::IsA},
+    prelude::WidgetExt,
+};
 use mlua::FromLua;
+
+use crate::shell::config::LUA;
 
 /// A value that is either resolved statically at parse time, or computed dynamically from a lua
 /// callback.
@@ -46,5 +54,42 @@ where
                 ),
             })
     }
+}
+
+pub fn bind_interval<T, W, F>(
+    widget: &W,
+    callback_key: &mlua::RegistryKey,
+    interval: u64,
+    prop_name: &'static str,
+    mut apply_fn: F,
+) -> Result<()>
+where
+    T: mlua::FromLua,
+    W: IsA<gtk4::Widget>,
+    F: FnMut(&W, T) + 'static,
+{
+    let lua = LUA.get().context("Lua instance not initialized")?;
+    let callback = lua.registry_value::<mlua::Function>(callback_key)?;
+    let widget_clone = widget.clone();
+
+    callback
+        .call::<T>(())
+        .map(|val| apply_fn(&widget_clone, val))?;
+
+    let source_id = glib::timeout_add_local(Duration::from_millis(interval), move || {
+        match callback.call::<T>(()) {
+            Ok(val) => apply_fn(&widget_clone, val),
+            Err(e) => tracing::error!("Error calling Lua callback for {}: {}", prop_name, e),
+        }
+        glib::ControlFlow::Continue
+    });
+
+    let source_id = Cell::new(Some(source_id));
+    widget.connect_destroy(move |_| {
+        if let Some(id) = source_id.take() {
+            id.remove();
+        }
+    });
+    Ok(())
 }
 

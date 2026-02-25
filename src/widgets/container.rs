@@ -18,7 +18,7 @@ impl Widget for Container {
     fn build(&self) -> Result<gtk4::Widget> {
         let container = GtkBox::new(self.orientation.into(), self.spacing);
 
-        self.properties.apply(&container);
+        self.properties.apply(&container)?;
 
         for child in &self.children {
             container.append(&child.build()?);

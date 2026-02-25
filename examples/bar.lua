@@ -25,15 +25,15 @@ end
 -- state ---------------------------------------------------------------------
 
 local WORKSPACES = 5
-local ActiveWS = active_workspace()
-local WinTitle = window_title()
 
 -- widgets -------------------------------------------------------------------
 
 local function workspace_button(id)
   return Button(
     Label(tostring(id), {
-      class_list = { id == ActiveWS and "ws-active" or "ws-inactive" },
+      class_list = wayglance.setInterval(function()
+        return { id == active_workspace() and "ws-active" or "ws-inactive" }
+      end, 100),
       valign = "center",
     }),
     {
@@ -61,10 +61,15 @@ local function workspaces_widget()
 end
 
 local function title_widget()
-  return Label(WinTitle, {
-    id = "window-title",
-    valign = "center",
-  })
+  return Label(
+    wayglance.setInterval(function()
+      return window_title()
+    end, 500),
+    {
+      id = "window-title",
+      valign = "center",
+    }
+  )
 end
 
 local function clock_widget()
@@ -93,9 +98,6 @@ end
 -- Layout: [workspaces | title | -> spacer <- | clock | date]
 
 return function()
-  ActiveWS = active_workspace()
-  WinTitle = window_title()
-
   return {
     title = "Bar",
     style = "bar.css",

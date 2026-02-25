@@ -1,12 +1,9 @@
-use std::{cell::Cell, time::Duration};
-
-use anyhow::{Context, Result};
-use gtk4::{Label as GtkLabel, glib, prelude::WidgetExt};
+use anyhow::Result;
+use gtk4::Label as GtkLabel;
 use mlua::FromLua;
 
 use crate::{
-    dynamic::MaybeDynamic,
-    shell::config::LUA,
+    dynamic::{MaybeDynamic, bind_interval},
     widgets::{Properties, Widget},
 };
 
@@ -20,35 +17,23 @@ impl Widget for Label {
         match &self.text {
             MaybeDynamic::Static(text) => {
                 let label = GtkLabel::new(Some(text));
-                self.properties.apply(&label);
+                self.properties.apply(&label)?;
                 Ok(label.into())
             }
             MaybeDynamic::Interval { callback, interval } => {
-                let lua = LUA.get().context("Lua instance not initialized")?;
-                let callback = lua.registry_value::<mlua::Function>(callback)?;
-
-                let label = GtkLabel::new(Some(&callback.call::<String>(())?));
-                self.properties.apply(&label);
+                let label = GtkLabel::new(None);
+                self.properties.apply(&label)?;
 
                 let label_clone = label.clone();
-                let source_id =
-                    glib::timeout_add_local(Duration::from_millis(*interval), move || {
-                        match callback.call::<String>(()) {
-                            Ok(text) => label_clone.set_text(&text),
-                            Err(e) => {
-                                tracing::error!("Error calling Lua callback for Label: {}", e)
-                            }
-                        }
-
-                        glib::ControlFlow::Continue
-                    });
-
-                let source_id = Cell::new(Some(source_id));
-                label.connect_destroy(move |_| {
-                    if let Some(id) = source_id.take() {
-                        id.remove();
-                    }
-                });
+                bind_interval(
+                    &label_clone,
+                    callback,
+                    *interval,
+                    "text",
+                    |w, text: String| {
+                        w.set_text(&text);
+                    },
+                )?;
 
                 Ok(label.into())
             }

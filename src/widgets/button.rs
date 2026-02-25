@@ -17,7 +17,7 @@ impl Widget for Button {
     fn build(&self) -> Result<gtk4::Widget> {
         let button = GtkButton::new();
 
-        self.properties.apply(&button);
+        self.properties.apply(&button)?;
 
         button.set_child(Some(&self.child.build()?));
 
