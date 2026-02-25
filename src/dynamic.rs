@@ -1,3 +1,5 @@
+use std::any::type_name;
+
 use mlua::FromLua;
 
 /// A value that is either resolved statically at parse time, or computed dynamically from a lua
@@ -14,38 +16,35 @@ pub enum MaybeDynamic<T> {
     // For example: after a button click
 }
 
-impl FromLua for MaybeDynamic<String> {
+impl<T> FromLua for MaybeDynamic<T>
+where
+    T: FromLua,
+{
     fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
-        let to = "MaybeDynamic<String>".to_string();
-        let message = Some(
-            "Expected a wayglance dynamic value (e.g. wayglance.setInterval(...))".to_string(),
-        );
+        if let mlua::Value::Table(ref t) = value
+            && t.contains_key("__wayglance_gen").unwrap_or(false)
+        {
+            let callback: mlua::Function = t.get("callback")?;
+            let registry = lua.create_registry_value(callback)?;
+            let interval = t.get("interval")?;
 
-        match value {
-            mlua::Value::String(s) => Ok(MaybeDynamic::Static(s.to_str()?.to_string())),
-            mlua::Value::Table(t) => {
-                if !t.contains_key("__wayglance_gen")? {
-                    return Err(mlua::Error::FromLuaConversionError {
-                        from: "table",
-                        to,
-                        message,
-                    });
-                }
-
-                let callback: mlua::Function = t.get("callback")?;
-                let registry = lua.create_registry_value(callback)?;
-                let interval = t.get("interval")?;
-
-                Ok(MaybeDynamic::Interval {
-                    callback: registry,
-                    interval,
-                })
-            }
-            _ => Err(mlua::Error::FromLuaConversionError {
-                from: value.type_name(),
-                to,
-                message,
-            }),
+            return Ok(MaybeDynamic::Interval {
+                callback: registry,
+                interval,
+            });
         }
+
+        let val_type = value.type_name();
+        T::from_lua(value, lua)
+            .map(MaybeDynamic::Static)
+            .map_err(|_| mlua::Error::FromLuaConversionError {
+                from: val_type,
+                to: type_name::<MaybeDynamic<T>>().to_string(),
+                message: Some(
+                    "Expected a wayglance dynamic value (e.g. wayglance.setInterval(...))"
+                        .to_string(),
+                ),
+            })
     }
 }
+
