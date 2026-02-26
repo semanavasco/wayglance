@@ -1,0 +1,18 @@
+window {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+#clock {
+  font-size: 120px;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: bold;
+  color: #cdd6f4;
+  text-shadow: 0px 4px 10px #cba6f7;
+}
+
+#date {
+  font-size: 32px;
+  font-family: "JetBrains Mono", monospace;
+  color: #a6adc8;
+  text-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+}

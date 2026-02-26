@@ -2,12 +2,15 @@ pub mod config;
 pub mod gtk_bindings;
 mod style;
 
+use std::rc::Rc;
+
 use anyhow::Result;
 use gtk4::{
-    Application, ApplicationWindow,
-    gio::prelude::{ApplicationExt, ApplicationExtManual},
+    Application, ApplicationWindow, gdk,
+    gio::prelude::{ApplicationExt, ApplicationExtManual, ListModelExt},
+    glib,
     glib::ExitCode,
-    prelude::GtkWindowExt,
+    prelude::{Cast, DisplayExt, GtkWindowExt, MonitorExt},
 };
 use gtk4_layer_shell::{Edge, LayerShell};
 
@@ -32,27 +35,85 @@ pub fn run_app(config: Config) -> Result<ExitCode> {
         }
     });
 
+    let config = Rc::new(config);
     app.connect_activate(move |app| {
-        let window = build_window(app, &config);
+        let display = match gdk::Display::default() {
+            Some(d) => d,
+            None => {
+                tracing::error!("No GDK display found");
+                return;
+            }
+        };
 
-        match config.child.build() {
-            Ok(child) => window.set_child(Some(&child)),
-            Err(e) => tracing::error!("Failed to build child widget: {}", e),
+        let monitors = display.monitors();
+
+        for i in 0..monitors.n_items() {
+            if let Some(monitor) = monitors
+                .item(i)
+                .and_then(|m: glib::Object| m.downcast::<gdk::Monitor>().ok())
+            {
+                open_window_for_monitor(app, &config, &monitor);
+            }
         }
 
-        window.present();
+        // React to monitors being added or removed while the app is running
+        //
+        // Removed items have already left the list by the time this fires; their windows are
+        // are closed via `connect_invalidate` registered per-window
+        let app_clone = app.clone();
+        let config_clone = Rc::clone(&config);
+        monitors.connect_items_changed(move |list: &gtk4::gio::ListModel, pos, _removed, added| {
+            for i in pos..(pos + added) {
+                if let Some(monitor) = list
+                    .item(i)
+                    .and_then(|m: glib::Object| m.downcast::<gdk::Monitor>().ok())
+                {
+                    open_window_for_monitor(&app_clone, &config_clone, &monitor);
+                }
+            }
+        });
     });
 
     Ok(app.run_with_args::<&str>(&[]))
 }
 
-fn build_window(app: &Application, config: &Config) -> ApplicationWindow {
+fn open_window_for_monitor(app: &Application, config: &Config, monitor: &gdk::Monitor) {
+    let connector = monitor
+        .connector()
+        .map(|s: glib::GString| s.to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+
+    if config.monitors.len() > 0 && !config.monitors.contains(&connector) {
+        return;
+    }
+
+    tracing::info!("Opening window on monitor: {}", connector);
+
+    let window = build_window(app, config, monitor);
+
+    match config.child.build() {
+        Ok(child) => window.set_child(Some(&child)),
+        Err(e) => tracing::error!("Failed to build child widget: {}", e),
+    }
+
+    // Close this window when its monitor is invalidated
+    let window_clone = window.clone();
+    monitor.connect_invalidate(move |_| {
+        tracing::info!("Monitor {} invalidated, closing window", connector);
+        window_clone.close();
+    });
+
+    window.present();
+}
+
+fn build_window(app: &Application, config: &Config, monitor: &gdk::Monitor) -> ApplicationWindow {
     let window = ApplicationWindow::builder()
         .application(app)
         .title(config.title.clone())
         .build();
 
     window.init_layer_shell();
+    window.set_monitor(Some(monitor));
 
     if config.exclusive_zone {
         window.auto_exclusive_zone_enable();

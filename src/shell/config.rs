@@ -31,6 +31,7 @@ pub struct Config {
     pub exclusive_zone: bool,
     pub anchors: Option<Anchors>,
     pub margins: Option<Margins>,
+    pub monitors: Vec<String>,
     pub child: Box<dyn Widget>,
 }
 
@@ -94,6 +95,9 @@ impl FromLua for Config {
             .unwrap_or(false);
         let anchors = table.get("anchors")?;
         let margins = table.get("margins")?;
+        let monitors = table
+            .get::<Option<Vec<String>>>("monitors")?
+            .unwrap_or_default();
         let child = table.get("child")?;
 
         Ok(Config {
@@ -103,6 +107,7 @@ impl FromLua for Config {
             exclusive_zone,
             anchors,
             margins,
+            monitors,
             child,
         })
     }
