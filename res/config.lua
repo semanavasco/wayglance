@@ -7,3 +7,13 @@ wayglance.setInterval = function(fn, ms)
     interval = ms,
   }
 end
+
+wayglance.onSignal = function(signal, fn)
+  return {
+    __wayglance_dynamic = "signal",
+    callback = fn,
+    signal = signal,
+  }
+end
+
+wayglance.emitSignal = function(signal, data) end

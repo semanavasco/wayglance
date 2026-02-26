@@ -4,9 +4,10 @@ use std::{
 };
 
 use anyhow::{Context, Result, anyhow};
-use mlua::{FromLua, Lua, Value};
+use mlua::{FromLua, Lua, Table as LuaTable, Value as LuaValue};
 
 use crate::{
+    dynamic::SIGNAL_BUS,
     shell::gtk_bindings::{Anchors, Layer, Margins},
     widgets::Widget,
 };
@@ -54,11 +55,21 @@ impl Config {
         lua.load(include_str!("../../res/config.lua")).exec()?;
         lua.load(include_str!("../../res/widgets.lua")).exec()?;
 
-        let value: Value = lua.load(&content).set_name("data").eval()?;
+        let globals = lua.globals();
+        let wayglance: LuaTable = globals.get("wayglance")?;
+        let emit_signal =
+            lua.create_function(|_, (signal, data): (String, Option<LuaValue>)| {
+                let data = data.unwrap_or(LuaValue::Nil);
+                SIGNAL_BUS.with(|bus| bus.borrow().emit(&signal, data));
+                Ok(())
+            })?;
+        wayglance.set("emitSignal", emit_signal)?;
+
+        let value: LuaValue = lua.load(&content).set_name("data").eval()?;
 
         let config = match value {
-            Value::Function(f) => f.call::<Config>(())?,
-            Value::Table(_) => Config::from_lua(value, &lua)?,
+            LuaValue::Function(f) => f.call::<Config>(())?,
+            LuaValue::Table(_) => Config::from_lua(value, &lua)?,
             _ => {
                 anyhow::bail!(
                     "Expected a function or table in config file, got {}",
@@ -75,9 +86,9 @@ impl Config {
 }
 
 impl FromLua for Config {
-    fn from_lua(value: mlua::Value, _: &Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
         let table = match &value {
-            mlua::Value::Table(t) => t,
+            LuaValue::Table(t) => t,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),

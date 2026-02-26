@@ -1,4 +1,6 @@
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
+use std::rc::Rc;
 use std::{any::type_name, time::Duration};
 
 use anyhow::{Context, Result};
@@ -6,7 +8,7 @@ use gtk4::{
     glib::{self, object::IsA},
     prelude::WidgetExt,
 };
-use mlua::{FromLua, Lua, Value as LuaValue};
+use mlua::FromLua;
 
 use crate::shell::config::LUA;
 
@@ -20,16 +22,20 @@ pub enum MaybeDynamic<T> {
         callback: mlua::RegistryKey,
         interval: u64,
     },
-    // TODO Add support for dynamic values updated from a signal instead of an interval
-    // For example: after a button click
+    /// A dynamic value of type `T` returned from the callback whenever any of the specified
+    /// signals are emitted.
+    Signal {
+        callback: mlua::RegistryKey,
+        signals: Vec<String>,
+    },
 }
 
 impl<T> FromLua for MaybeDynamic<T>
 where
     T: FromLua,
 {
-    fn from_lua(value: LuaValue, lua: &Lua) -> mlua::Result<Self> {
-        if let LuaValue::Table(ref t) = value
+    fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
+        if let mlua::Value::Table(ref t) = value
             && let Ok(wayglance_d) = t.get::<String>("__wayglance_dynamic")
         {
             match wayglance_d.as_str() {
@@ -43,12 +49,39 @@ where
                         interval,
                     });
                 }
+                "signal" => {
+                    let callback: mlua::Function = t.get("callback")?;
+                    let registry = lua.create_registry_value(callback)?;
+                    let signals_val: mlua::Value = t.get("signal")?;
+
+                    let signals = match signals_val {
+                        mlua::Value::String(s) => vec![s.to_str()?.to_string()],
+                        mlua::Value::Table(t) => t
+                            .sequence_values::<String>()
+                            .collect::<mlua::Result<Vec<String>>>()?,
+                        _ => {
+                            return Err(mlua::Error::FromLuaConversionError {
+                                from: signals_val.type_name(),
+                                to: "String or Table of Strings".to_string(),
+                                message: Some(
+                                    "Expected a signal name or a list of signal names".to_string(),
+                                ),
+                            });
+                        }
+                    };
+
+                    return Ok(MaybeDynamic::Signal {
+                        callback: registry,
+                        signals,
+                    });
+                }
                 _ => {
                     return Err(mlua::Error::FromLuaConversionError {
                         from: "string",
                         to: type_name::<MaybeDynamic<T>>().to_string(),
                         message: Some(
-                            "Invalid dynamic value type (expected 'interval')".to_string(),
+                            "Invalid dynamic value type (expected 'signal' or 'interval')"
+                                .to_string(),
                         ),
                     });
                 }
@@ -85,6 +118,9 @@ where
             }
             MaybeDynamic::Interval { callback, interval } => {
                 bind_interval(widget, callback, *interval, prop_name, apply_fn)
+            }
+            MaybeDynamic::Signal { callback, signals } => {
+                bind_signals(widget, callback, signals, prop_name, apply_fn)
             }
         }
     }
@@ -124,5 +160,96 @@ where
             id.remove();
         }
     });
+    Ok(())
+}
+
+thread_local! {
+    pub static SIGNAL_BUS: RefCell<SignalBus> = RefCell::new(SignalBus::default());
+}
+
+type SignalCallback = Box<dyn Fn(mlua::Value)>;
+
+#[derive(Default)]
+pub struct SignalBus {
+    listeners: HashMap<String, HashMap<usize, SignalCallback>>,
+    next_id: usize,
+}
+
+impl SignalBus {
+    pub fn subscribe(&mut self, signal: &str, cb: SignalCallback) -> usize {
+        let id = self.next_id;
+        self.next_id += 1;
+        self.listeners
+            .entry(signal.to_string())
+            .or_default()
+            .insert(id, cb);
+        id
+    }
+
+    pub fn unsubscribe(&mut self, signal: &str, id: usize) {
+        if let Some(callbacks) = self.listeners.get_mut(signal) {
+            callbacks.remove(&id);
+        }
+    }
+
+    pub fn emit(&self, signal: &str, data: mlua::Value) {
+        if let Some(callbacks) = self.listeners.get(signal) {
+            for cb in callbacks.values() {
+                cb(data.clone());
+            }
+        }
+    }
+}
+
+fn bind_signals<T, W, F>(
+    widget: &W,
+    callback_key: &mlua::RegistryKey,
+    signals: &[String],
+    prop_name: &'static str,
+    mut apply_fn: F,
+) -> Result<()>
+where
+    T: FromLua,
+    W: IsA<gtk4::Widget>,
+    F: FnMut(&W, T) + 'static,
+{
+    let lua = LUA.get().context("Lua instance not initialized")?;
+    let callback = lua.registry_value::<mlua::Function>(callback_key)?;
+    let widget_clone = widget.clone();
+
+    match callback.call::<T>(()) {
+        Ok(val) => apply_fn(&widget_clone, val),
+        Err(e) => tracing::error!("Error calling Lua callback for {}: {}", prop_name, e),
+    }
+
+    let apply_fn_cell = Rc::new(RefCell::new(apply_fn));
+    let callback_rc = Rc::new(callback);
+
+    let mut subscription_ids = Vec::new();
+
+    for signal in signals {
+        let widget_clone = widget.clone();
+        let apply_fn_cell = Rc::clone(&apply_fn_cell);
+        let callback_rc = Rc::clone(&callback_rc);
+        let prop_name = prop_name;
+
+        let listener = Box::new(move |data: mlua::Value| match callback_rc.call::<T>(data) {
+            Ok(val) => apply_fn_cell.borrow_mut()(&widget_clone, val),
+            Err(e) => tracing::error!("Error calling Lua callback for {}: {}", prop_name, e),
+        });
+
+        let subscribe_id = SIGNAL_BUS.with(|bus| bus.borrow_mut().subscribe(signal, listener));
+        subscription_ids.push((signal.clone(), subscribe_id));
+    }
+
+    widget.connect_destroy(move |_| {
+        SIGNAL_BUS.with(|bus| {
+            let mut bus = bus.borrow_mut();
+            for (signal, id) in &subscription_ids {
+                bus.unsubscribe(signal, *id);
+            }
+        });
+    });
+
     Ok(())
 }
