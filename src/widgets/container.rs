@@ -1,6 +1,6 @@
 use anyhow::Result;
 use gtk4::{Box as GtkBox, prelude::BoxExt};
-use mlua::FromLua;
+use mlua::{FromLua, Lua, Value as LuaValue};
 
 use crate::{
     shell::gtk_bindings::Orientation,
@@ -29,9 +29,9 @@ impl Widget for Container {
 }
 
 impl FromLua for Container {
-    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
         let table = match &value {
-            mlua::Value::Table(t) => t,
+            LuaValue::Table(t) => t,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),

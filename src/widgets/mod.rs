@@ -4,21 +4,18 @@ mod label;
 
 use anyhow::Result;
 use gtk4::{glib::object::IsA, prelude::WidgetExt};
-use mlua::FromLua;
+use mlua::{FromLua, Lua, Value as LuaValue};
 
-use crate::{
-    dynamic::{MaybeDynamic, bind_interval},
-    shell::gtk_bindings::Alignment,
-};
+use crate::{dynamic::MaybeDynamic, shell::gtk_bindings::Alignment};
 
 pub trait Widget {
     fn build(&self) -> Result<gtk4::Widget>;
 }
 
 impl FromLua for Box<dyn Widget> {
-    fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, lua: &Lua) -> mlua::Result<Self> {
         let table = match &value {
-            mlua::Value::Table(t) => t,
+            LuaValue::Table(t) => t,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),
@@ -86,108 +83,38 @@ impl Properties {
     }
 
     pub fn apply(&self, widget: &impl IsA<gtk4::Widget>) -> Result<()> {
-        match &self.id {
-            MaybeDynamic::Static(Some(id)) => widget.set_widget_name(id),
-            MaybeDynamic::Interval { callback, interval } => {
-                bind_interval(
-                    widget,
-                    callback,
-                    *interval,
-                    "id",
-                    |w, id: Option<String>| {
-                        if let Some(id) = id {
-                            w.set_widget_name(&id);
-                        }
-                    },
-                )?;
-            }
-            _ => {}
-        }
+        let widget = widget.as_ref();
 
-        match &self.class_list {
-            MaybeDynamic::Static(classes) => {
-                let class_refs: Vec<&str> = classes.iter().map(|s| s.as_str()).collect();
-                widget.set_css_classes(&class_refs);
+        self.id.bind(widget, "id", |w, id| {
+            if let Some(id) = id {
+                w.set_widget_name(&id);
             }
-            MaybeDynamic::Interval { callback, interval } => {
-                bind_interval(
-                    widget,
-                    callback,
-                    *interval,
-                    "class_list",
-                    |w, classes: Vec<String>| {
-                        let class_refs: Vec<&str> = classes.iter().map(|s| s.as_str()).collect();
-                        w.set_css_classes(&class_refs);
-                    },
-                )?;
-            }
-        }
+        })?;
 
-        match &self.halign {
-            MaybeDynamic::Static(Some(halign)) => widget.set_halign((*halign).into()),
-            MaybeDynamic::Interval { callback, interval } => {
-                bind_interval(
-                    widget,
-                    callback,
-                    *interval,
-                    "halign",
-                    |w, halign: Option<Alignment>| {
-                        if let Some(halign) = halign {
-                            w.set_halign(halign.into());
-                        }
-                    },
-                )?;
-            }
-            _ => {}
-        }
+        self.class_list.bind(widget, "class_list", |w, classes| {
+            let class_refs: Vec<&str> = classes.iter().map(|s| s.as_str()).collect();
+            w.set_css_classes(&class_refs);
+        })?;
 
-        match &self.valign {
-            MaybeDynamic::Static(Some(valign)) => widget.set_valign((*valign).into()),
-            MaybeDynamic::Interval { callback, interval } => {
-                bind_interval(
-                    widget,
-                    callback,
-                    *interval,
-                    "valign",
-                    |w, valign: Option<Alignment>| {
-                        if let Some(valign) = valign {
-                            w.set_valign(valign.into());
-                        }
-                    },
-                )?;
+        self.halign.bind(widget, "halign", |w, halign| {
+            if let Some(halign) = halign {
+                w.set_halign(halign.into());
             }
-            _ => {}
-        }
+        })?;
 
-        match &self.hexpand {
-            MaybeDynamic::Static(hexpand) => widget.set_hexpand(*hexpand),
-            MaybeDynamic::Interval { callback, interval } => {
-                bind_interval(
-                    widget,
-                    callback,
-                    *interval,
-                    "hexpand",
-                    |w, hexpand: bool| {
-                        w.set_hexpand(hexpand);
-                    },
-                )?;
+        self.valign.bind(widget, "valign", |w, valign| {
+            if let Some(valign) = valign {
+                w.set_valign(valign.into());
             }
-        }
+        })?;
 
-        match &self.vexpand {
-            MaybeDynamic::Static(vexpand) => widget.set_vexpand(*vexpand),
-            MaybeDynamic::Interval { callback, interval } => {
-                bind_interval(
-                    widget,
-                    callback,
-                    *interval,
-                    "vexpand",
-                    |w, vexpand: bool| {
-                        w.set_vexpand(vexpand);
-                    },
-                )?;
-            }
-        }
+        self.hexpand.bind(widget, "hexpand", |w, hexpand| {
+            w.set_hexpand(hexpand);
+        })?;
+
+        self.vexpand.bind(widget, "vexpand", |w, vexpand| {
+            w.set_vexpand(vexpand);
+        })?;
 
         Ok(())
     }

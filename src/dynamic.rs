@@ -6,7 +6,7 @@ use gtk4::{
     glib::{self, object::IsA},
     prelude::WidgetExt,
 };
-use mlua::FromLua;
+use mlua::{FromLua, Lua, Value as LuaValue};
 
 use crate::shell::config::LUA;
 
@@ -28,18 +28,31 @@ impl<T> FromLua for MaybeDynamic<T>
 where
     T: FromLua,
 {
-    fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
-        if let mlua::Value::Table(ref t) = value
-            && t.contains_key("__wayglance_gen").unwrap_or(false)
+    fn from_lua(value: LuaValue, lua: &Lua) -> mlua::Result<Self> {
+        if let LuaValue::Table(ref t) = value
+            && let Ok(wayglance_d) = t.get::<String>("__wayglance_dynamic")
         {
-            let callback: mlua::Function = t.get("callback")?;
-            let registry = lua.create_registry_value(callback)?;
-            let interval = t.get("interval")?;
+            match wayglance_d.as_str() {
+                "interval" => {
+                    let callback: mlua::Function = t.get("callback")?;
+                    let registry = lua.create_registry_value(callback)?;
+                    let interval = t.get("interval")?;
 
-            return Ok(MaybeDynamic::Interval {
-                callback: registry,
-                interval,
-            });
+                    return Ok(MaybeDynamic::Interval {
+                        callback: registry,
+                        interval,
+                    });
+                }
+                _ => {
+                    return Err(mlua::Error::FromLuaConversionError {
+                        from: "string",
+                        to: type_name::<MaybeDynamic<T>>().to_string(),
+                        message: Some(
+                            "Invalid dynamic value type (expected 'interval')".to_string(),
+                        ),
+                    });
+                }
+            }
         }
 
         let val_type = value.type_name();
@@ -56,7 +69,28 @@ where
     }
 }
 
-pub fn bind_interval<T, W, F>(
+impl<T> MaybeDynamic<T>
+where
+    T: FromLua + Clone,
+{
+    pub fn bind<W, F>(&self, widget: &W, prop_name: &'static str, mut apply_fn: F) -> Result<()>
+    where
+        W: IsA<gtk4::Widget>,
+        F: FnMut(&W, T) + 'static,
+    {
+        match self {
+            MaybeDynamic::Static(val) => {
+                apply_fn(widget, val.clone());
+                Ok(())
+            }
+            MaybeDynamic::Interval { callback, interval } => {
+                bind_interval(widget, callback, *interval, prop_name, apply_fn)
+            }
+        }
+    }
+}
+
+fn bind_interval<T, W, F>(
     widget: &W,
     callback_key: &mlua::RegistryKey,
     interval: u64,
@@ -64,7 +98,7 @@ pub fn bind_interval<T, W, F>(
     mut apply_fn: F,
 ) -> Result<()>
 where
-    T: mlua::FromLua,
+    T: FromLua,
     W: IsA<gtk4::Widget>,
     F: FnMut(&W, T) + 'static,
 {
@@ -92,4 +126,3 @@ where
     });
     Ok(())
 }
-

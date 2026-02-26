@@ -1,9 +1,9 @@
 use anyhow::Result;
 use gtk4::Label as GtkLabel;
-use mlua::FromLua;
+use mlua::{FromLua, Lua, Value as LuaValue};
 
 use crate::{
-    dynamic::{MaybeDynamic, bind_interval},
+    dynamic::MaybeDynamic,
     widgets::{Properties, Widget},
 };
 
@@ -14,37 +14,21 @@ pub struct Label {
 
 impl Widget for Label {
     fn build(&self) -> Result<gtk4::Widget> {
-        match &self.text {
-            MaybeDynamic::Static(text) => {
-                let label = GtkLabel::new(Some(text));
-                self.properties.apply(&label)?;
-                Ok(label.into())
-            }
-            MaybeDynamic::Interval { callback, interval } => {
-                let label = GtkLabel::new(None);
-                self.properties.apply(&label)?;
+        let label = GtkLabel::new(None);
+        self.properties.apply(&label)?;
 
-                let label_clone = label.clone();
-                bind_interval(
-                    &label_clone,
-                    callback,
-                    *interval,
-                    "text",
-                    |w, text: String| {
-                        w.set_text(&text);
-                    },
-                )?;
+        self.text.bind(&label, "text", |w, text| {
+            w.set_text(&text);
+        })?;
 
-                Ok(label.into())
-            }
-        }
+        Ok(label.into())
     }
 }
 
 impl FromLua for Label {
-    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
         let table = match &value {
-            mlua::Value::Table(t) => t,
+            LuaValue::Table(t) => t,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),

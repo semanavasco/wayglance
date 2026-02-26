@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use gtk4::{Button as GtkButton, prelude::ButtonExt};
-use mlua::FromLua;
+use mlua::{FromLua, Lua, Value as LuaValue};
 
 use crate::{
     shell::config::LUA,
@@ -38,9 +38,9 @@ impl Widget for Button {
 }
 
 impl FromLua for Button {
-    fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, lua: &Lua) -> mlua::Result<Self> {
         let table = match &value {
-            mlua::Value::Table(t) => t,
+            LuaValue::Table(t) => t,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),
@@ -50,8 +50,8 @@ impl FromLua for Button {
             }
         };
 
-        let on_click = match table.get::<mlua::Value>("on_click")? {
-            mlua::Value::Function(func) => lua.create_registry_value(func)?,
+        let on_click = match table.get::<LuaValue>("on_click")? {
+            LuaValue::Function(func) => lua.create_registry_value(func)?,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: "non-function",
