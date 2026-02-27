@@ -15,7 +15,8 @@ use crate::{
 static CONFIG_PATH: OnceLock<PathBuf> = OnceLock::new();
 pub static LUA: OnceLock<Lua> = OnceLock::new();
 
-pub fn get_relative_config_dir() -> Result<PathBuf> {
+/// Helper function to get the directory of the currently loaded config file using `CONFIG_PATH`.
+pub fn get_config_dir() -> Result<PathBuf> {
     match CONFIG_PATH.get() {
         Some(path) => Ok(path
             .parent()
@@ -25,18 +26,39 @@ pub fn get_relative_config_dir() -> Result<PathBuf> {
     }
 }
 
+/// The global configuration for wayglance, loaded from a Lua script.
 pub struct Config {
+    /// The title of the window, used to build the `application_id` for GTK.
     pub title: String,
+    /// An optional CSS style to apply to the window, specified as a path to a CSS file relative to
+    /// the config file directory or an absolute path.
     pub style: Option<String>,
+    /// The layer where the window will be placed.
     pub layer: Layer,
+    /// Whether the window should reserve space on the screen (pushing other windows away) or
+    /// overlap them. If true, will use  `auto_exclusive_zone_enable` from gtk layer shell.
     pub exclusive_zone: bool,
+    /// Anchor points for the window to stick to specific edges of the monitor.
     pub anchors: Option<Anchors>,
+    /// Margins to apply on each side of the window, specified in pixels.
     pub margins: Option<Margins>,
+    /// A list of monitor connector names (e.g., "eDP-1", "HDMI-2"...). Empty means all monitors.
     pub monitors: Vec<String>,
+    /// The child widget to display inside the window. The widget is defined as a Lua table with a
+    /// `type` field (e.g., "button", "label"...) and other fields specific to that widget type.
+    /// Widgets are built recursively so one may use container widgets to create complex layouts.
     pub child: Box<dyn Widget>,
 }
 
 impl Config {
+    /// Loads the configuration from the specified Lua file.
+    /// This also initializes the Lua environment and injects the `wayglance` global.
+    /// The Lua file can return either a table (with the config data) or a function (which will be
+    /// called to get the config).
+    ///
+    /// # Errors
+    /// Returns an error if the file doesn't exist, if there's an error reading it, if the Lua code
+    /// is invalid, or if the returned value is not a table or function.
     pub fn load(path: &str) -> Result<Self> {
         let path = Path::new(path);
 

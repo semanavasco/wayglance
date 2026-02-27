@@ -20,5 +20,5 @@ fn main() -> Result<ExitCode> {
 
     let config = Config::load(&cli.config)?;
 
-    run_app(config)
+    Ok(run_app(config))
 }

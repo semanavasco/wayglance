@@ -8,11 +8,21 @@ use mlua::{FromLua, Lua, Value as LuaValue};
 
 use crate::{dynamic::MaybeDynamic, shell::gtk_bindings::Alignment};
 
+/// Base trait for all UI components in wayglance.
 pub trait Widget {
+    /// Builds the corresponding GTK widget.
+    ///
+    /// # Errors
+    /// Returns an error if evaluating a dynamic property fails, or if the GTK widget fails to
+    /// initialize for some reason.
     fn build(&self) -> Result<gtk4::Widget>;
 }
 
 impl FromLua for Box<dyn Widget> {
+    /// Deserializes a Lua table into a specific `Widget` trait object.
+    /// The table must contain a `type` field (e.g., "button", "label") to determine which widget
+    /// to instantiate.
+    /// The rest of the fields are passed to the specific widget's `from_lua` implementation.
     fn from_lua(value: LuaValue, lua: &Lua) -> mlua::Result<Self> {
         let table = match &value {
             LuaValue::Table(t) => t,
@@ -49,6 +59,7 @@ impl FromLua for Box<dyn Widget> {
     }
 }
 
+/// Common properties shared by all widgets (layout, CSS classes, IDs, etc).
 struct Properties {
     pub id: MaybeDynamic<Option<String>>,
     pub class_list: MaybeDynamic<Vec<String>>,
@@ -59,6 +70,10 @@ struct Properties {
 }
 
 impl Properties {
+    /// Parses properties from a Lua table.
+    ///
+    /// Used turbofish syntax extensively to provide defaults for all properties without crashing
+    /// if they are missing from the Lua table but still crashing if they are of the wrong type.
     fn parse(table: &mlua::Table) -> mlua::Result<Self> {
         Ok(Properties {
             id: table
@@ -82,6 +97,13 @@ impl Properties {
         })
     }
 
+    /// Applies the properties to a given GTK widget.
+    /// If a property is dynamic, this method automatically registers the necessary background
+    /// loops and event listeners to keep the widget updated.
+    ///
+    /// # Errors
+    /// Returns an error if evaluating a dynamic property fails, or if the GTK widget fails to
+    /// update for some reason.
     pub fn apply(&self, widget: &impl IsA<gtk4::Widget>) -> Result<()> {
         let widget = widget.as_ref();
 

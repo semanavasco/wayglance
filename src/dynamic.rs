@@ -1,3 +1,8 @@
+//! This module provides the reactivity system for wayglance.
+//!
+//! It allows widget properties to be either static values or dynamic values that update based on
+//! timers (intervals) or event-driven signals.
+
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -12,18 +17,17 @@ use mlua::FromLua;
 
 use crate::shell::config::LUA;
 
-/// A value that is either resolved statically at parse time, or computed dynamically from a lua
-/// callback.
+/// A value that is either resolved statically at parse time, or computed dynamically.
 pub enum MaybeDynamic<T> {
     /// A plain value of type `T`.
     Static(T),
-    /// A dynamic value of type `T` returned from the callback every `interval` ms.
+    /// A dynamic value computed by a Lua callback every `interval` milliseconds.
     Interval {
         callback: mlua::RegistryKey,
         interval: u64,
     },
-    /// A dynamic value of type `T` returned from the callback whenever any of the specified
-    /// signals are emitted.
+    /// A dynamic value computed by a Lua callback whenever any of the specified signals are
+    /// emitted.
     Signal {
         callback: mlua::RegistryKey,
         signals: Vec<String>,
@@ -106,6 +110,13 @@ impl<T> MaybeDynamic<T>
 where
     T: FromLua + Clone,
 {
+    /// Binds this value to a GTK widget property.
+    ///
+    /// - If `Static`: The value is applied immediately.
+    /// - If `Interval`: A GLib timeout is set up to update the property periodically.
+    /// - If `Signal`: The property updates whenever one of the signals is emitted.
+    ///
+    /// All dynamic bindings are automatically cleaned up when the widget is destroyed.
     pub fn bind<W, F>(&self, widget: &W, prop_name: &'static str, mut apply_fn: F) -> Result<()>
     where
         W: IsA<gtk4::Widget>,
@@ -126,6 +137,7 @@ where
     }
 }
 
+/// Internal helper to bind an interval-based dynamic value.
 fn bind_interval<T, W, F>(
     widget: &W,
     callback_key: &mlua::RegistryKey,
@@ -142,10 +154,12 @@ where
     let callback = lua.registry_value::<mlua::Function>(callback_key)?;
     let widget_clone = widget.clone();
 
+    // Initial call to set the value immediately
     callback
         .call::<T>(())
         .map(|val| apply_fn(&widget_clone, val))?;
 
+    // Set up a GLib timeout to update the value periodically
     let source_id = glib::timeout_add_local(Duration::from_millis(interval), move || {
         match callback.call::<T>(()) {
             Ok(val) => apply_fn(&widget_clone, val),
@@ -164,11 +178,13 @@ where
 }
 
 thread_local! {
+    /// Thread-local bus for broadcasting signals across the application.
     pub static SIGNAL_BUS: RefCell<SignalBus> = RefCell::new(SignalBus::default());
 }
 
 type SignalCallback = Box<dyn Fn(mlua::Value)>;
 
+/// Simple publish-subscribe bus for named signals.
 #[derive(Default)]
 pub struct SignalBus {
     listeners: HashMap<String, HashMap<usize, SignalCallback>>,
@@ -176,6 +192,7 @@ pub struct SignalBus {
 }
 
 impl SignalBus {
+    /// Subscribes a callback to a signal name. Returns a unique subscription ID.
     pub fn subscribe(&mut self, signal: &str, cb: SignalCallback) -> usize {
         let id = self.next_id;
         self.next_id += 1;
@@ -186,12 +203,14 @@ impl SignalBus {
         id
     }
 
+    /// Unsubscribes a listener using its signal name and subscription ID.
     pub fn unsubscribe(&mut self, signal: &str, id: usize) {
         if let Some(callbacks) = self.listeners.get_mut(signal) {
             callbacks.remove(&id);
         }
     }
 
+    /// Emits a signal to all subscribed listeners, passing along optional data.
     pub fn emit(&self, signal: &str, data: mlua::Value) {
         if let Some(callbacks) = self.listeners.get(signal) {
             for cb in callbacks.values() {
@@ -201,6 +220,7 @@ impl SignalBus {
     }
 }
 
+/// Internal helper to bind a signal-based dynamic value.
 fn bind_signals<T, W, F>(
     widget: &W,
     callback_key: &mlua::RegistryKey,
@@ -217,11 +237,13 @@ where
     let callback = lua.registry_value::<mlua::Function>(callback_key)?;
     let widget_clone = widget.clone();
 
+    // Initial call to set the value immediately
     match callback.call::<T>(()) {
         Ok(val) => apply_fn(&widget_clone, val),
         Err(e) => tracing::error!("Error calling Lua callback for {}: {}", prop_name, e),
     }
 
+    // Use Rc to share the callback and apply_fn across multiple signal listeners
     let apply_fn_cell = Rc::new(RefCell::new(apply_fn));
     let callback_rc = Rc::new(callback);
 

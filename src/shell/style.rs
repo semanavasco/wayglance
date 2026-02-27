@@ -5,8 +5,13 @@ use gtk4::{
     CssProvider, STYLE_PROVIDER_PRIORITY_USER, gdk::Display, style_context_add_provider_for_display,
 };
 
-use crate::shell::config::get_relative_config_dir;
+use crate::shell::config::get_config_dir;
 
+/// Loads a CSS style from the specified path and applies it to the GTK application.
+/// The path can be either absolute or relative to the config file directory.
+///
+/// # Errors
+/// Returns an error if the CSS file cannot be loaded or if there is no display available.
 pub fn load(path: &str) -> Result<()> {
     let provider = CssProvider::new();
 
@@ -15,7 +20,7 @@ pub fn load(path: &str) -> Result<()> {
     if path.is_absolute() {
         provider.load_from_path(path);
     } else {
-        let path = get_relative_config_dir()?.join(path);
+        let path = get_config_dir()?.join(path);
         provider.load_from_path(path);
     }
 

@@ -1,7 +1,10 @@
+//! Type definitions for bridging Lua configuration with GTK and Layer Shell types.
+
 use gtk4::{Align as GtkAlign, Orientation as GtkOrientation};
 use gtk4_layer_shell::Layer as GtkLayer;
-use mlua::FromLua;
+use mlua::{FromLua, Lua, Value as LuaValue};
 
+/// The z-level layer where the window will be placed.
 #[derive(Clone, Copy)]
 pub enum Layer {
     Background,
@@ -11,9 +14,9 @@ pub enum Layer {
 }
 
 impl FromLua for Layer {
-    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
         let layer = match &value {
-            mlua::Value::String(s) => s.to_str()?,
+            LuaValue::String(s) => s.to_str()?,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),
@@ -48,6 +51,7 @@ impl From<Layer> for GtkLayer {
     }
 }
 
+/// Anchor points for the window to stick to specific edges of the monitor.
 pub struct Anchors {
     pub top: bool,
     pub right: bool,
@@ -56,9 +60,9 @@ pub struct Anchors {
 }
 
 impl FromLua for Anchors {
-    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
         let anchors = match &value {
-            mlua::Value::Table(t) => t,
+            LuaValue::Table(t) => t,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),
@@ -77,6 +81,7 @@ impl FromLua for Anchors {
     }
 }
 
+/// Margin in pixels from each edge of the monitor.
 pub struct Margins {
     pub top: i32,
     pub right: i32,
@@ -85,9 +90,9 @@ pub struct Margins {
 }
 
 impl FromLua for Margins {
-    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
         let margins = match &value {
-            mlua::Value::Table(t) => t,
+            LuaValue::Table(t) => t,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),
@@ -106,6 +111,7 @@ impl FromLua for Margins {
     }
 }
 
+/// Orientation for container widgets.
 #[derive(Clone, Copy)]
 pub enum Orientation {
     Horizontal,
@@ -113,9 +119,9 @@ pub enum Orientation {
 }
 
 impl FromLua for Orientation {
-    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
         let orientation = match &value {
-            mlua::Value::String(s) => s.to_str()?,
+            LuaValue::String(s) => s.to_str()?,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),
@@ -146,6 +152,7 @@ impl From<Orientation> for GtkOrientation {
     }
 }
 
+/// Alignment for widgets within their parent container.
 #[derive(Clone, Copy)]
 pub enum Alignment {
     Start,
@@ -156,9 +163,9 @@ pub enum Alignment {
 }
 
 impl FromLua for Alignment {
-    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
         let alignment = match &value {
-            mlua::Value::String(s) => s.to_str()?,
+            LuaValue::String(s) => s.to_str()?,
             _ => {
                 return Err(mlua::Error::FromLuaConversionError {
                     from: value.type_name(),
