@@ -1,5 +1,6 @@
 mod cli;
 mod dynamic;
+mod modules;
 mod shell;
 mod widgets;
 

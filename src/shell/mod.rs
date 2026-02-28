@@ -51,6 +51,10 @@ pub fn run_app(config: Config) -> ExitCode {
     // Wrap the config in an Rc so it can be shared across closures without cloning
     let config = Rc::new(config);
     app.connect_activate(move |app| {
+        // Start the window manager event listener if corresponding features are enabled
+        #[cfg(any(feature = "hyprland"))]
+        crate::modules::wm::start_listener();
+
         let display = match gdk::Display::default() {
             Some(d) => d,
             None => {

@@ -12,28 +12,23 @@ local function shell(cmd)
   return out:gsub("%s+$", "")
 end
 
-local function active_workspace()
-  local out = shell("hyprctl activeworkspace -j")
-  return tonumber(out:match('"id":%s*(%d+)')) or 1
-end
-
-local function window_title()
-  local out = shell("hyprctl activewindow -j")
-  return out:match('"title":%s*"([^"]*)"') or ""
-end
-
 -- state ---------------------------------------------------------------------
 
 local WORKSPACES = 5
+ActiveWorkspace = 1
 
 -- widgets -------------------------------------------------------------------
 
 local function workspace_button(id)
   return Button(
     Label(tostring(id), {
-      class_list = wayglance.setInterval(function()
-        return { id == active_workspace() and "ws-active" or "ws-inactive" }
-      end, 100),
+      class_list = wayglance.onSignal("hyprland::workspace_changed", function(workspace)
+        if workspace and workspace.id then
+          ActiveWorkspace = workspace.id
+        end
+
+        return { id == ActiveWorkspace and "ws-active" or "ws-inactive" }
+      end),
       valign = "center",
     }),
     {
@@ -62,9 +57,9 @@ end
 
 local function title_widget()
   return Label(
-    wayglance.setInterval(function()
-      return window_title()
-    end, 500),
+    wayglance.onSignal("hyprland::active_window", function(window)
+      return window and window.title or ""
+    end),
     {
       id = "window-title",
       valign = "center",
