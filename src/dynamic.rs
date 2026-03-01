@@ -253,7 +253,6 @@ where
         let widget_clone = widget.clone();
         let apply_fn_cell = Rc::clone(&apply_fn_cell);
         let callback_rc = Rc::clone(&callback_rc);
-        let prop_name = prop_name;
 
         let listener = Box::new(move |data: mlua::Value| match callback_rc.call::<T>(data) {
             Ok(val) => apply_fn_cell.borrow_mut()(&widget_clone, val),

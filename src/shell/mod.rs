@@ -103,7 +103,7 @@ fn open_window_for_monitor(app: &Application, config: &Config, monitor: &gdk::Mo
         .map(|s: glib::GString| s.to_string())
         .unwrap_or_else(|| "unknown".to_string());
 
-    if config.monitors.len() > 0 && !config.monitors.contains(&connector) {
+    if !config.monitors.is_empty() && !config.monitors.contains(&connector) {
         return;
     }
 

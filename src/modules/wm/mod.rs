@@ -1,6 +1,6 @@
 use async_channel::Receiver;
 use gtk4::glib;
-use mlua::{IntoLua, Lua, Value as LuaValue};
+use mlua::{IntoLua, Value as LuaValue};
 
 use crate::dynamic::SIGNAL_BUS;
 use crate::shell::config::LUA;
@@ -22,7 +22,7 @@ where
             SIGNAL_BUS.with(|bus| {
                 let signal_name = format!("{wm_name}::{event_type}");
 
-                LUA.get().map(|lua| {
+                if let Some(lua) = LUA.get() {
                     bus.borrow().emit(
                         &signal_name,
                         event_data.into_lua(lua).unwrap_or_else(|e| {
@@ -30,12 +30,17 @@ where
                             LuaValue::Nil
                         }),
                     );
-                });
+                }
             });
         }
     });
 }
 
+/// Starts the event listener for the configured window manager. This is called once during
+/// application initialization. The listener runs in a background thread and forwards events to the
+/// Lua signal bus on the GTK main thread.
+/// It is called using cfg(any(feature = ...)) to only start the listener when one backend is
+/// enabled.
 pub fn start_listener() {
     #[cfg(feature = "hyprland")]
     dispatch_events(hyprland::start_listener(), "hyprland");
