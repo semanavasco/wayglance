@@ -1,9 +1,10 @@
+use anyhow::Result;
 use async_channel::Receiver;
 use gtk4::glib;
-use mlua::{IntoLua, Lua, Table as LuaTable, Value as LuaValue};
+use mlua::{IntoLua, Lua, Value as LuaValue};
 
 use crate::dynamic::SIGNAL_BUS;
-use crate::shell::config::LUA;
+use crate::lua::LUA;
 
 #[cfg(feature = "hyprland")]
 mod hyprland;
@@ -39,20 +40,23 @@ where
     });
 }
 
-/// Starts the event listener for the configured window manager. This is called once during
-/// application initialization. The listener runs in a background thread and forwards events to the
-/// Lua signal bus on the GTK main thread.
-/// It is called using cfg(any(feature = ...)) to only start the listener when one backend is
-/// enabled.
+/// Starts the event listener for the configured window manager.
+///
+/// Called once during application initialization. The listener runs in a background thread and
+/// forwards events to the Lua signal bus on the GTK main thread. Only active backends (those
+/// enabled via Cargo features) will start a listener.
 pub fn start_listener() {
     #[cfg(feature = "hyprland")]
     dispatch_events(hyprland::start_listener(), "hyprland");
 }
 
-/// Returns the Lua bindings for the configured window manager. This is used to register the Lua
-/// functions for the window manager.
-/// It is called using cfg(any(feature = ...)) to only return the bindings for the enabled backend.
-pub fn lua_bindings(lua: &Lua) -> (&'static str, mlua::Result<LuaTable>) {
+/// Registers Lua bindings for the window manager under the `wayglance` table.
+///
+/// Called during Lua initialization. Each enabled backend injects its own subtable (e.g.
+/// `wayglance.hyprland`). Backends not enabled via Cargo features are skipped.
+pub fn register_lua(lua: &Lua, table: &mlua::Table) -> Result<()> {
     #[cfg(feature = "hyprland")]
-    ("hyprland", hyprland::lua_bindings(lua))
+    hyprland::register_lua(lua, table)?;
+
+    Ok(())
 }

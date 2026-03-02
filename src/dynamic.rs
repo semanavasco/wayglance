@@ -15,7 +15,7 @@ use gtk4::{
 };
 use mlua::FromLua;
 
-use crate::shell::config::LUA;
+use crate::lua::LUA;
 
 /// A value that is either resolved statically at parse time, or computed dynamically.
 pub enum MaybeDynamic<T> {

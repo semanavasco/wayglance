@@ -3,7 +3,7 @@ use gtk4::{Button as GtkButton, prelude::ButtonExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
 
 use crate::{
-    shell::config::LUA,
+    lua::LUA,
     widgets::{Properties, Widget},
 };
 

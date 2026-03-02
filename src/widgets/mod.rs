@@ -6,7 +6,7 @@ use anyhow::Result;
 use gtk4::{glib::object::IsA, prelude::WidgetExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
 
-use crate::{dynamic::MaybeDynamic, shell::gtk_bindings::Alignment};
+use crate::{dynamic::MaybeDynamic, lua::types::Alignment};
 
 /// Base trait for all UI components in wayglance.
 pub trait Widget {

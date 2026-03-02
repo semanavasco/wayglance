@@ -4,16 +4,14 @@ use std::{
 };
 
 use anyhow::{Context, Result, anyhow};
-use mlua::{FromLua, Lua, Table as LuaTable, Value as LuaValue};
+use mlua::{FromLua, Lua, Value as LuaValue};
 
 use crate::{
-    dynamic::SIGNAL_BUS,
-    shell::gtk_bindings::{Anchors, Layer, Margins},
+    lua::types::{Anchors, Layer, Margins},
     widgets::Widget,
 };
 
 static CONFIG_PATH: OnceLock<PathBuf> = OnceLock::new();
-pub static LUA: OnceLock<Lua> = OnceLock::new();
 
 /// Helper function to get the directory of the currently loaded config file using `CONFIG_PATH`.
 pub fn get_config_dir() -> Result<PathBuf> {
@@ -74,31 +72,7 @@ impl Config {
 
         let lua = Lua::new();
 
-        lua.load(include_str!("../../res/config.lua")).exec()?;
-        lua.load(include_str!("../../res/widgets.lua")).exec()?;
-
-        let globals = lua.globals();
-        let wayglance: LuaTable = globals.get("wayglance")?;
-        let emit_signal =
-            lua.create_function(|_, (signal, data): (String, Option<LuaValue>)| {
-                let data = data.unwrap_or(LuaValue::Nil);
-                // Collect callbacks under a short borrow then call them after the borrow is
-                // released to prevent re-entrancy panics
-                let callbacks = SIGNAL_BUS.with(|bus| bus.borrow().callbacks_for(&signal));
-                for cb in callbacks {
-                    cb(data.clone());
-                }
-                Ok(())
-            })?;
-        wayglance.set("emitSignal", emit_signal)?;
-
-        // Inject Lua bindings for the window manager, if any are enabled
-        // They are injected under a `wayglance.<wm_name>` table, e.g. `wayglance.hyprland`
-        #[cfg(any(feature = "hyprland"))]
-        {
-            let (wm_name, bindings) = crate::modules::wm::lua_bindings(&lua);
-            wayglance.set(wm_name, bindings?)?;
-        }
+        crate::lua::register_lua(&lua)?;
 
         let value: LuaValue = lua.load(&content).set_name("data").eval()?;
 
@@ -113,7 +87,8 @@ impl Config {
             }
         };
 
-        LUA.set(lua)
+        crate::lua::LUA
+            .set(lua)
             .map_err(|_| anyhow!("Couldn't set Lua instance"))?;
 
         Ok(config)

@@ -3,7 +3,7 @@ use gtk4::{Box as GtkBox, prelude::BoxExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
 
 use crate::{
-    shell::gtk_bindings::Orientation,
+    lua::types::Orientation,
     widgets::{Properties, Widget},
 };
 

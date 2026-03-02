@@ -264,10 +264,11 @@ fn call_dispatch(dispatch_type: DispatchType<'_>, action: &str) -> mlua::Result<
         .map_err(|e| mlua::Error::external(format!("Failed to {}: {}", action, e)))
 }
 
-pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
-    let table = lua.create_table()?;
+/// Registers Hyprland-specific Lua functions under the `hyprland` table.
+pub fn register_lua(lua: &Lua, table: &mlua::Table) -> mlua::Result<()> {
+    let hyprland = lua.create_table()?;
 
-    table.set(
+    hyprland.set(
         "getWorkspaces",
         lua.create_function(|lua, ()| {
             let workspaces = Workspaces::get()
@@ -294,7 +295,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "getMonitors",
         lua.create_function(|lua, ()| {
             let monitors = Monitors::get()
@@ -317,7 +318,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "getActiveWindow",
         lua.create_function(|lua, ()| {
             let active_window = Client::get_active().map_err(|e| {
@@ -352,7 +353,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "switchWorkspace",
         lua.create_function(|_, workspace_id: i32| {
             call_dispatch(
@@ -362,7 +363,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "switchWorkspaceRelative",
         lua.create_function(|_, offset: i32| {
             call_dispatch(
@@ -372,7 +373,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "switchWorkspaceNamed",
         lua.create_function(|_, workspace_name: String| {
             call_dispatch(
@@ -382,7 +383,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "switchToPreviousWorkspace",
         lua.create_function(|_, ()| {
             call_dispatch(
@@ -392,7 +393,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "moveActiveToWorkspace",
         lua.create_function(|_, workspace_id: i32| {
             call_dispatch(
@@ -405,7 +406,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "moveActiveToWorkspaceSilent",
         lua.create_function(|_, workspace_id: i32| {
             call_dispatch(
@@ -418,7 +419,7 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "toggleSpecialWorkspace",
         lua.create_function(|_, workspace_name: Option<String>| {
             call_dispatch(
@@ -428,14 +429,14 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "toggleFloating",
         lua.create_function(|_, ()| {
             call_dispatch(DispatchType::ToggleFloating(None), "toggle floating")
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "toggleFullscreen",
         lua.create_function(|_, ()| {
             call_dispatch(
@@ -445,12 +446,13 @@ pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
         })?,
     )?;
 
-    table.set(
+    hyprland.set(
         "killActiveWindow",
         lua.create_function(|_, ()| {
             call_dispatch(DispatchType::KillActiveWindow, "kill active window")
         })?,
     )?;
 
-    Ok(table)
+    table.set("hyprland", hyprland)?;
+    Ok(())
 }

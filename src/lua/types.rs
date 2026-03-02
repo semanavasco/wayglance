@@ -1,4 +1,8 @@
-//! Type definitions for bridging Lua configuration with GTK and Layer Shell types.
+//! Lua-to-Rust type conversion bridges for configuration types.
+//!
+//! Each type here implements [`mlua::FromLua`] so it can be parsed directly from a Lua config
+//! table, and [`From<T>`] for the corresponding GTK / layer-shell type so it can be passed to
+//! GTK without an extra conversion step.
 
 use gtk4::{Align as GtkAlign, Orientation as GtkOrientation};
 use gtk4_layer_shell::Layer as GtkLayer;

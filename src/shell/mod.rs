@@ -2,7 +2,6 @@
 //! monitor-specific configuration.
 
 pub mod config;
-pub mod gtk_bindings;
 mod style;
 
 use std::rc::Rc;
