@@ -1,21 +1,40 @@
 -- Example status bar using wayglance
 
--- helpers ------------------------------------------------------------------
-
-local function shell(cmd)
-  local handle = io.popen(cmd .. " 2>/dev/null")
-  if not handle then
-    return ""
-  end
-  local out = handle:read("*a")
-  handle:close()
-  return out:gsub("%s+$", "")
-end
-
 -- state ---------------------------------------------------------------------
 
-local WORKSPACES = 5
-ActiveWorkspace = 1
+local WorkspaceIds = {}
+local ActiveWorkspace = 1
+local ActiveWindowTitle = ""
+
+local function load_initial_state()
+  local workspaces = wayglance.hyprland.getWorkspaces() or {}
+
+  for _, workspace in ipairs(workspaces) do
+    if type(workspace.id) == "number" and workspace.id > 0 then
+      WorkspaceIds[#WorkspaceIds + 1] = workspace.id
+    end
+  end
+
+  table.sort(WorkspaceIds)
+
+  if #WorkspaceIds == 0 then
+    WorkspaceIds = { 1, 2, 3, 4, 5 }
+  end
+
+  local window = wayglance.hyprland.getActiveWindow() or {}
+
+  if window and window.workspace and type(window.workspace.id) == "number" then
+    ActiveWorkspace = window.workspace.id
+  else
+    ActiveWorkspace = WorkspaceIds[1]
+  end
+
+  if window and window.title then
+    ActiveWindowTitle = window.title
+  end
+end
+
+load_initial_state()
 
 -- widgets -------------------------------------------------------------------
 
@@ -35,7 +54,7 @@ local function workspace_button(id)
       class_list = { "ws-btn" },
       valign = "center",
       on_click = function()
-        shell("hyprctl dispatch workspace " .. id)
+        wayglance.hyprland.switchWorkspace(id)
       end,
     }
   )
@@ -43,8 +62,8 @@ end
 
 local function workspaces_widget()
   local btns = {}
-  for i = 1, WORKSPACES do
-    btns[i] = workspace_button(i)
+  for i, workspace_id in ipairs(WorkspaceIds) do
+    btns[i] = workspace_button(workspace_id)
   end
   return Container({
     id = "workspaces",
@@ -58,7 +77,11 @@ end
 local function title_widget()
   return Label(
     wayglance.onSignal("hyprland::active_window", function(window)
-      return window and window.title or ""
+      if window and window.title then
+        ActiveWindowTitle = window.title
+      end
+
+      return ActiveWindowTitle
     end),
     {
       id = "window-title",

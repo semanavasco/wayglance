@@ -1,7 +1,12 @@
 use std::thread;
 
 use async_channel::Receiver;
-use hyprland::{event_listener::EventListener, shared::WorkspaceType};
+use hyprland::{
+    data::{Client, Monitors, Workspaces},
+    dispatch::{Dispatch, DispatchType, FullscreenType, WorkspaceIdentifierWithSpecial},
+    event_listener::EventListener,
+    shared::{HyprData, HyprDataActiveOptional, HyprDataVec, WorkspaceType},
+};
 use mlua::{IntoLua, Lua, Value as LuaValue};
 
 /// Events emitted by the Hyprland IPC listener.
@@ -250,4 +255,202 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
     });
 
     receiver
+}
+
+/// Helper function to call a dispatch and convert any errors into an mlua::Error with a
+/// descriptive message.
+fn call_dispatch(dispatch_type: DispatchType<'_>, action: &str) -> mlua::Result<()> {
+    Dispatch::call(dispatch_type)
+        .map_err(|e| mlua::Error::external(format!("Failed to {}: {}", action, e)))
+}
+
+pub fn lua_bindings(lua: &Lua) -> mlua::Result<mlua::Table> {
+    let table = lua.create_table()?;
+
+    table.set(
+        "getWorkspaces",
+        lua.create_function(|lua, ()| {
+            let workspaces = Workspaces::get()
+                .map_err(|e| mlua::Error::external(format!("Failed to get workspaces: {}", e)))?
+                .to_vec();
+
+            let ws_table = lua.create_table()?;
+
+            for (i, ws) in workspaces.into_iter().enumerate() {
+                let ws_entry = lua.create_table()?;
+
+                ws_entry.set("id", ws.id)?;
+                ws_entry.set("name", ws.name)?;
+                ws_entry.set("monitor", ws.monitor)?;
+                ws_entry.set("windows", ws.windows)?;
+                ws_entry.set("last_window_title", ws.last_window_title)?;
+                ws_entry.set("fullscreen", ws.fullscreen)?;
+                ws_entry.set("monitor_id", ws.monitor_id)?;
+
+                ws_table.set(i + 1, ws_entry)?;
+            }
+
+            Ok(ws_table)
+        })?,
+    )?;
+
+    table.set(
+        "getMonitors",
+        lua.create_function(|lua, ()| {
+            let monitors = Monitors::get()
+                .map_err(|e| mlua::Error::external(format!("Failed to get monitors: {}", e)))?
+                .to_vec();
+
+            let monitor_table = lua.create_table()?;
+
+            for (i, monitor) in monitors.into_iter().enumerate() {
+                let monitor_entry = lua.create_table()?;
+
+                monitor_entry.set("id", monitor.id)?;
+                monitor_entry.set("name", monitor.name)?;
+                monitor_entry.set("focused", monitor.focused)?;
+
+                monitor_table.set(i + 1, monitor_entry)?;
+            }
+
+            Ok(monitor_table)
+        })?,
+    )?;
+
+    table.set(
+        "getActiveWindow",
+        lua.create_function(|lua, ()| {
+            let active_window = Client::get_active().map_err(|e| {
+                mlua::Error::external(format!("Failed to get active window: {}", e))
+            })?;
+
+            let window_table = lua.create_table()?;
+
+            if let Some(window) = active_window {
+                window_table.set("title", window.title)?;
+                window_table.set("class", window.class)?;
+                window_table.set("pid", window.pid)?;
+                window_table.set("monitor", window.monitor)?;
+
+                let workspace = lua.create_table()?;
+                workspace.set("id", window.workspace.id)?;
+                workspace.set("name", window.workspace.name)?;
+                window_table.set("workspace", workspace)?;
+
+                let at = lua.create_table()?;
+                at.set("x", window.at.0)?;
+                at.set("y", window.at.1)?;
+                window_table.set("at", at)?;
+
+                let size = lua.create_table()?;
+                size.set("width", window.size.0)?;
+                size.set("height", window.size.1)?;
+                window_table.set("size", size)?;
+            }
+
+            Ok(window_table)
+        })?,
+    )?;
+
+    table.set(
+        "switchWorkspace",
+        lua.create_function(|_, workspace_id: i32| {
+            call_dispatch(
+                DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Id(workspace_id)),
+                "switch workspace",
+            )
+        })?,
+    )?;
+
+    table.set(
+        "switchWorkspaceRelative",
+        lua.create_function(|_, offset: i32| {
+            call_dispatch(
+                DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Relative(offset)),
+                "switch workspace",
+            )
+        })?,
+    )?;
+
+    table.set(
+        "switchWorkspaceNamed",
+        lua.create_function(|_, workspace_name: String| {
+            call_dispatch(
+                DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Name(&workspace_name)),
+                "switch workspace",
+            )
+        })?,
+    )?;
+
+    table.set(
+        "switchToPreviousWorkspace",
+        lua.create_function(|_, ()| {
+            call_dispatch(
+                DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Previous),
+                "switch workspace",
+            )
+        })?,
+    )?;
+
+    table.set(
+        "moveActiveToWorkspace",
+        lua.create_function(|_, workspace_id: i32| {
+            call_dispatch(
+                DispatchType::MoveToWorkspace(
+                    WorkspaceIdentifierWithSpecial::Id(workspace_id),
+                    None,
+                ),
+                "move active window to workspace",
+            )
+        })?,
+    )?;
+
+    table.set(
+        "moveActiveToWorkspaceSilent",
+        lua.create_function(|_, workspace_id: i32| {
+            call_dispatch(
+                DispatchType::MoveToWorkspaceSilent(
+                    WorkspaceIdentifierWithSpecial::Id(workspace_id),
+                    None,
+                ),
+                "move active window to workspace silently",
+            )
+        })?,
+    )?;
+
+    table.set(
+        "toggleSpecialWorkspace",
+        lua.create_function(|_, workspace_name: Option<String>| {
+            call_dispatch(
+                DispatchType::ToggleSpecialWorkspace(workspace_name),
+                "toggle special workspace",
+            )
+        })?,
+    )?;
+
+    table.set(
+        "toggleFloating",
+        lua.create_function(|_, ()| {
+            call_dispatch(DispatchType::ToggleFloating(None), "toggle floating")
+        })?,
+    )?;
+
+    table.set(
+        "toggleFullscreen",
+        lua.create_function(|_, ()| {
+            call_dispatch(
+                DispatchType::ToggleFullscreen(FullscreenType::NoParam),
+                "toggle fullscreen",
+            )
+        })?,
+    )?;
+
+    table.set(
+        "killActiveWindow",
+        lua.create_function(|_, ()| {
+            call_dispatch(DispatchType::KillActiveWindow, "kill active window")
+        })?,
+    )?;
+
+    Ok(table)
 }

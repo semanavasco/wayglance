@@ -92,6 +92,14 @@ impl Config {
             })?;
         wayglance.set("emitSignal", emit_signal)?;
 
+        // Inject Lua bindings for the window manager, if any are enabled
+        // They are injected under a `wayglance.<wm_name>` table, e.g. `wayglance.hyprland`
+        #[cfg(any(feature = "hyprland"))]
+        {
+            let (wm_name, bindings) = crate::modules::wm::lua_bindings(&lua);
+            wayglance.set(wm_name, bindings?)?;
+        }
+
         let value: LuaValue = lua.load(&content).set_name("data").eval()?;
 
         let config = match value {

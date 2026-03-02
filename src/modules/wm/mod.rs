@@ -1,6 +1,6 @@
 use async_channel::Receiver;
 use gtk4::glib;
-use mlua::{IntoLua, Value as LuaValue};
+use mlua::{IntoLua, Lua, Table as LuaTable, Value as LuaValue};
 
 use crate::dynamic::SIGNAL_BUS;
 use crate::shell::config::LUA;
@@ -47,4 +47,12 @@ where
 pub fn start_listener() {
     #[cfg(feature = "hyprland")]
     dispatch_events(hyprland::start_listener(), "hyprland");
+}
+
+/// Returns the Lua bindings for the configured window manager. This is used to register the Lua
+/// functions for the window manager.
+/// It is called using cfg(any(feature = ...)) to only return the bindings for the enabled backend.
+pub fn lua_bindings(lua: &Lua) -> (&'static str, mlua::Result<LuaTable>) {
+    #[cfg(feature = "hyprland")]
+    ("hyprland", hyprland::lua_bindings(lua))
 }
