@@ -82,7 +82,12 @@ impl Config {
         let emit_signal =
             lua.create_function(|_, (signal, data): (String, Option<LuaValue>)| {
                 let data = data.unwrap_or(LuaValue::Nil);
-                SIGNAL_BUS.with(|bus| bus.borrow().emit(&signal, data));
+                // Collect callbacks under a short borrow then call them after the borrow is
+                // released to prevent re-entrancy panics
+                let callbacks = SIGNAL_BUS.with(|bus| bus.borrow().callbacks_for(&signal));
+                for cb in callbacks {
+                    cb(data.clone());
+                }
                 Ok(())
             })?;
         wayglance.set("emitSignal", emit_signal)?;

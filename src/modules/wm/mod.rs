@@ -19,19 +19,22 @@ where
 {
     glib::MainContext::default().spawn_local(async move {
         while let Ok((event_type, event_data)) = receiver.recv().await {
-            SIGNAL_BUS.with(|bus| {
-                let signal_name = format!("{wm_name}::{event_type}");
+            let Some(lua) = LUA.get() else { continue };
 
-                if let Some(lua) = LUA.get() {
-                    bus.borrow().emit(
-                        &signal_name,
-                        event_data.into_lua(lua).unwrap_or_else(|e| {
-                            tracing::error!("Failed to convert event data to Lua: {}", e);
-                            LuaValue::Nil
-                        }),
-                    );
-                }
+            let signal_name = format!("{wm_name}::{event_type}");
+            let lua_data = event_data.into_lua(lua).unwrap_or_else(|e| {
+                tracing::error!("Failed to convert event data to Lua: {}", e);
+                LuaValue::Nil
             });
+
+            // Collect Rc handles under a short borrow then release it before calling the
+            // callbacks. This prevents re-entrancy panics: a callback that calls
+            // `subscribe`/`unsubscribe` needs `borrow_mut()`, which would conflict with `borrow()`
+            let callbacks = SIGNAL_BUS.with(|bus| bus.borrow().callbacks_for(&signal_name));
+
+            for cb in callbacks {
+                cb(lua_data.clone());
+            }
         }
     });
 }

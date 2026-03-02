@@ -182,7 +182,12 @@ thread_local! {
     pub static SIGNAL_BUS: RefCell<SignalBus> = RefCell::new(SignalBus::default());
 }
 
-type SignalCallback = Box<dyn Fn(mlua::Value)>;
+/// Type alias for a signal callback function. It takes a Lua value as input and returns nothing.
+///
+/// `Rc` makes callbacks cloneable so call sites can collect handles, release the
+/// `RefCell` borrow, and only then invoke the callbacks. This prevents re-entrancy
+/// panics when a callback tries to subscribe or unsubscribe.
+type SignalCallback = Rc<dyn Fn(mlua::Value)>;
 
 /// Simple publish-subscribe bus for named signals.
 #[derive(Default)]
@@ -210,13 +215,16 @@ impl SignalBus {
         }
     }
 
-    /// Emits a signal to all subscribed listeners, passing along optional data.
-    pub fn emit(&self, signal: &str, data: mlua::Value) {
-        if let Some(callbacks) = self.listeners.get(signal) {
-            for cb in callbacks.values() {
-                cb(data.clone());
-            }
-        }
+    /// Returns cloned `Rc` handles for all callbacks registered for `signal`.
+    ///
+    /// Callers should collect these, drop the `RefCell` borrow on the bus, and
+    /// only then invoke the callbacks. This avoids re-entrancy panics when a
+    /// callback itself calls `subscribe` or `unsubscribe`.
+    pub fn callbacks_for(&self, signal: &str) -> Vec<SignalCallback> {
+        self.listeners
+            .get(signal)
+            .map(|m| m.values().cloned().collect())
+            .unwrap_or_default()
     }
 }
 
@@ -254,7 +262,7 @@ where
         let apply_fn_cell = Rc::clone(&apply_fn_cell);
         let callback_rc = Rc::clone(&callback_rc);
 
-        let listener = Box::new(move |data: mlua::Value| match callback_rc.call::<T>(data) {
+        let listener = Rc::new(move |data: mlua::Value| match callback_rc.call::<T>(data) {
             Ok(val) => apply_fn_cell.borrow_mut()(&widget_clone, val),
             Err(e) => tracing::error!("Error calling Lua callback for {}: {}", prop_name, e),
         });
