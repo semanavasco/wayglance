@@ -27,8 +27,10 @@ pub static LUA: OnceLock<Lua> = OnceLock::new();
 ///
 /// Must be called before the user config is evaluated and before [`LUA`] is set.
 pub fn register_lua(lua: &Lua) -> Result<()> {
-    lua.load(include_str!("../../res/config.lua")).exec()?;
-    lua.load(include_str!("../../res/widgets.lua")).exec()?;
+    lua.load(include_str!("../../../../res/config.lua"))
+        .exec()?;
+    lua.load(include_str!("../../../../res/widgets.lua"))
+        .exec()?;
 
     let globals = lua.globals();
     let wayglance: Table = globals.get("wayglance")?;
