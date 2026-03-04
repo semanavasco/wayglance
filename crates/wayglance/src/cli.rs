@@ -4,11 +4,22 @@ use clap::Parser;
 #[derive(Parser)]
 #[command(version, long_about = None)]
 pub struct Cli {
-    /// The path to the Lua configuration file
-    #[arg(short, long)]
-    pub config: String,
+    #[command(subcommand)]
+    pub command: Command,
+}
 
-    /// Set the logging level (error, warn, info, debug, trace).
-    #[arg(short, long, default_value = "info")]
-    pub log_level: String,
+#[derive(Parser)]
+pub enum Command {
+    /// Run the Wayglance widget with the specified Lua shell configuration file
+    Run {
+        /// The path to the Lua configuration file
+        #[arg(short, long)]
+        config: String,
+
+        /// Set the logging level (error, warn, info, debug, trace)
+        #[arg(short, long, default_value = "info")]
+        log_level: String,
+    },
+    /// Generate Lua stubs for the built-in Wayglance API
+    GenStubs,
 }

@@ -3,6 +3,7 @@
 //! It allows widget properties to be either static values or dynamic values that update based on
 //! timers (intervals) or event-driven signals.
 
+use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -15,7 +16,7 @@ use gtk4::{
 };
 use mlua::FromLua;
 
-use crate::lua::LUA;
+use crate::lua::{LUA, stubs::LuaType};
 
 /// A value that is either resolved statically at parse time, or computed dynamically.
 pub enum MaybeDynamic<T> {
@@ -32,6 +33,16 @@ pub enum MaybeDynamic<T> {
         callback: mlua::RegistryKey,
         signals: Vec<String>,
     },
+}
+
+impl<T> LuaType for MaybeDynamic<T>
+where
+    T: LuaType,
+{
+    fn lua_type() -> Cow<'static, str> {
+        let base_type = T::lua_type();
+        format!("{} | dynamic", base_type).into()
+    }
 }
 
 impl<T> FromLua for MaybeDynamic<T>

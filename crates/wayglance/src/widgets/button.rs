@@ -1,15 +1,22 @@
 use anyhow::{Context, Result};
 use gtk4::{Button as GtkButton, prelude::ButtonExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
+use wayglance_macros::LuaClass;
 
 use crate::{
     lua::LUA,
     widgets::{Properties, Widget},
 };
 
+/// A clickable button widget.
+#[derive(LuaClass)]
+#[lua_class(name = "Button")]
 pub struct Button {
+    #[lua_attr(parent)]
     pub properties: Properties,
+    /// Function to execute when the button is clicked.
     pub on_click: mlua::RegistryKey,
+    /// The child widget to display inside the button.
     pub child: Box<dyn Widget>,
 }
 

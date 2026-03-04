@@ -1,16 +1,24 @@
 use anyhow::Result;
 use gtk4::{Box as GtkBox, prelude::BoxExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
+use wayglance_macros::LuaClass;
 
 use crate::{
     lua::types::Orientation,
     widgets::{Properties, Widget},
 };
 
+/// A container widget that can hold multiple child widgets, arranged either horizontally or
+/// vertically.
+#[derive(LuaClass)]
 pub struct Container {
+    #[lua_attr(parent)]
     pub properties: Properties,
+    /// The orientation of the container.
     pub orientation: Orientation,
+    /// The spacing between children in the container, in pixels.
     pub spacing: i32,
+    /// The child widgets contained within this container.
     pub children: Vec<Box<dyn Widget>>,
 }
 

@@ -3,7 +3,9 @@
 //! This module is responsible for:
 //! - setting up the global `wayglance` Lua table with built-in helpers and runtime bindings
 //! - storing the process-wide [`LUA`] instance used by dynamic bindings and event forwarding
+//! - generating Lua stubs for all Rust-defined Lua classes and functions
 
+pub mod stubs;
 pub mod types;
 
 use std::sync::OnceLock;
@@ -11,7 +13,14 @@ use std::sync::OnceLock;
 use anyhow::Result;
 use mlua::{Lua, Table, Value};
 
-use crate::dynamic::SIGNAL_BUS;
+use crate::{
+    dynamic::SIGNAL_BUS,
+    lua::{
+        stubs::Stubbed,
+        types::{Anchors, Margins},
+    },
+    widgets::{Button, Container, Label, Properties},
+};
 
 /// Global Lua instance used by dynamic bindings and modules event forwarding.
 /// This is set during config loading, after the Lua environment is initialized and the config file
@@ -52,4 +61,38 @@ pub fn register_lua(lua: &Lua) -> Result<()> {
     crate::modules::wm::register_lua(lua, &wayglance)?;
 
     Ok(())
+}
+
+/// Generates Lua stubs for all Lua classes and functions defined in Rust, to provide better
+/// autocompletion and type hints in the user config when using an LSP that supports it.
+pub fn gen_stubs() -> String {
+    let mut stubs = String::new();
+
+    stubs.push_str("---@meta\n\n");
+
+    let anchors_stubs = <Anchors as Stubbed>::stubs();
+    stubs.push_str(&anchors_stubs.to_string());
+    stubs.push('\n');
+
+    let margins_stubs = <Margins as Stubbed>::stubs();
+    stubs.push_str(&margins_stubs.to_string());
+    stubs.push('\n');
+
+    let widget_stubs = <Properties as Stubbed>::stubs();
+    stubs.push_str(&widget_stubs.to_string());
+    stubs.push('\n');
+
+    let container_stubs = <Container as Stubbed>::stubs();
+    stubs.push_str(&container_stubs.to_string());
+    stubs.push('\n');
+
+    let label_stubs = <Label as Stubbed>::stubs();
+    stubs.push_str(&label_stubs.to_string());
+    stubs.push('\n');
+
+    let button_stubs = <Button as Stubbed>::stubs();
+    stubs.push_str(&button_stubs.to_string());
+    stubs.push('\n');
+
+    stubs
 }

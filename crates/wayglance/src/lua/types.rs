@@ -3,13 +3,63 @@
 //! Each type here implements [`mlua::FromLua`] so it can be parsed directly from a Lua config
 //! table, and [`From<T>`] for the corresponding GTK / layer-shell type so it can be passed to
 //! GTK without an extra conversion step.
+//!
+//! This module also implements the [`LuaType`] trait, which provides a string representation
+//! of the type for documentation generation and error messages in Lua parsing.
+
+use std::borrow::Cow;
 
 use gtk4::{Align as GtkAlign, Orientation as GtkOrientation};
 use gtk4_layer_shell::Layer as GtkLayer;
 use mlua::{FromLua, Lua, Value as LuaValue};
+use wayglance_macros::{LuaClass, LuaEnum};
+
+use crate::lua::stubs::LuaType;
+
+impl LuaType for String {
+    fn lua_type() -> Cow<'static, str> {
+        "string".into()
+    }
+}
+
+impl LuaType for bool {
+    fn lua_type() -> Cow<'static, str> {
+        "boolean".into()
+    }
+}
+
+impl LuaType for i32 {
+    fn lua_type() -> Cow<'static, str> {
+        "number".into()
+    }
+}
+
+impl<T> LuaType for Option<T>
+where
+    T: LuaType,
+{
+    fn lua_type() -> Cow<'static, str> {
+        format!("? {}", T::lua_type()).into()
+    }
+}
+
+impl<T> LuaType for Vec<T>
+where
+    T: LuaType,
+{
+    fn lua_type() -> Cow<'static, str> {
+        format!("{}[]", T::lua_type()).into()
+    }
+}
+
+impl LuaType for mlua::RegistryKey {
+    fn lua_type() -> Cow<'static, str> {
+        "function".into()
+    }
+}
 
 /// The z-level layer where the window will be placed.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, LuaEnum)]
 pub enum Layer {
     Background,
     Bottom,
@@ -56,10 +106,19 @@ impl From<Layer> for GtkLayer {
 }
 
 /// Anchor points for the window to stick to specific edges of the monitor.
+#[derive(LuaClass)]
 pub struct Anchors {
+    /// Whether to anchor the window to the top edge of the monitor.
+    #[lua_attr(default = false)]
     pub top: bool,
+    /// Whether to anchor the window to the right edge of the monitor.
+    #[lua_attr(default = false)]
     pub right: bool,
+    /// Whether to anchor the window to the bottom edge of the monitor.
+    #[lua_attr(default = false)]
     pub bottom: bool,
+    /// Whether to anchor the window to the left edge of the monitor.
+    #[lua_attr(default = false)]
     pub left: bool,
 }
 
@@ -86,10 +145,19 @@ impl FromLua for Anchors {
 }
 
 /// Margin in pixels from each edge of the monitor.
+#[derive(LuaClass)]
 pub struct Margins {
+    /// Margin from the top edge of the monitor, in pixels.
+    #[lua_attr(default = 0)]
     pub top: i32,
+    /// Margin from the right edge of the monitor, in pixels.
+    #[lua_attr(default = 0)]
     pub right: i32,
+    /// Margin from the bottom edge of the monitor, in pixels.
+    #[lua_attr(default = 0)]
     pub bottom: i32,
+    /// Margin from the left edge of the monitor, in pixels.
+    #[lua_attr(default = 0)]
     pub left: i32,
 }
 
@@ -116,7 +184,7 @@ impl FromLua for Margins {
 }
 
 /// Orientation for container widgets.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, LuaEnum)]
 pub enum Orientation {
     Horizontal,
     Vertical,
@@ -157,7 +225,7 @@ impl From<Orientation> for GtkOrientation {
 }
 
 /// Alignment for widgets within their parent container.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, LuaEnum)]
 pub enum Alignment {
     Start,
     Center,

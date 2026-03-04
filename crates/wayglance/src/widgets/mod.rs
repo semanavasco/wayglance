@@ -2,11 +2,21 @@ mod button;
 mod container;
 mod label;
 
+pub use button::Button;
+pub use container::Container;
+pub use label::Label;
+
+use std::borrow::Cow;
+
 use anyhow::Result;
 use gtk4::{glib::object::IsA, prelude::WidgetExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
+use wayglance_macros::LuaClass;
 
-use crate::{dynamic::MaybeDynamic, lua::types::Alignment};
+use crate::{
+    dynamic::MaybeDynamic,
+    lua::{stubs::LuaType, types::Alignment},
+};
 
 /// Base trait for all UI components in wayglance.
 pub trait Widget {
@@ -16,6 +26,12 @@ pub trait Widget {
     /// Returns an error if evaluating a dynamic property fails, or if the GTK widget fails to
     /// initialize for some reason.
     fn build(&self) -> Result<gtk4::Widget>;
+}
+
+impl LuaType for Box<dyn Widget> {
+    fn lua_type() -> Cow<'static, str> {
+        "Widget".into()
+    }
 }
 
 impl FromLua for Box<dyn Widget> {
@@ -39,15 +55,15 @@ impl FromLua for Box<dyn Widget> {
 
         match widget_type.as_str() {
             "button" => {
-                let button = button::Button::from_lua(value, lua)?;
+                let button = Button::from_lua(value, lua)?;
                 Ok(Box::new(button))
             }
             "container" => {
-                let container = container::Container::from_lua(value, lua)?;
+                let container = Container::from_lua(value, lua)?;
                 Ok(Box::new(container))
             }
             "label" => {
-                let label = label::Label::from_lua(value, lua)?;
+                let label = Label::from_lua(value, lua)?;
                 Ok(Box::new(label))
             }
             _ => Err(mlua::Error::FromLuaConversionError {
@@ -60,12 +76,22 @@ impl FromLua for Box<dyn Widget> {
 }
 
 /// Common properties shared by all widgets (layout, CSS classes, IDs, etc).
-struct Properties {
+#[derive(LuaClass)]
+#[lua_class(name = "Widget")]
+pub struct Properties {
+    /// Optional widget ID, used for CSS styling and querying.
     pub id: MaybeDynamic<Option<String>>,
+    /// Optional list of CSS classes applied to the widget.
     pub class_list: MaybeDynamic<Vec<String>>,
+    /// Optional horizontal alignment for the widget.
     pub halign: MaybeDynamic<Option<Alignment>>,
+    /// Optional vertical alignment for the widget.
     pub valign: MaybeDynamic<Option<Alignment>>,
+    /// Whether the widget should expand to fill available horizontal space.
+    #[lua_attr(default = false)]
     pub hexpand: MaybeDynamic<bool>,
+    /// Whether the widget should expand to fill available vertical space.
+    #[lua_attr(default = false)]
     pub vexpand: MaybeDynamic<bool>,
 }
 
