@@ -7,16 +7,14 @@
 
 pub mod stubs;
 pub mod types;
+mod wayglance;
 
 use std::sync::OnceLock;
 
 use anyhow::Result;
-use mlua::{Lua, Table, Value};
+use mlua::Lua;
 
-use crate::{
-    dynamic::SIGNAL_BUS,
-    lua::stubs::{Stub, StubFactory},
-};
+use crate::lua::stubs::{Stub, StubFactory};
 
 /// Global Lua instance used by dynamic bindings and modules event forwarding.
 /// This is set during config loading, after the Lua environment is initialized and the config file
@@ -32,24 +30,16 @@ pub static LUA: OnceLock<Lua> = OnceLock::new();
 ///
 /// Must be called before the user config is evaluated and before [`LUA`] is set.
 pub fn register_lua(lua: &Lua) -> Result<()> {
-    lua.load(include_str!("../../../../res/config.lua"))
-        .exec()?;
     lua.load(include_str!("../../../../res/widgets.lua"))
         .exec()?;
 
     let globals = lua.globals();
-    let wayglance: Table = globals.get("wayglance")?;
-    let emit_signal = lua.create_function(|_, (signal, data): (String, Option<Value>)| {
-        let data = data.unwrap_or(Value::Nil);
-        // Collect callbacks under a short borrow then call them after the borrow is
-        // released to prevent re-entrancy panics
-        let callbacks = SIGNAL_BUS.with(|bus| bus.borrow().callbacks_for(&signal));
-        for cb in callbacks {
-            cb(data.clone());
-        }
-        Ok(())
-    })?;
-    wayglance.set("emitSignal", emit_signal)?;
+    let wayglance = lua.create_table()?;
+    globals.set("wayglance", &wayglance)?;
+
+    wayglance.set("setInterval", lua.create_function(wayglance::set_interval)?)?;
+    wayglance.set("onSignal", lua.create_function(wayglance::on_signal)?)?;
+    wayglance.set("emitSignal", lua.create_function(wayglance::emit_signal)?)?;
 
     // Inject Lua bindings for the window manager, if any are enabled
     // They are injected under a `wayglance.<wm_name>` table, e.g. `wayglance.hyprland`

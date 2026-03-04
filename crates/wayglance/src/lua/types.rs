@@ -11,7 +11,7 @@ use std::borrow::Cow;
 
 use gtk4::{Align as GtkAlign, Orientation as GtkOrientation};
 use gtk4_layer_shell::Layer as GtkLayer;
-use mlua::{FromLua, Lua, Value as LuaValue};
+use mlua::{FromLua, IntoLua, Lua, Value as LuaValue};
 use wayglance_macros::{LuaClass, LuaEnum};
 
 use crate::lua::stubs::LuaType;
@@ -270,6 +270,41 @@ impl From<Alignment> for GtkAlign {
             Alignment::End => GtkAlign::End,
             Alignment::Fill => GtkAlign::Fill,
             Alignment::Baseline => GtkAlign::Baseline,
+        }
+    }
+}
+
+/// A helper type to allow either a single string or an array of strings in Lua.
+pub enum StringOrStrings {
+    Single(String),
+    Multiple(Vec<String>),
+}
+
+impl FromLua for StringOrStrings {
+    fn from_lua(value: LuaValue, _: &Lua) -> mlua::Result<Self> {
+        match value {
+            LuaValue::String(s) => Ok(StringOrStrings::Single(s.to_str()?.to_string())),
+            LuaValue::Table(t) => {
+                let mut strings = Vec::new();
+                for pair in t.sequence_values::<String>() {
+                    strings.push(pair?);
+                }
+                Ok(StringOrStrings::Multiple(strings))
+            }
+            _ => Err(mlua::Error::FromLuaConversionError {
+                from: value.type_name(),
+                to: "string or string[]".to_string(),
+                message: Some("Expected a string or an array of strings".to_string()),
+            }),
+        }
+    }
+}
+
+impl IntoLua for StringOrStrings {
+    fn into_lua(self, lua: &Lua) -> mlua::Result<LuaValue> {
+        match self {
+            StringOrStrings::Single(s) => s.into_lua(lua),
+            StringOrStrings::Multiple(vec) => vec.into_lua(lua),
         }
     }
 }
