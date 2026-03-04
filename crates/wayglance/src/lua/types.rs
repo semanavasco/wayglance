@@ -34,6 +34,12 @@ impl LuaType for i32 {
     }
 }
 
+impl LuaType for u64 {
+    fn lua_type() -> Cow<'static, str> {
+        "number".into()
+    }
+}
+
 impl<T> LuaType for Option<T>
 where
     T: LuaType,
@@ -49,6 +55,33 @@ where
 {
     fn lua_type() -> Cow<'static, str> {
         format!("{}[]", T::lua_type()).into()
+    }
+}
+
+impl LuaType for () {
+    fn lua_type() -> Cow<'static, str> {
+        "nil".into()
+    }
+}
+
+impl<T> LuaType for mlua::Result<T>
+where
+    T: LuaType,
+{
+    fn lua_type() -> Cow<'static, str> {
+        T::lua_type()
+    }
+}
+
+impl LuaType for LuaValue {
+    fn lua_type() -> Cow<'static, str> {
+        "any".into()
+    }
+}
+
+impl LuaType for mlua::Function {
+    fn lua_type() -> Cow<'static, str> {
+        "function".into()
     }
 }
 
@@ -278,6 +311,12 @@ impl From<Alignment> for GtkAlign {
 pub enum StringOrStrings {
     Single(String),
     Multiple(Vec<String>),
+}
+
+impl LuaType for StringOrStrings {
+    fn lua_type() -> Cow<'static, str> {
+        "string | string[]".into()
+    }
 }
 
 impl FromLua for StringOrStrings {

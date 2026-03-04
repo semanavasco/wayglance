@@ -1,6 +1,11 @@
+use std::collections::{HashMap, HashSet};
+
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Attribute, Data, DeriveInput, Expr, Fields, Lit, LitStr, Meta, parse_macro_input};
+use syn::{
+    Attribute, Data, DeriveInput, Expr, Fields, FnArg, Lit, LitStr, Meta, Pat, ReturnType,
+    parse::Parser, parse_macro_input,
+};
 
 #[proc_macro_derive(LuaClass, attributes(lua_class, lua_attr))]
 pub fn derive_stubbed(input: TokenStream) -> TokenStream {
@@ -198,6 +203,172 @@ pub fn derive_lua_enum(input: TokenStream) -> TokenStream {
                     name: #name_str,
                     doc: #enum_doc,
                     variants: #lua_type_variants,
+                })
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_attribute]
+pub fn lua_func(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let mut input = parse_macro_input!(item as syn::ItemFn);
+    let name = &input.sig.ident;
+    let mut name_str = name.to_string();
+    let func_doc = extract_doc(&input.attrs);
+
+    // Parse attributes passed directly to the macro
+    let mut skip_args = HashSet::new();
+    let attr_parser = syn::meta::parser(|meta| {
+        // Check for #[lua_func(skip = "arg_name")]
+        if meta.path.is_ident("skip") {
+            let value = meta.value()?;
+            let s: LitStr = value.parse()?;
+            skip_args.insert(s.value());
+        }
+
+        // Check for #[lua_func(name = "custom_name")]
+        if meta.path.is_ident("name") {
+            let value = meta.value()?;
+            let s: LitStr = value.parse()?;
+            name_str = s.value();
+        }
+
+        Ok(())
+    });
+
+    let _ = attr_parser.parse(attr);
+
+    struct ArgOverride {
+        ty: Option<String>,
+        doc: Option<String>,
+    }
+
+    let mut arg_overrides = HashMap::new();
+    let mut ret_ty_override = None;
+    let mut ret_doc_override = None;
+    let mut indices_to_remove = Vec::new();
+
+    // Look for #[arg(...)] or #[ret(...)] attributes on the function itself
+    for (i, attr) in input.attrs.iter().enumerate() {
+        if attr.path().is_ident("arg") {
+            let mut arg_name = String::new();
+            let mut ty = None;
+            let mut doc = None;
+
+            let _ = attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("name") {
+                    let value = meta.value()?;
+                    let s: LitStr = value.parse()?;
+                    arg_name = s.value();
+                } else if meta.path.is_ident("ty") {
+                    let value = meta.value()?;
+                    let s: LitStr = value.parse()?;
+                    ty = Some(s.value());
+                } else if meta.path.is_ident("doc") {
+                    let value = meta.value()?;
+                    let s: LitStr = value.parse()?;
+                    doc = Some(s.value());
+                }
+                Ok(())
+            });
+
+            if !arg_name.is_empty() {
+                arg_overrides.insert(arg_name, ArgOverride { ty, doc });
+            }
+            indices_to_remove.push(i);
+        } else if attr.path().is_ident("ret") {
+            let _ = attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("ty") {
+                    let value = meta.value()?;
+                    let s: LitStr = value.parse()?;
+                    ret_ty_override = Some(s.value());
+                } else if meta.path.is_ident("doc") {
+                    let value = meta.value()?;
+                    let s: LitStr = value.parse()?;
+                    ret_doc_override = Some(s.value());
+                }
+                Ok(())
+            });
+            indices_to_remove.push(i);
+        }
+    }
+
+    // Remove #[arg] and #[ret] attributes so they don't cause compile failures
+    for &i in indices_to_remove.iter().rev() {
+        input.attrs.remove(i);
+    }
+
+    let mut args = Vec::new();
+    for input in &input.sig.inputs {
+        if let FnArg::Typed(pat_type) = input
+            && let Pat::Ident(ident) = &*pat_type.pat
+        {
+            let arg_name = ident.ident.to_string();
+
+            // Skip arguments marked with 'skip' or those that start with underscores
+            if skip_args.contains(&arg_name)
+                || (arg_name.starts_with('_') && skip_args.contains(&arg_name[1..]))
+            {
+                continue;
+            }
+
+            // Determine the Lua type and documentation, using overrides if provided
+            let (ty_quote, doc_val) = if let Some(over) = arg_overrides.get(&arg_name) {
+                let t = over
+                    .ty
+                    .as_deref()
+                    .map(|t| quote! { std::borrow::Cow::Borrowed(#t) })
+                    .unwrap_or_else(|| {
+                        let arg_type = &pat_type.ty;
+                        quote! { <#arg_type as crate::lua::stubs::LuaType>::lua_type() }
+                    });
+                let d = over.doc.as_deref().unwrap_or("");
+                (t, d)
+            } else {
+                let arg_type = &pat_type.ty;
+                (
+                    quote! { <#arg_type as crate::lua::stubs::LuaType>::lua_type() },
+                    "",
+                )
+            };
+
+            args.push(quote! {
+                crate::lua::stubs::Attr {
+                    name: #arg_name,
+                    doc: #doc_val,
+                    ty: #ty_quote,
+                }
+            });
+        }
+    }
+
+    let ret_type = if let Some(ty) = ret_ty_override {
+        quote! { std::borrow::Cow::Borrowed(#ty) }
+    } else {
+        match &input.sig.output {
+            ReturnType::Default => quote! { std::borrow::Cow::Borrowed("nil") },
+            ReturnType::Type(_, ty) => {
+                quote! { <#ty as crate::lua::stubs::LuaType>::lua_type() }
+            }
+        }
+    };
+    let ret_doc = ret_doc_override.unwrap_or_default();
+
+    let expanded = quote! {
+        // Emit the original function with #[arg] and #[ret] attributes removed
+        #input
+
+        // Register the function stub in the global inventory
+        inventory::submit! {
+            crate::lua::stubs::StubFactory {
+                build: || crate::lua::stubs::Stub::Function(crate::lua::stubs::Function {
+                    name: #name_str,
+                    doc: #func_doc,
+                    args: std::borrow::Cow::Owned(vec![#(#args),*]),
+                    ret: #ret_type,
+                    ret_doc: #ret_doc,
                 })
             }
         }

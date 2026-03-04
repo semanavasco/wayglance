@@ -37,9 +37,20 @@ pub fn register_lua(lua: &Lua) -> Result<()> {
     let wayglance = lua.create_table()?;
     globals.set("wayglance", &wayglance)?;
 
-    wayglance.set("setInterval", lua.create_function(wayglance::set_interval)?)?;
-    wayglance.set("onSignal", lua.create_function(wayglance::on_signal)?)?;
-    wayglance.set("emitSignal", lua.create_function(wayglance::emit_signal)?)?;
+    wayglance.set(
+        "setInterval",
+        lua.create_function(|lua, (cb, ms)| wayglance::set_interval(lua, cb, ms))?,
+    )?;
+
+    wayglance.set(
+        "onSignal",
+        lua.create_function(|lua, (sigs, cb)| wayglance::on_signal(lua, sigs, cb))?,
+    )?;
+
+    wayglance.set(
+        "emitSignal",
+        lua.create_function(|_, (sig, data)| wayglance::emit_signal(sig, data))?,
+    )?;
 
     // Inject Lua bindings for the window manager, if any are enabled
     // They are injected under a `wayglance.<wm_name>` table, e.g. `wayglance.hyprland`
@@ -54,11 +65,13 @@ pub fn register_lua(lua: &Lua) -> Result<()> {
 pub fn gen_stubs() -> String {
     let mut enums = Vec::new();
     let mut classes = Vec::new();
+    let mut functions = Vec::new();
 
     for factory in inventory::iter::<StubFactory> {
         match (factory.build)() {
             Stub::Enum(e) => enums.push(e.to_string()),
             Stub::Class(c) => classes.push(c.to_string()),
+            Stub::Function(f) => functions.push(f.to_string()),
         }
     }
 
@@ -68,5 +81,7 @@ pub fn gen_stubs() -> String {
     out.push_str(&enums.join("\n\n"));
     out.push_str("\n\n");
     out.push_str(&classes.join("\n"));
+    out.push('\n');
+    out.push_str(&functions.join("\n\n"));
     out
 }

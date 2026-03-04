@@ -83,10 +83,57 @@ impl fmt::Display for Enum {
     }
 }
 
+/// Represents a Lua function, including its name, documentation, arguments, and return type.
+pub struct Function {
+    pub name: &'static str,
+    pub doc: &'static str,
+    pub args: Cow<'static, [Attr]>,
+    pub ret: Cow<'static, str>,
+    pub ret_doc: &'static str,
+}
+
+impl fmt::Display for Function {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if !self.doc.is_empty() {
+            for line in self.doc.lines() {
+                writeln!(f, "--- {}", line)?;
+            }
+        }
+
+        for arg in self.args.iter() {
+            write!(f, "---@param {} {}", arg.name, arg.ty)?;
+            if !arg.doc.is_empty() {
+                write!(f, " {}", arg.doc.replace('\n', " "))?;
+            }
+            writeln!(f)?;
+        }
+
+        if self.ret != "nil" {
+            write!(f, "---@return {}", self.ret)?;
+            if !self.ret_doc.is_empty() {
+                write!(f, " {}", self.ret_doc.replace('\n', " "))?;
+            }
+            writeln!(f)?;
+        }
+
+        write!(
+            f,
+            "function {}({}) end",
+            self.name,
+            self.args
+                .iter()
+                .map(|a| a.name)
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
+}
+
 /// A stub entry that can represent any kind of Lua type definition.
 pub enum Stub {
     Class(Class),
     Enum(Enum),
+    Function(Function),
 }
 
 /// Factory to build a [`Stub`] at runtime.
