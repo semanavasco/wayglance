@@ -135,6 +135,13 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
                 }
             }
         }
+
+        // Register the class in the inventory for Lua stubs
+        inventory::submit! {
+            crate::lua::stubs::ClassStubFactory {
+                build: <#ident as crate::lua::stubs::Stubbed>::stubs,
+            }
+        }
     };
 
     TokenStream::from(expanded)

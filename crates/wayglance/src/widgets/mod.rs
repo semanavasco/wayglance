@@ -1,10 +1,9 @@
 mod button;
+use button::Button;
 mod container;
+use container::Container;
 mod label;
-
-pub use button::Button;
-pub use container::Container;
-pub use label::Label;
+use label::Label;
 
 use std::borrow::Cow;
 

@@ -64,3 +64,12 @@ impl fmt::Display for Class {
         Ok(())
     }
 }
+
+/// This is used to register classes in the inventory instead of the `Class` itself, since the
+/// `Class` isn't const so it can't be directly registered. We can register this struct because a
+/// function pointer is known at compile time.
+/// We call build() at runtime to get the actual `Class` instance.
+pub struct ClassStubFactory {
+    pub build: fn() -> Class,
+}
+inventory::collect!(ClassStubFactory);
