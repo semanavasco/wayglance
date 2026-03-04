@@ -138,8 +138,8 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
 
         // Register the class in the inventory for Lua stubs
         inventory::submit! {
-            crate::lua::stubs::ClassStubFactory {
-                build: <#ident as crate::lua::stubs::Stubbed>::stubs,
+            crate::lua::stubs::StubFactory {
+                build: || crate::lua::stubs::Stub::Class(<#ident as crate::lua::stubs::Stubbed>::stubs()),
             }
         }
     };
@@ -168,6 +168,8 @@ fn extract_doc(attrs: &[Attribute]) -> String {
 pub fn derive_lua_enum(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
+    let name_str = name.to_string();
+    let enum_doc = extract_doc(&input.attrs);
     let mut variants = Vec::new();
 
     if let Data::Enum(enum_data) = &input.data {
@@ -181,12 +183,22 @@ pub fn derive_lua_enum(input: TokenStream) -> TokenStream {
             .into();
     }
 
-    let lua_type = variants.join(" | ");
+    let lua_type_variants = variants.join(" | ");
 
     let expanded = quote! {
         impl crate::lua::stubs::LuaType for #name {
             fn lua_type() -> std::borrow::Cow<'static, str> {
-                std::borrow::Cow::Borrowed(#lua_type)
+                std::borrow::Cow::Borrowed(#name_str)
+            }
+        }
+
+        inventory::submit! {
+            crate::lua::stubs::StubFactory {
+                build: || crate::lua::stubs::Stub::Enum(crate::lua::stubs::Enum {
+                    name: #name_str,
+                    doc: #enum_doc,
+                    variants: #lua_type_variants,
+                })
             }
         }
     };

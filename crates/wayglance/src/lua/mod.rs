@@ -13,7 +13,10 @@ use std::sync::OnceLock;
 use anyhow::Result;
 use mlua::{Lua, Table, Value};
 
-use crate::{dynamic::SIGNAL_BUS, lua::stubs::ClassStubFactory};
+use crate::{
+    dynamic::SIGNAL_BUS,
+    lua::stubs::{Stub, StubFactory},
+};
 
 /// Global Lua instance used by dynamic bindings and modules event forwarding.
 /// This is set during config loading, after the Lua environment is initialized and the config file
@@ -59,17 +62,21 @@ pub fn register_lua(lua: &Lua) -> Result<()> {
 /// Generates Lua stubs for all Lua classes and functions defined in Rust, to provide better
 /// autocompletion and type hints in the user config when using an LSP that supports it.
 pub fn gen_stubs() -> String {
-    let mut stubs_str = String::new();
+    let mut enums = Vec::new();
+    let mut classes = Vec::new();
 
-    stubs_str.push_str("---@meta\n\n");
+    for factory in inventory::iter::<StubFactory> {
+        match (factory.build)() {
+            Stub::Enum(e) => enums.push(e.to_string()),
+            Stub::Class(c) => classes.push(c.to_string()),
+        }
+    }
 
-    stubs_str.push_str(
-        &inventory::iter::<ClassStubFactory>
-            .into_iter()
-            .map(|class| (class.build)().to_string())
-            .collect::<Vec<String>>()
-            .join("\n"),
-    );
+    let mut out = String::new();
+    out.push_str("---@meta\n\n");
 
-    stubs_str
+    out.push_str(&enums.join("\n\n"));
+    out.push_str("\n\n");
+    out.push_str(&classes.join("\n"));
+    out
 }

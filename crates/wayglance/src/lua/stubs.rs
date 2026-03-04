@@ -65,11 +65,35 @@ impl fmt::Display for Class {
     }
 }
 
-/// This is used to register classes in the inventory instead of the `Class` itself, since the
-/// `Class` isn't const so it can't be directly registered. We can register this struct because a
-/// function pointer is known at compile time.
-/// We call build() at runtime to get the actual `Class` instance.
-pub struct ClassStubFactory {
-    pub build: fn() -> Class,
+/// Represents a Lua enum type alias (e.g. `---@alias Orientation "horizontal" | "vertical"`).
+pub struct Enum {
+    pub name: &'static str,
+    pub doc: &'static str,
+    pub variants: &'static str,
 }
-inventory::collect!(ClassStubFactory);
+
+impl fmt::Display for Enum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if !self.doc.is_empty() {
+            for line in self.doc.lines() {
+                writeln!(f, "--- {}", line)?;
+            }
+        }
+        write!(f, "---@alias {} {}", self.name, self.variants)
+    }
+}
+
+/// A stub entry that can represent any kind of Lua type definition.
+pub enum Stub {
+    Class(Class),
+    Enum(Enum),
+}
+
+/// Factory to build a [`Stub`] at runtime.
+///
+/// Because `Stub` variants aren't `const`, we register factory closures instead and call
+/// `build()` at stub-generation time to get the actual instance.
+pub struct StubFactory {
+    pub build: fn() -> Stub,
+}
+inventory::collect!(StubFactory);
