@@ -8,9 +8,9 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
 
     let ident = &input.ident;
     let mut lua_name = ident.to_string();
-
     let mut parent_classes = Vec::new();
 
+    // Override lua_name if #[lua_class(name = "...")] is provided
     for attr in &input.attrs {
         if attr.path().is_ident("lua_class") {
             let _ = attr.parse_nested_meta(|meta| {
@@ -24,9 +24,11 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
         }
     }
 
+    // Process named fields to extract attributes and parent classes
     let (attrs_init, parent_merges) = if let Data::Struct(struct_data) = &input.data
         && let Fields::Named(fields) = &struct_data.fields
     {
+        // Collect attributes and parent class merges
         let mut attr_quotes = Vec::new();
         let mut merge_quotes = Vec::new();
 
@@ -40,18 +42,22 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
             let mut default_val = None;
 
             for attr in &field.attrs {
+                // Process #[lua_attr(...)] attributes on the field
                 if attr.path().is_ident("lua_attr") {
                     let _ = attr.parse_nested_meta(|meta| {
+                        // Check for #[lua_attr(parent)]
                         if meta.path.is_ident("parent") {
                             is_parent = true;
                         }
 
+                        // Check for #[lua_attr(name = "...")]
                         if meta.path.is_ident("name") {
                             let value = meta.value()?;
                             let s: LitStr = value.parse()?;
                             custom_name = s.value();
                         }
 
+                        // Check for #[lua_attr(default = ...)]
                         if meta.path.is_ident("default") {
                             let expr: Expr = meta.value()?.parse()?;
 
@@ -68,6 +74,7 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
                 }
             }
 
+            // Append default value info to the field documentation if provided
             if let Some(default) = default_val {
                 if !field_doc.is_empty() {
                     field_doc.push(' ');
@@ -76,6 +83,8 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
                 field_doc.push_str(&format!("(Default: {})", default));
             }
 
+            // If this field is marked as a parent, merge its attributes into the current class's
+            // attributes and add it to the list of parent classes
             if is_parent {
                 merge_quotes.push(quote! {
                     let parent_attrs = <#field_type as crate::lua::stubs::Stubbed>::stubs().attrs;
@@ -85,6 +94,7 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
                     quote! { <#field_type as crate::lua::stubs::Stubbed>::stubs().name.into() },
                 );
             } else {
+                // Otherwise, add it as a regular attribute of the class
                 attr_quotes.push(quote! {
                     crate::lua::stubs::Attr {
                         name: #custom_name,
@@ -95,6 +105,10 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
             }
         }
 
+        // Initialize the attributes vector with the directly defined attributes
+        // Parent class attributes will be merged in later
+        // Using a Vec here to allow for dynamic merging of parent attributes, which may not be
+        // known at compile time
         (quote! {vec![#(#attr_quotes),*]}, quote! {#(#merge_quotes)*})
     } else {
         return syn::Error::new_spanned(
@@ -147,7 +161,6 @@ fn extract_doc(attrs: &[Attribute]) -> String {
 pub fn derive_lua_enum(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
-
     let mut variants = Vec::new();
 
     if let Data::Enum(enum_data) = &input.data {
@@ -161,12 +174,12 @@ pub fn derive_lua_enum(input: TokenStream) -> TokenStream {
             .into();
     }
 
-    let lua_type_string = variants.join(" | ");
+    let lua_type = variants.join(" | ");
 
     let expanded = quote! {
         impl crate::lua::stubs::LuaType for #name {
             fn lua_type() -> std::borrow::Cow<'static, str> {
-                std::borrow::Cow::Borrowed(#lua_type_string)
+                std::borrow::Cow::Borrowed(#lua_type)
             }
         }
     };
