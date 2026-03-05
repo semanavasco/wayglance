@@ -129,11 +129,32 @@ impl fmt::Display for Function {
     }
 }
 
+/// Represents a widget builder function that creates a widget table with the `type` field set.
+pub struct WidgetBuilder {
+    pub name: &'static str,
+    pub type_name: &'static str,
+    pub doc: &'static str,
+}
+
+impl fmt::Display for WidgetBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if !self.doc.is_empty() {
+            for line in self.doc.lines() {
+                writeln!(f, "--- {}", line)?;
+            }
+        }
+        writeln!(f, "---@param config {} The configuration table for the {} widget.", self.name, self.name)?;
+        writeln!(f, "---@return Widget The constructed widget.")?;
+        write!(f, "function {}(config) end", self.name)
+    }
+}
+
 /// A stub entry that can represent any kind of Lua type definition.
 pub enum Stub {
     Class(Class),
     Enum(Enum),
     Function(Function),
+    WidgetBuilder(WidgetBuilder),
 }
 
 /// Factory to build a [`Stub`] at runtime.

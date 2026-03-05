@@ -1,7 +1,7 @@
 use anyhow::Result;
 use gtk4::Label as GtkLabel;
 use mlua::{FromLua, Lua, Value as LuaValue};
-use wayglance_macros::LuaClass;
+use wayglance_macros::{LuaClass, WidgetBuilder};
 
 use crate::{
     dynamic::MaybeDynamic,
@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// A simple widget that displays a text label.
-#[derive(LuaClass)]
+#[derive(LuaClass, WidgetBuilder)]
 pub struct Label {
     #[lua_attr(parent)]
     pub properties: Properties,

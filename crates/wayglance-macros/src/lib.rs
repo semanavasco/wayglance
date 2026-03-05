@@ -376,3 +376,27 @@ pub fn lua_func(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
+
+#[proc_macro_derive(WidgetBuilder)]
+pub fn derive_widget_builder(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let ident = &input.ident;
+
+    let name = ident.to_string();
+    let type_name = name.to_lowercase();
+    let doc = extract_doc(&input.attrs);
+
+    let expanded = quote! {
+        inventory::submit! {
+            crate::lua::stubs::StubFactory {
+                build: || crate::lua::stubs::Stub::WidgetBuilder(crate::lua::stubs::WidgetBuilder {
+                    name: #name,
+                    type_name: #type_name,
+                    doc: #doc,
+                }),
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}

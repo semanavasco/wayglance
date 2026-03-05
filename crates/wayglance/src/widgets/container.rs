@@ -1,7 +1,7 @@
 use anyhow::Result;
 use gtk4::{Box as GtkBox, prelude::BoxExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
-use wayglance_macros::LuaClass;
+use wayglance_macros::{LuaClass, WidgetBuilder};
 
 use crate::{
     lua::types::Orientation,
@@ -10,7 +10,7 @@ use crate::{
 
 /// A container widget that can hold multiple child widgets, arranged either horizontally or
 /// vertically.
-#[derive(LuaClass)]
+#[derive(LuaClass, WidgetBuilder)]
 pub struct Container {
     #[lua_attr(parent)]
     pub properties: Properties,

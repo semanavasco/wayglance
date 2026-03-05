@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use gtk4::{Button as GtkButton, prelude::ButtonExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
-use wayglance_macros::LuaClass;
+use wayglance_macros::{LuaClass, WidgetBuilder};
 
 use crate::{
     lua::LUA,
@@ -9,8 +9,7 @@ use crate::{
 };
 
 /// A clickable button widget.
-#[derive(LuaClass)]
-#[lua_class(name = "Button")]
+#[derive(LuaClass, WidgetBuilder)]
 pub struct Button {
     #[lua_attr(parent)]
     pub properties: Properties,

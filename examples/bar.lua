@@ -39,8 +39,9 @@ load_initial_state()
 -- widgets -------------------------------------------------------------------
 
 local function workspace_button(id)
-  return Button(
-    Label(tostring(id), {
+  return Button({
+    child = Label({
+      text = tostring(id),
       class_list = wayglance.onSignal("hyprland::workspace_changed", function(workspace)
         if workspace and workspace.id then
           ActiveWorkspace = workspace.id
@@ -50,14 +51,12 @@ local function workspace_button(id)
       end),
       valign = "center",
     }),
-    {
-      class_list = { "ws-btn" },
-      valign = "center",
-      on_click = function()
-        wayglance.hyprland.switchWorkspace(id)
-      end,
-    }
-  )
+    class_list = { "ws-btn" },
+    valign = "center",
+    on_click = function()
+      wayglance.hyprland.switchWorkspace(id)
+    end,
+  })
 end
 
 local function workspaces_widget()
@@ -75,37 +74,37 @@ local function workspaces_widget()
 end
 
 local function title_widget()
-  return Label(
-    wayglance.onSignal("hyprland::active_window", function(window)
+  return Label({
+    text = wayglance.onSignal("hyprland::active_window", function(window)
       if window and window.title then
         ActiveWindowTitle = window.title
       end
 
       return ActiveWindowTitle
     end),
-    {
-      id = "window-title",
-      valign = "center",
-    }
-  )
+    id = "window-title",
+    valign = "center",
+  })
 end
 
 local function clock_widget()
-  return Label(
-    wayglance.setInterval(function()
+  return Label({
+    text = wayglance.setInterval(function()
       return os.date("%H:%M")
     end, 1000),
-    { id = "clock", valign = "center" }
-  )
+    id = "clock",
+    valign = "center",
+  })
 end
 
 local function date_widget()
-  return Label(
-    wayglance.setInterval(function()
+  return Label({
+    text = wayglance.setInterval(function()
       return os.date("%a %d %b")
     end, 60000),
-    { id = "date", valign = "center" }
-  )
+    id = "date",
+    valign = "center",
+  })
 end
 
 local function spacer()

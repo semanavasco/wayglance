@@ -1,9 +1,0 @@
-{
-  "workspace": {
-    "library": ["res"],
-    "checkThirdParty": false
-  },
-  "diagnostics": {
-    "globals": ["Label", "Container", "Button", "wayglance"]
-  }
-}

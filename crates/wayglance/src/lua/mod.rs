@@ -30,10 +30,23 @@ pub static LUA: OnceLock<Lua> = OnceLock::new();
 ///
 /// Must be called before the user config is evaluated and before [`LUA`] is set.
 pub fn register_lua(lua: &Lua) -> Result<()> {
-    lua.load(include_str!("../../../../res/widgets.lua"))
-        .exec()?;
-
     let globals = lua.globals();
+
+    // Register widget builder functions as Lua globals
+    // Each builder takes a config table, sets its `type` field, and returns it
+    for factory in inventory::iter::<StubFactory> {
+        if let Stub::WidgetBuilder(wb) = (factory.build)() {
+            let type_name = wb.type_name;
+            globals.set(
+                wb.name,
+                lua.create_function(move |_, config: mlua::Table| {
+                    config.set("type", type_name)?;
+                    Ok(config)
+                })?,
+            )?;
+        }
+    }
+
     let wayglance = lua.create_table()?;
     globals.set("wayglance", &wayglance)?;
 
@@ -66,22 +79,38 @@ pub fn gen_stubs() -> String {
     let mut enums = Vec::new();
     let mut classes = Vec::new();
     let mut functions = Vec::new();
+    let mut builders = Vec::new();
 
     for factory in inventory::iter::<StubFactory> {
         match (factory.build)() {
             Stub::Enum(e) => enums.push(e.to_string()),
             Stub::Class(c) => classes.push(c.to_string()),
             Stub::Function(f) => functions.push(f.to_string()),
+            Stub::WidgetBuilder(wb) => builders.push(wb.to_string()),
         }
     }
 
     let mut out = String::new();
     out.push_str("---@meta\n\n");
 
-    out.push_str(&enums.join("\n\n"));
-    out.push_str("\n\n");
-    out.push_str(&classes.join("\n"));
-    out.push('\n');
-    out.push_str(&functions.join("\n\n"));
+    if !enums.is_empty() {
+        out.push_str(&enums.join("\n\n"));
+    }
+
+    if !classes.is_empty() {
+        out.push_str("\n\n");
+        out.push_str(&classes.join("\n"));
+    }
+
+    if !functions.is_empty() {
+        out.push('\n');
+        out.push_str(&functions.join("\n\n"));
+    }
+
+    if !builders.is_empty() {
+        out.push_str("\n\n");
+        out.push_str(&builders.join("\n\n"));
+    }
+
     out
 }
