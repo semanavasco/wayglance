@@ -6,6 +6,29 @@
 --- handling.
 wayglance = {}
 
+--- The `hyprland` module, which provides functions for querying Hyprland state and dispatching
+--- commands, as well as forwarding events from the Hyprland IPC listener.
+---
+--- ### Signals
+--- The following signals are emitted on the `wayglance` signal bus:
+--- - `hyprland::workspace_changed` : Emitted when the user switches to a different workspace.
+--- Data: `HyprlandWorkspace`
+--- - `hyprland::workspace_added` : Emitted when a new workspace is created.
+--- Data: `HyprlandWorkspace`
+--- - `hyprland::workspace_deleted` : Emitted when a workspace is destroyed.
+--- Data: `HyprlandWorkspace`
+--- - `hyprland::workspace_moved` : Emitted when a workspace is moved to another monitor.
+--- Data: `HyprlandWorkspace`
+--- - `hyprland::workspace_renamed` : Emitted when a workspace is given a new name.
+--- Data: `HyprlandWorkspace`
+--- - `hyprland::active_window` : Emitted when the focused window changes.
+--- Data: `HyprlandWindow`
+--- - `hyprland::fullscreen_changed` : Emitted when the active window's fullscreen state toggles.
+--- Data: `boolean`
+--- - `hyprland::active_monitor_changed` : Emitted when focus moves to a different monitor.
+--- Data: `HyprlandActiveMonitor`
+wayglance.hyprland = {}
+
 --- The z-level layer where the window will be placed.
 ---@alias Layer "background" | "bottom" | "top" | "overlay"
 
@@ -14,6 +37,29 @@ wayglance = {}
 
 --- Alignment for widgets within their parent container.
 ---@alias Alignment "start" | "center" | "end" | "fill" | "baseline"
+
+--- Information about the currently active window in Hyprland, including its title, class, PID,
+--- monitor, workspace, position, size, and other states.
+---@class HyprlandActiveWindowInfo
+---@field address string The unique hex address of the window.
+---@field title string The title of the active window.
+---@field initial_title string The initial title of the window when it was first created.
+---@field class string The class of the active window.
+---@field initial_class string The initial class of the window when it was first created.
+---@field pid number The process ID of the active window.
+---@field monitor ? number The ID of the monitor the active window is on, if available.
+---@field workspace HyprlandWorkspace Basic information about the workspace the active window is on.
+---@field width number The width of the window in pixels.
+---@field height number The height of the window in pixels.
+---@field x number The x-coordinate of the window's top-left corner.
+---@field y number The y-coordinate of the window's top-left corner.
+---@field floating boolean Whether the window is currently floating.
+---@field fullscreen boolean Whether the window is currently in fullscreen mode.
+
+--- Basic information about a window, including its title and class.
+---@class HyprlandWindow
+---@field title string The title of the window.
+---@field class string The class of the window.
 
 --- A container widget that can hold multiple child widgets, arranged either horizontally or
 --- vertically.
@@ -72,6 +118,57 @@ wayglance = {}
 ---@field bottom ? number Margin from the bottom edge of the monitor, in pixels. (Default: 0)
 ---@field left ? number Margin from the left edge of the monitor, in pixels. (Default: 0)
 
+--- Basic information about a workspace, including its ID and name.
+---@class HyprlandWorkspace
+---@field id number The unique identifier for the workspace.
+---@field name string The name of the workspace.
+
+--- Detailed information about a workspace in Hyprland, including its ID, name,
+--- associated monitor, number of windows, last focused window title, and whether it is fullscreen.
+---@class HyprlandWorkspaceInfo : HyprlandWorkspace
+---@field monitor string The name of the monitor this workspace is on.
+---@field windows number The number of windows currently on this workspace.
+---@field last_window_title string The title of the last focused window on this workspace.
+---@field fullscreen boolean Whether this workspace is currently in fullscreen mode.
+---@field monitor_id ? number The unique identifier of the monitor this workspace is on.
+---@field id number The unique identifier for the workspace.
+---@field name string The name of the workspace.
+
+--- Information about a monitor in Hyprland, including its ID, name, resolution,
+--- position, and currently active workspace.
+---@class HyprlandMonitorInfo
+---@field id number The unique identifier for the monitor.
+---@field name string The name of the monitor, as configured in Hyprland.
+---@field focused boolean Whether this monitor is currently focused (i.e., has the active workspace).
+---@field width number The width of the monitor in pixels.
+---@field height number The height of the monitor in pixels.
+---@field x number The x-coordinate of the monitor's top-left corner.
+---@field y number The y-coordinate of the monitor's top-left corner.
+---@field refresh_rate number The refresh rate of the monitor in Hz.
+---@field scale number The UI scale factor for the monitor.
+---@field active_workspace HyprlandWorkspace Basic information about the currently active workspace on this monitor.
+
+--- Basic information about an active monitor, including its name and the name of the active
+--- workspace.
+---@class HyprlandActiveMonitor
+---@field monitor string The name of the monitor.
+---@field workspace ? string The name of the workspace on the monitor, if available.
+
+--- Returns information about the currently active window in Hyprland, including its title, class,
+--- PID, monitor, workspace, position, and size. If there is no active window, a nil value is
+--- returned.
+---@return HyprlandActiveWindowInfo | nil active_window A table containing information about the currently active window, or nil if there is no active window.
+function wayglance.hyprland.getActiveWindow() end
+
+--- Toggles the fullscreen state of the currently active window in Hyprland.
+function wayglance.hyprland.toggleFullscreen() end
+
+--- Toggles the floating state of the currently active window in Hyprland.
+function wayglance.hyprland.toggleFloating() end
+
+--- Closes the currently active window in Hyprland.
+function wayglance.hyprland.killActiveWindow() end
+
 --- Schedules the provided callback to be called repeatedly at the specified interval (in ms).
 ---@param callback function The callback to call after interval ms have passed.
 ---@param interval number The interval in milliseconds to wait before calling the callback.
@@ -88,6 +185,44 @@ function wayglance.onSignal(signals, callback) end
 ---@param signal string The name of the signal to emit.
 ---@param data ? any Optional data to include with the signal. Can be any Lua value.
 function wayglance.emitSignal(signal, data) end
+
+--- Switches the focus to the workspace with the given numerical ID.
+---@param workspace_id number The numerical ID of the workspace to switch to.
+function wayglance.hyprland.switchWorkspace(workspace_id) end
+
+--- Moves the currently active window to the workspace with the given numerical ID without
+--- switching focus to that workspace.
+---@param workspace_id number The numerical ID of the workspace to move the window to.
+function wayglance.hyprland.moveActiveToWorkspaceSilent(workspace_id) end
+
+--- Switches the focus to a workspace relative to the current one (e.g., +1 or -1).
+---@param offset number The relative offset from the current workspace (e.g., 1 for next, -1 for previous).
+function wayglance.hyprland.switchWorkspaceRelative(offset) end
+
+--- Returns a list of all current workspaces in Hyprland, including their IDs, names,
+--- associated monitors, and status information.
+---@return HyprlandWorkspaceInfo[] workspaces A list of information about all current workspaces.
+function wayglance.hyprland.getWorkspaces() end
+
+--- Toggles a special workspace (scratchpad) with the given name. If no name is provided,
+--- the default special workspace is used.
+---@param workspace_name ? string Optional name of the special workspace to toggle. If nil, the default special workspace is used.
+function wayglance.hyprland.toggleSpecialWorkspace(workspace_name) end
+
+--- Switches the focus back to the previously active workspace.
+function wayglance.hyprland.switchToPreviousWorkspace() end
+
+--- Switches the focus to the workspace with the given name.
+---@param workspace_name string The name of the workspace to switch to.
+function wayglance.hyprland.switchWorkspaceNamed(workspace_name) end
+
+--- Moves the currently active window to the workspace with the given numerical ID.
+---@param workspace_id number The numerical ID of the workspace to move the window to.
+function wayglance.hyprland.moveActiveToWorkspace(workspace_id) end
+
+--- Returns a list of Hyprland monitors, including their IDs, names, and focus status.
+---@return HyprlandMonitorInfo[] monitors A list of information about all connected monitors.
+function wayglance.hyprland.getMonitors() end
 
 --- A container widget that can hold multiple child widgets, arranged either horizontally or
 --- vertically.

@@ -1,13 +1,51 @@
+pub mod monitors;
+pub mod utils;
+pub mod windows;
+pub mod workspaces;
+
 use std::thread;
 
 use async_channel::Receiver;
-use hyprland::{
-    data::{Client, Monitors, Workspaces},
-    dispatch::{Dispatch, DispatchType, FullscreenType, WorkspaceIdentifierWithSpecial},
-    event_listener::EventListener,
-    shared::{HyprData, HyprDataActiveOptional, HyprDataVec, WorkspaceType},
-};
+use hyprland::{event_listener::EventListener, shared::WorkspaceType};
 use mlua::{IntoLua, Lua, Value as LuaValue};
+use wayglance_macros::LuaModule;
+
+use monitors::get_monitors;
+use windows::{get_active_window, kill_active_win, toggle_floating, toggle_fs};
+use workspaces::{
+    get_workspaces, mv_active_to_ws, mv_active_to_ws_silent, switch_prev_ws, switch_ws,
+    switch_ws_named, switch_ws_rel, toggle_special_ws,
+};
+
+use monitors::ActiveMonitor;
+use windows::Window;
+use workspaces::Workspace;
+
+/// The `hyprland` module, which provides functions for querying Hyprland state and dispatching
+/// commands, as well as forwarding events from the Hyprland IPC listener.
+///
+/// ### Signals
+/// The following signals are emitted on the `wayglance` signal bus:
+/// - `hyprland::workspace_changed` : Emitted when the user switches to a different workspace.
+///   Data: `HyprlandWorkspace`
+/// - `hyprland::workspace_added` : Emitted when a new workspace is created.
+///   Data: `HyprlandWorkspace`
+/// - `hyprland::workspace_deleted` : Emitted when a workspace is destroyed.
+///   Data: `HyprlandWorkspace`
+/// - `hyprland::workspace_moved` : Emitted when a workspace is moved to another monitor.
+///   Data: `HyprlandWorkspace`
+/// - `hyprland::workspace_renamed` : Emitted when a workspace is given a new name.
+///   Data: `HyprlandWorkspace`
+/// - `hyprland::active_window` : Emitted when the focused window changes.
+///   Data: `HyprlandWindow`
+/// - `hyprland::fullscreen_changed` : Emitted when the active window's fullscreen state toggles.
+///   Data: `boolean`
+/// - `hyprland::active_monitor_changed` : Emitted when focus moves to a different monitor.
+///   Data: `HyprlandActiveMonitor`
+#[allow(dead_code)]
+#[derive(LuaModule)]
+#[lua_module(parent = "wayglance")]
+struct Hyprland;
 
 /// Events emitted by the Hyprland IPC listener.
 ///
@@ -21,14 +59,12 @@ pub enum HyprlandEvent {
     /// - `hyprland::workspace_deleted` : a workspace was destroyed
     /// - `hyprland::workspace_moved`   : a workspace was moved to another monitor
     /// - `hyprland::workspace_renamed` : a workspace was given a new name
-    Workspace { id: i32, name: String },
+    Workspace(Workspace),
 
     /// Emitted when the focused window changes.
     ///
     /// Signal: `hyprland::active_window`
-    ///
-    /// Both fields are empty strings when no window is focused (e.g. on an empty workspace).
-    ActiveWindowChanged { title: String, class: String },
+    ActiveWindowChanged(Window),
 
     /// Emitted when the fullscreen state of the active window toggles.
     ///
@@ -38,39 +74,16 @@ pub enum HyprlandEvent {
     /// Emitted when keyboard focus moves to a different monitor.
     ///
     /// Signal: `hyprland::active_monitor_changed`
-    ///
-    /// `workspace` is `nil` in Lua when Hyprland does not report an associated
-    /// workspace for the monitor at the time of the event.
-    ActiveMonitorChanged {
-        monitor: String,
-        workspace: Option<String>,
-    },
+    ActiveMonitorChanged(ActiveMonitor),
 }
 
 impl IntoLua for HyprlandEvent {
     fn into_lua(self, lua: &Lua) -> mlua::Result<LuaValue> {
         match self {
-            HyprlandEvent::Workspace { id, name } => {
-                let table = lua.create_table()?;
-                table.set("id", id)?;
-                table.set("name", name)?;
-                Ok(LuaValue::Table(table))
-            }
-            HyprlandEvent::ActiveWindowChanged { title, class } => {
-                let table = lua.create_table()?;
-                table.set("title", title)?;
-                table.set("class", class)?;
-                Ok(LuaValue::Table(table))
-            }
+            HyprlandEvent::Workspace(event) => event.into_lua(lua),
+            HyprlandEvent::ActiveWindowChanged(event) => event.into_lua(lua),
             HyprlandEvent::FullscreenStateChanged(state) => Ok(LuaValue::Boolean(state)),
-            HyprlandEvent::ActiveMonitorChanged { monitor, workspace } => {
-                let table = lua.create_table()?;
-                table.set("monitor", monitor)?;
-                if let Some(ws) = workspace {
-                    table.set("workspace", ws)?;
-                }
-                Ok(LuaValue::Table(table))
-            }
+            HyprlandEvent::ActiveMonitorChanged(event) => event.into_lua(lua),
         }
     }
 }
@@ -101,10 +114,10 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
             if sender_clone
                 .send_blocking((
                     "workspace_changed".to_string(),
-                    HyprlandEvent::Workspace {
+                    HyprlandEvent::Workspace(Workspace {
                         id: workspace.id,
                         name: ws_name,
-                    },
+                    }),
                 ))
                 .is_err()
             {
@@ -123,10 +136,10 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
             if sender_clone
                 .send_blocking((
                     "workspace_deleted".to_string(),
-                    HyprlandEvent::Workspace {
+                    HyprlandEvent::Workspace(Workspace {
                         id: workspace.id,
                         name: ws_name,
-                    },
+                    }),
                 ))
                 .is_err()
             {
@@ -145,10 +158,10 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
             if sender_clone
                 .send_blocking((
                     "workspace_added".to_string(),
-                    HyprlandEvent::Workspace {
+                    HyprlandEvent::Workspace(Workspace {
                         id: workspace.id,
                         name: ws_name,
-                    },
+                    }),
                 ))
                 .is_err()
             {
@@ -167,10 +180,10 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
             if sender_clone
                 .send_blocking((
                     "workspace_moved".to_string(),
-                    HyprlandEvent::Workspace {
+                    HyprlandEvent::Workspace(Workspace {
                         id: workspace.id,
                         name: ws_name,
-                    },
+                    }),
                 ))
                 .is_err()
             {
@@ -183,10 +196,10 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
             if sender_clone
                 .send_blocking((
                     "workspace_renamed".to_string(),
-                    HyprlandEvent::Workspace {
+                    HyprlandEvent::Workspace(Workspace {
                         id: workspace.id,
                         name: workspace.name,
-                    },
+                    }),
                 ))
                 .is_err()
             {
@@ -204,7 +217,7 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
             if sender_clone
                 .send_blocking((
                     "active_window".to_string(),
-                    HyprlandEvent::ActiveWindowChanged { title, class },
+                    HyprlandEvent::ActiveWindowChanged(Window { title, class }),
                 ))
                 .is_err()
             {
@@ -236,10 +249,10 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
             if sender_clone
                 .send_blocking((
                     "active_monitor_changed".to_string(),
-                    HyprlandEvent::ActiveMonitorChanged {
+                    HyprlandEvent::ActiveMonitorChanged(ActiveMonitor {
                         monitor: event.monitor_name,
                         workspace,
-                    },
+                    }),
                 ))
                 .is_err()
             {
@@ -257,200 +270,70 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
     receiver
 }
 
-/// Helper function to call a dispatch and convert any errors into an mlua::Error with a
-/// descriptive message.
-fn call_dispatch(dispatch_type: DispatchType<'_>, action: &str) -> mlua::Result<()> {
-    Dispatch::call(dispatch_type)
-        .map_err(|e| mlua::Error::external(format!("Failed to {}: {}", action, e)))
-}
-
 /// Registers Hyprland-specific Lua functions under the `hyprland` table.
 pub fn register_lua(lua: &Lua, table: &mlua::Table) -> mlua::Result<()> {
     let hyprland = lua.create_table()?;
 
     hyprland.set(
         "getWorkspaces",
-        lua.create_function(|lua, ()| {
-            let workspaces = Workspaces::get()
-                .map_err(|e| mlua::Error::external(format!("Failed to get workspaces: {}", e)))?
-                .to_vec();
-
-            let ws_table = lua.create_table()?;
-
-            for (i, ws) in workspaces.into_iter().enumerate() {
-                let ws_entry = lua.create_table()?;
-
-                ws_entry.set("id", ws.id)?;
-                ws_entry.set("name", ws.name)?;
-                ws_entry.set("monitor", ws.monitor)?;
-                ws_entry.set("windows", ws.windows)?;
-                ws_entry.set("last_window_title", ws.last_window_title)?;
-                ws_entry.set("fullscreen", ws.fullscreen)?;
-                ws_entry.set("monitor_id", ws.monitor_id)?;
-
-                ws_table.set(i + 1, ws_entry)?;
-            }
-
-            Ok(ws_table)
-        })?,
+        lua.create_function(|_, ()| get_workspaces())?,
     )?;
 
-    hyprland.set(
-        "getMonitors",
-        lua.create_function(|lua, ()| {
-            let monitors = Monitors::get()
-                .map_err(|e| mlua::Error::external(format!("Failed to get monitors: {}", e)))?
-                .to_vec();
-
-            let monitor_table = lua.create_table()?;
-
-            for (i, monitor) in monitors.into_iter().enumerate() {
-                let monitor_entry = lua.create_table()?;
-
-                monitor_entry.set("id", monitor.id)?;
-                monitor_entry.set("name", monitor.name)?;
-                monitor_entry.set("focused", monitor.focused)?;
-
-                monitor_table.set(i + 1, monitor_entry)?;
-            }
-
-            Ok(monitor_table)
-        })?,
-    )?;
+    hyprland.set("getMonitors", lua.create_function(|_, ()| get_monitors())?)?;
 
     hyprland.set(
         "getActiveWindow",
-        lua.create_function(|lua, ()| {
-            let active_window = Client::get_active().map_err(|e| {
-                mlua::Error::external(format!("Failed to get active window: {}", e))
-            })?;
-
-            let window_table = lua.create_table()?;
-
-            if let Some(window) = active_window {
-                window_table.set("title", window.title)?;
-                window_table.set("class", window.class)?;
-                window_table.set("pid", window.pid)?;
-                window_table.set("monitor", window.monitor)?;
-
-                let workspace = lua.create_table()?;
-                workspace.set("id", window.workspace.id)?;
-                workspace.set("name", window.workspace.name)?;
-                window_table.set("workspace", workspace)?;
-
-                let at = lua.create_table()?;
-                at.set("x", window.at.0)?;
-                at.set("y", window.at.1)?;
-                window_table.set("at", at)?;
-
-                let size = lua.create_table()?;
-                size.set("width", window.size.0)?;
-                size.set("height", window.size.1)?;
-                window_table.set("size", size)?;
-            }
-
-            Ok(window_table)
-        })?,
+        lua.create_function(|_, ()| get_active_window())?,
     )?;
 
     hyprland.set(
         "switchWorkspace",
-        lua.create_function(|_, workspace_id: i32| {
-            call_dispatch(
-                DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Id(workspace_id)),
-                "switch workspace",
-            )
-        })?,
+        lua.create_function(|_, ws_id| switch_ws(ws_id))?,
     )?;
 
     hyprland.set(
         "switchWorkspaceRelative",
-        lua.create_function(|_, offset: i32| {
-            call_dispatch(
-                DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Relative(offset)),
-                "switch workspace",
-            )
-        })?,
+        lua.create_function(|_, offset| switch_ws_rel(offset))?,
     )?;
 
     hyprland.set(
         "switchWorkspaceNamed",
-        lua.create_function(|_, workspace_name: String| {
-            call_dispatch(
-                DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Name(&workspace_name)),
-                "switch workspace",
-            )
-        })?,
+        lua.create_function(|_, ws_name| switch_ws_named(ws_name))?,
     )?;
 
     hyprland.set(
         "switchToPreviousWorkspace",
-        lua.create_function(|_, ()| {
-            call_dispatch(
-                DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Previous),
-                "switch workspace",
-            )
-        })?,
+        lua.create_function(|_, ()| switch_prev_ws())?,
     )?;
 
     hyprland.set(
         "moveActiveToWorkspace",
-        lua.create_function(|_, workspace_id: i32| {
-            call_dispatch(
-                DispatchType::MoveToWorkspace(
-                    WorkspaceIdentifierWithSpecial::Id(workspace_id),
-                    None,
-                ),
-                "move active window to workspace",
-            )
-        })?,
+        lua.create_function(|_, ws_id| mv_active_to_ws(ws_id))?,
     )?;
 
     hyprland.set(
         "moveActiveToWorkspaceSilent",
-        lua.create_function(|_, workspace_id: i32| {
-            call_dispatch(
-                DispatchType::MoveToWorkspaceSilent(
-                    WorkspaceIdentifierWithSpecial::Id(workspace_id),
-                    None,
-                ),
-                "move active window to workspace silently",
-            )
-        })?,
+        lua.create_function(|_, ws_id| mv_active_to_ws_silent(ws_id))?,
     )?;
 
     hyprland.set(
         "toggleSpecialWorkspace",
-        lua.create_function(|_, workspace_name: Option<String>| {
-            call_dispatch(
-                DispatchType::ToggleSpecialWorkspace(workspace_name),
-                "toggle special workspace",
-            )
-        })?,
+        lua.create_function(|_, ws_name| toggle_special_ws(ws_name))?,
     )?;
 
     hyprland.set(
         "toggleFloating",
-        lua.create_function(|_, ()| {
-            call_dispatch(DispatchType::ToggleFloating(None), "toggle floating")
-        })?,
+        lua.create_function(|_, ()| toggle_floating())?,
     )?;
 
     hyprland.set(
         "toggleFullscreen",
-        lua.create_function(|_, ()| {
-            call_dispatch(
-                DispatchType::ToggleFullscreen(FullscreenType::NoParam),
-                "toggle fullscreen",
-            )
-        })?,
+        lua.create_function(|_, ()| toggle_fs())?,
     )?;
 
     hyprland.set(
         "killActiveWindow",
-        lua.create_function(|_, ()| {
-            call_dispatch(DispatchType::KillActiveWindow, "kill active window")
-        })?,
+        lua.create_function(|_, ()| kill_active_win())?,
     )?;
 
     table.set("hyprland", hyprland)?;
