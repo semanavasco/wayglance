@@ -88,6 +88,15 @@ impl IntoLua for HyprlandEvent {
     }
 }
 
+/// Helper function to parse workspace names from Hyprland events.
+fn parse_ws(name: WorkspaceType) -> String {
+    match name {
+        WorkspaceType::Regular(name) => name,
+        WorkspaceType::Special(Some(name)) => name,
+        WorkspaceType::Special(None) => "special".to_string(),
+    }
+}
+
 /// Spawns a background thread that connects to the Hyprland IPC socket and listens for compositor
 /// events.
 ///
@@ -103,162 +112,57 @@ pub fn start_listener() -> Receiver<(String, HyprlandEvent)> {
     thread::spawn(move || {
         let mut listener = EventListener::new();
 
-        let sender_clone = sender.clone();
-        listener.add_workspace_changed_handler(move |workspace| {
-            let ws_name = match workspace.name {
-                WorkspaceType::Regular(name) => name,
-                WorkspaceType::Special(Some(name)) => name,
-                WorkspaceType::Special(None) => "special".to_string(),
+        // Helper macro to add an event handler that forwards a specific signal with the provided
+        // data transformation
+        macro_rules! add_event {
+            ($method:ident, $signal:expr, $data:ident => $event:expr) => {
+                let s = sender.clone();
+                listener.$method(move |$data| {
+                    if s.send_blocking(($signal.to_string(), $event)).is_err() {
+                        tracing::warn!("Failed to send {} event", $signal);
+                    }
+                });
             };
+        }
 
-            if sender_clone
-                .send_blocking((
-                    "workspace_changed".to_string(),
+        // Helper macro to add workspace-related event handlers
+        macro_rules! add_ws_event {
+            ($method:ident, $signal:expr) => {
+                add_event!($method, $signal, ws =>
                     HyprlandEvent::Workspace(Workspace {
-                        id: workspace.id,
-                        name: ws_name,
-                    }),
-                ))
-                .is_err()
-            {
-                tracing::warn!("Failed to send workspace change event");
-            }
-        });
-
-        let sender_clone = sender.clone();
-        listener.add_workspace_deleted_handler(move |workspace| {
-            let ws_name = match workspace.name {
-                WorkspaceType::Regular(name) => name,
-                WorkspaceType::Special(Some(name)) => name,
-                WorkspaceType::Special(None) => "special".to_string(),
+                        id: ws.id,
+                        name: parse_ws(ws.name)
+                    })
+                );
             };
+        }
 
-            if sender_clone
-                .send_blocking((
-                    "workspace_deleted".to_string(),
-                    HyprlandEvent::Workspace(Workspace {
-                        id: workspace.id,
-                        name: ws_name,
-                    }),
-                ))
-                .is_err()
-            {
-                tracing::warn!("Failed to send workspace destroy event");
-            }
+        add_ws_event!(add_workspace_changed_handler, "workspace_changed");
+        add_ws_event!(add_workspace_deleted_handler, "workspace_deleted");
+        add_ws_event!(add_workspace_added_handler, "workspace_added");
+        add_ws_event!(add_workspace_moved_handler, "workspace_moved");
+
+        add_event!(add_workspace_renamed_handler, "workspace_renamed", ws =>
+            HyprlandEvent::Workspace(Workspace { id: ws.id, name: ws.name })
+        );
+
+        // Window events
+        add_event!(add_active_window_changed_handler, "active_window", ev => {
+            let (title, class) = ev.map_or((String::new(), String::new()), |w| (w.title, w.class));
+            HyprlandEvent::ActiveWindowChanged(Window { title, class })
         });
 
-        let sender_clone = sender.clone();
-        listener.add_workspace_added_handler(move |workspace| {
-            let ws_name = match workspace.name {
-                WorkspaceType::Regular(name) => name,
-                WorkspaceType::Special(Some(name)) => name,
-                WorkspaceType::Special(None) => "special".to_string(),
-            };
+        add_event!(add_fullscreen_state_changed_handler, "fullscreen_changed", state =>
+            HyprlandEvent::FullscreenStateChanged(state)
+        );
 
-            if sender_clone
-                .send_blocking((
-                    "workspace_added".to_string(),
-                    HyprlandEvent::Workspace(Workspace {
-                        id: workspace.id,
-                        name: ws_name,
-                    }),
-                ))
-                .is_err()
-            {
-                tracing::warn!("Failed to send workspace added event");
-            }
-        });
-
-        let sender_clone = sender.clone();
-        listener.add_workspace_moved_handler(move |workspace| {
-            let ws_name = match workspace.name {
-                WorkspaceType::Regular(name) => name,
-                WorkspaceType::Special(Some(name)) => name,
-                WorkspaceType::Special(None) => "special".to_string(),
-            };
-
-            if sender_clone
-                .send_blocking((
-                    "workspace_moved".to_string(),
-                    HyprlandEvent::Workspace(Workspace {
-                        id: workspace.id,
-                        name: ws_name,
-                    }),
-                ))
-                .is_err()
-            {
-                tracing::warn!("Failed to send workspace moved event");
-            }
-        });
-
-        let sender_clone = sender.clone();
-        listener.add_workspace_renamed_handler(move |workspace| {
-            if sender_clone
-                .send_blocking((
-                    "workspace_renamed".to_string(),
-                    HyprlandEvent::Workspace(Workspace {
-                        id: workspace.id,
-                        name: workspace.name,
-                    }),
-                ))
-                .is_err()
-            {
-                tracing::warn!("Failed to send workspace renamed event");
-            }
-        });
-
-        let sender_clone = sender.clone();
-        listener.add_active_window_changed_handler(move |event| {
-            let (title, class) = match event {
-                Some(window) => (window.title, window.class),
-                None => (String::new(), String::new()),
-            };
-
-            if sender_clone
-                .send_blocking((
-                    "active_window".to_string(),
-                    HyprlandEvent::ActiveWindowChanged(Window { title, class }),
-                ))
-                .is_err()
-            {
-                tracing::warn!("Failed to send active_window change event");
-            }
-        });
-
-        let sender_clone = sender.clone();
-        listener.add_fullscreen_state_changed_handler(move |state| {
-            if sender_clone
-                .send_blocking((
-                    "fullscreen_changed".to_string(),
-                    HyprlandEvent::FullscreenStateChanged(state),
-                ))
-                .is_err()
-            {
-                tracing::warn!("Failed to send fullscreen_changed event");
-            }
-        });
-
-        let sender_clone = sender.clone();
-        listener.add_active_monitor_changed_handler(move |event| {
-            let workspace = event.workspace_name.map(|ws| match ws {
-                WorkspaceType::Regular(name) => name,
-                WorkspaceType::Special(Some(name)) => name,
-                WorkspaceType::Special(None) => "special".to_string(),
-            });
-
-            if sender_clone
-                .send_blocking((
-                    "active_monitor_changed".to_string(),
-                    HyprlandEvent::ActiveMonitorChanged(ActiveMonitor {
-                        monitor: event.monitor_name,
-                        workspace,
-                    }),
-                ))
-                .is_err()
-            {
-                tracing::warn!("Failed to send active_monitor_changed event");
-            }
-        });
+        // Monitor events
+        add_event!(add_active_monitor_changed_handler, "active_monitor_changed", ev =>
+            HyprlandEvent::ActiveMonitorChanged(ActiveMonitor {
+                monitor: ev.monitor_name,
+                workspace: ev.workspace_name.map(parse_ws),
+            })
+        );
 
         tracing::debug!("Starting Hyprland IPC listener...");
 
