@@ -14,6 +14,26 @@ pub trait LuaType {
     fn lua_type() -> Cow<'static, str>;
 }
 
+/// Represents a Lua module, including its name, optional parent module path, and documentation.
+pub struct Module {
+    pub name: &'static str,
+    pub parent: Option<&'static str>,
+    pub doc: &'static str,
+}
+
+impl Module {
+    pub fn format_with_path(&self, full_path: &str) -> String {
+        let mut out = String::new();
+        if !self.doc.is_empty() {
+            for line in self.doc.lines() {
+                out.push_str(&format!("--- {}\n", line));
+            }
+        }
+        out.push_str(&format!("{} = {{}}", full_path));
+        out
+    }
+}
+
 /// Represents an attribute of a Lua class, including its name, type, and documentation.
 #[derive(Clone)]
 pub struct Attr {
@@ -85,6 +105,7 @@ impl fmt::Display for Enum {
 
 /// Represents a Lua function, including its name, documentation, arguments, and return type.
 pub struct Function {
+    pub module: Option<&'static str>,
     pub name: &'static str,
     pub doc: &'static str,
     pub args: Cow<'static, [Attr]>,
@@ -116,10 +137,16 @@ impl fmt::Display for Function {
             writeln!(f)?;
         }
 
+        let full_name = if let Some(module) = self.module {
+            format!("{}.{}", module, self.name)
+        } else {
+            self.name.to_string()
+        };
+
         write!(
             f,
             "function {}({}) end",
-            self.name,
+            full_name,
             self.args
                 .iter()
                 .map(|a| a.name)
@@ -155,6 +182,7 @@ impl fmt::Display for WidgetBuilder {
 
 /// A stub entry that can represent any kind of Lua type definition.
 pub enum Stub {
+    Module(Module),
     Class(Class),
     Enum(Enum),
     Function(Function),

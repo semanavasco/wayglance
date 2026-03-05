@@ -1,10 +1,16 @@
 use mlua::{Function as LuaFn, Lua, Value as LuaValue};
-use wayglance_macros::lua_func;
+use wayglance_macros::{LuaModule, lua_func};
 
 use crate::{dynamic::SIGNAL_BUS, lua::types::StringOrStrings};
 
+/// The `wayglance` module, which provides helper functions for dynamic bindings and event
+/// handling.
+#[allow(dead_code)]
+#[derive(LuaModule)]
+pub struct Wayglance;
+
 /// Schedules the provided callback to be called repeatedly at the specified interval (in ms).
-#[lua_func(name = "setInterval", skip = "lua")]
+#[lua_func(name = "setInterval", skip = "lua", module = "wayglance")]
 #[arg(
     name = "callback",
     doc = "The callback to call after interval ms have passed."
@@ -26,7 +32,7 @@ pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<L
 }
 
 /// Listen for one or more signals and call the provided callback when they are emitted.
-#[lua_func(name = "setInterval", skip = "lua")]
+#[lua_func(name = "onSignal", skip = "lua", module = "wayglance")]
 #[arg(name = "signals", doc = "The signal or signals to listen for.")]
 #[arg(
     name = "callback",
@@ -45,7 +51,7 @@ pub fn on_signal(lua: &Lua, signals: StringOrStrings, callback: LuaFn) -> mlua::
 }
 
 /// Emit a signal with the given name and optional data payload.
-#[lua_func(name = "emitSignal")]
+#[lua_func(name = "emitSignal", module = "wayglance")]
 #[arg(name = "signal", doc = "The name of the signal to emit.")]
 #[arg(
     name = "data",

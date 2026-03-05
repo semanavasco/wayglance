@@ -30,7 +30,7 @@ fn main() -> Result<ExitCode> {
             Ok(run_app(config))
         }
         Command::GenStubs => {
-            let stubs = lua::gen_stubs();
+            let stubs = lua::gen_stubs()?;
             println!("{stubs}");
             Ok(ExitCode::new(0))
         }

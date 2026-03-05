@@ -233,22 +233,27 @@ pub fn lua_func(attr: TokenStream, item: TokenStream) -> TokenStream {
     let name = &input.sig.ident;
     let mut name_str = name.to_string();
     let func_doc = extract_doc(&input.attrs);
+    let mut module = quote! { None };
 
     // Parse attributes passed directly to the macro
     let mut skip_args = HashSet::new();
     let attr_parser = syn::meta::parser(|meta| {
-        // Check for #[lua_func(skip = "arg_name")]
         if meta.path.is_ident("skip") {
             let value = meta.value()?;
             let s: LitStr = value.parse()?;
             skip_args.insert(s.value());
         }
 
-        // Check for #[lua_func(name = "custom_name")]
         if meta.path.is_ident("name") {
             let value = meta.value()?;
             let s: LitStr = value.parse()?;
             name_str = s.value();
+        }
+
+        if meta.path.is_ident("module") {
+            let value = meta.value()?;
+            let s: LitStr = value.parse()?;
+            module = quote! { Some(#s) };
         }
 
         Ok(())
@@ -380,6 +385,7 @@ pub fn lua_func(attr: TokenStream, item: TokenStream) -> TokenStream {
         inventory::submit! {
             crate::lua::stubs::StubFactory {
                 build: || crate::lua::stubs::Stub::Function(crate::lua::stubs::Function {
+                    module: #module,
                     name: #name_str,
                     doc: #func_doc,
                     args: std::borrow::Cow::Owned(vec![#(#args),*]),
@@ -408,6 +414,49 @@ pub fn derive_widget_builder(input: TokenStream) -> TokenStream {
                 build: || crate::lua::stubs::Stub::WidgetBuilder(crate::lua::stubs::WidgetBuilder {
                     name: #name,
                     type_name: #type_name,
+                    doc: #doc,
+                }),
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_derive(LuaModule, attributes(lua_module))]
+pub fn derive_lua_module(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let ident = &input.ident;
+
+    let mut name = ident.to_string().to_lowercase();
+    let doc = extract_doc(&input.attrs);
+    let mut parent = quote! { None };
+
+    for attr in &input.attrs {
+        if attr.path().is_ident("lua_module") {
+            let _ = attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("name") {
+                    let value = meta.value()?;
+                    let s: LitStr = value.parse()?;
+                    name = s.value();
+                }
+
+                if meta.path.is_ident("parent") {
+                    let value = meta.value()?;
+                    let s: LitStr = value.parse()?;
+                    parent = quote! { Some(#s) };
+                }
+                Ok(())
+            });
+        }
+    }
+
+    let expanded = quote! {
+        inventory::submit! {
+            crate::lua::stubs::StubFactory {
+                build: || crate::lua::stubs::Stub::Module(crate::lua::stubs::Module {
+                    name: #name,
+                    parent: #parent,
                     doc: #doc,
                 }),
             }
