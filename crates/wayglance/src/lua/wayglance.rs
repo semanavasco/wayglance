@@ -13,7 +13,10 @@ use crate::{dynamic::SIGNAL_BUS, lua::types::StringOrStrings};
     name = "interval",
     doc = "The interval in milliseconds to wait before calling the callback."
 )]
-#[ret(doc = "A table representing the interval timer.", ty = "dynamic")]
+#[ret(
+    doc = "interval A table representing the interval timer.",
+    ty = "dynamic"
+)]
 pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<LuaValue> {
     let table = lua.create_table()?;
     table.set("__wayglance_dynamic", "interval")?;
@@ -29,7 +32,10 @@ pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<L
     name = "callback",
     doc = "The callback to call when the signal(s) are emitted."
 )]
-#[ret(doc = "A table representing the signal listener.", ty = "dynamic")]
+#[ret(
+    doc = "signal A table representing the signal listener.",
+    ty = "dynamic"
+)]
 pub fn on_signal(lua: &Lua, signals: StringOrStrings, callback: LuaFn) -> mlua::Result<LuaValue> {
     let table = lua.create_table()?;
     table.set("__wayglance_dynamic", "signal")?;

@@ -1,0 +1,100 @@
+---@meta
+
+--- The z-level layer where the window will be placed.
+---@alias Layer "background" | "bottom" | "top" | "overlay"
+
+--- Orientation for container widgets.
+---@alias Orientation "horizontal" | "vertical"
+
+--- Alignment for widgets within their parent container.
+---@alias Alignment "start" | "center" | "end" | "fill" | "baseline"
+
+--- A container widget that can hold multiple child widgets, arranged either horizontally or
+--- vertically.
+---@class Container : Widget
+---@field orientation Orientation The orientation of the container.
+---@field spacing ? number The spacing between children in the container, in pixels. (Default: 0)
+---@field children ? Widget[] The child widgets contained within this container.
+---@field id ? string | dynamic Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | dynamic Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | dynamic Optional horizontal alignment for the widget.
+---@field valign ? Alignment | dynamic Optional vertical alignment for the widget.
+---@field hexpand ? boolean | dynamic Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | dynamic Whether the widget should expand to fill available vertical space. (Default: false)
+
+--- A clickable button widget.
+---@class Button : Widget
+---@field on_click function Function to execute when the button is clicked.
+---@field child Widget The child widget to display inside the button.
+---@field id ? string | dynamic Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | dynamic Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | dynamic Optional horizontal alignment for the widget.
+---@field valign ? Alignment | dynamic Optional vertical alignment for the widget.
+---@field hexpand ? boolean | dynamic Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | dynamic Whether the widget should expand to fill available vertical space. (Default: false)
+
+--- A simple widget that displays a text label.
+---@class Label : Widget
+---@field text string | dynamic The text content of the label. Can be a static string or a dynamic expression that evaluates to a string.
+---@field id ? string | dynamic Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | dynamic Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | dynamic Optional horizontal alignment for the widget.
+---@field valign ? Alignment | dynamic Optional vertical alignment for the widget.
+---@field hexpand ? boolean | dynamic Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | dynamic Whether the widget should expand to fill available vertical space. (Default: false)
+
+--- Common properties shared by all widgets (layout, CSS classes, IDs, etc).
+---@class Widget
+---@field id ? string | dynamic Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | dynamic Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | dynamic Optional horizontal alignment for the widget.
+---@field valign ? Alignment | dynamic Optional vertical alignment for the widget.
+---@field hexpand ? boolean | dynamic Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | dynamic Whether the widget should expand to fill available vertical space. (Default: false)
+
+--- Anchor points for the window to stick to specific edges of the monitor.
+---@class Anchors
+---@field top ? boolean Whether to anchor the window to the top edge of the monitor. (Default: false)
+---@field right ? boolean Whether to anchor the window to the right edge of the monitor. (Default: false)
+---@field bottom ? boolean Whether to anchor the window to the bottom edge of the monitor. (Default: false)
+---@field left ? boolean Whether to anchor the window to the left edge of the monitor. (Default: false)
+
+--- Margin in pixels from each edge of the monitor.
+---@class Margins
+---@field top ? number Margin from the top edge of the monitor, in pixels. (Default: 0)
+---@field right ? number Margin from the right edge of the monitor, in pixels. (Default: 0)
+---@field bottom ? number Margin from the bottom edge of the monitor, in pixels. (Default: 0)
+---@field left ? number Margin from the left edge of the monitor, in pixels. (Default: 0)
+
+--- Listen for one or more signals and call the provided callback when they are emitted.
+---@param signals string | string[] The signal or signals to listen for.
+---@param callback function The callback to call when the signal(s) are emitted.
+---@return dynamic signal A table representing the signal listener.
+function setInterval(signals, callback) end
+
+--- Emit a signal with the given name and optional data payload.
+---@param signal string The name of the signal to emit.
+---@param data ? any Optional data to include with the signal. Can be any Lua value.
+function emitSignal(signal, data) end
+
+--- Schedules the provided callback to be called repeatedly at the specified interval (in ms).
+---@param callback function The callback to call after interval ms have passed.
+---@param interval number The interval in milliseconds to wait before calling the callback.
+---@return dynamic interval A table representing the interval timer.
+function setInterval(callback, interval) end
+
+--- A container widget that can hold multiple child widgets, arranged either horizontally or
+--- vertically.
+---@param config Container The configuration table for the Container widget.
+---@return Widget widget The constructed widget.
+function Container(config) end
+
+--- A clickable button widget.
+---@param config Button The configuration table for the Button widget.
+---@return Widget widget The constructed widget.
+function Button(config) end
+
+--- A simple widget that displays a text label.
+---@param config Label The configuration table for the Label widget.
+---@return Widget widget The constructed widget.
+function Label(config) end

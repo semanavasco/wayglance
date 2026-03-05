@@ -17,8 +17,10 @@ pub struct Container {
     /// The orientation of the container.
     pub orientation: Orientation,
     /// The spacing between children in the container, in pixels.
+    #[lua_attr(default = 0)]
     pub spacing: i32,
     /// The child widgets contained within this container.
+    #[lua_attr(optional)]
     pub children: Vec<Box<dyn Widget>>,
 }
 

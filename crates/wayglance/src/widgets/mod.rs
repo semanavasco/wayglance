@@ -81,6 +81,7 @@ pub struct Properties {
     /// Optional widget ID, used for CSS styling and querying.
     pub id: MaybeDynamic<Option<String>>,
     /// Optional list of CSS classes applied to the widget.
+    #[lua_attr(optional)]
     pub class_list: MaybeDynamic<Vec<String>>,
     /// Optional horizontal alignment for the widget.
     pub halign: MaybeDynamic<Option<Alignment>>,

@@ -143,8 +143,12 @@ impl fmt::Display for WidgetBuilder {
                 writeln!(f, "--- {}", line)?;
             }
         }
-        writeln!(f, "---@param config {} The configuration table for the {} widget.", self.name, self.name)?;
-        writeln!(f, "---@return Widget The constructed widget.")?;
+        writeln!(
+            f,
+            "---@param config {} The configuration table for the {} widget.",
+            self.name, self.name
+        )?;
+        writeln!(f, "---@return Widget widget The constructed widget.")?;
         write!(f, "function {}(config) end", self.name)
     }
 }

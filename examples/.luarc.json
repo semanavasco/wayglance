@@ -1,0 +1,5 @@
+{
+  "diagnostics": {
+    "globals": ["Label", "Container", "Button", "wayglance"]
+  }
+}

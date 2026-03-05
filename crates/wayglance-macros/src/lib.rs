@@ -45,24 +45,28 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
             let mut is_parent = false;
             let mut custom_name = field_name.to_string();
             let mut default_val = None;
+            let mut is_optional = false;
 
             for attr in &field.attrs {
                 // Process #[lua_attr(...)] attributes on the field
                 if attr.path().is_ident("lua_attr") {
                     let _ = attr.parse_nested_meta(|meta| {
-                        // Check for #[lua_attr(parent)]
+                        // Check for simple attributes
                         if meta.path.is_ident("parent") {
                             is_parent = true;
                         }
 
-                        // Check for #[lua_attr(name = "...")]
+                        if meta.path.is_ident("optional") {
+                            is_optional = true;
+                        }
+
+                        // Check for attributes with values
                         if meta.path.is_ident("name") {
                             let value = meta.value()?;
                             let s: LitStr = value.parse()?;
                             custom_name = s.value();
                         }
 
-                        // Check for #[lua_attr(default = ...)]
                         if meta.path.is_ident("default") {
                             let expr: Expr = meta.value()?.parse()?;
 
@@ -79,13 +83,25 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
                 }
             }
 
+            let mut lua_type_quote =
+                quote! { <#field_type as crate::lua::stubs::LuaType>::lua_type() };
+
             // Append default value info to the field documentation if provided
-            if let Some(default) = default_val {
+            if let Some(default) = &default_val {
                 if !field_doc.is_empty() {
                     field_doc.push(' ');
                 }
 
                 field_doc.push_str(&format!("(Default: {})", default));
+            }
+
+            // Append ? to the beginning of the type if has default or is marked optional but its
+            // type isn't explicitely Option<T> (e.g. Vec<String> that defaults to empty vec)
+            if (default_val.is_some() || is_optional)
+                && !lua_type_quote.to_string().starts_with('?')
+            {
+                lua_type_quote =
+                    quote! { std::borrow::Cow::Owned(format!("? {}", #lua_type_quote)) };
             }
 
             // If this field is marked as a parent, merge its attributes into the current class's
@@ -104,7 +120,7 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
                     crate::lua::stubs::Attr {
                         name: #custom_name,
                         doc: #field_doc,
-                        ty: <#field_type as crate::lua::stubs::LuaType>::lua_type(),
+                        ty: #lua_type_quote,
                     }
                 });
             }
