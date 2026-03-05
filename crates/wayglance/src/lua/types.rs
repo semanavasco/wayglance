@@ -16,6 +16,17 @@ use wayglance_macros::{LuaClass, LuaEnum};
 
 use crate::lua::stubs::LuaType;
 
+/// Simple macro to implement LuaType for multiple types with the same Lua type string.
+macro_rules! impl_lua_type {
+    ($s:literal for $($t:ty),+) => {
+        $(impl LuaType for $t {
+            fn lua_type() -> Cow<'static, str> {
+                $s.into()
+            }
+        })*
+    }
+}
+
 impl LuaType for String {
     fn lua_type() -> Cow<'static, str> {
         "string".into()
@@ -28,17 +39,7 @@ impl LuaType for bool {
     }
 }
 
-impl LuaType for i32 {
-    fn lua_type() -> Cow<'static, str> {
-        "number".into()
-    }
-}
-
-impl LuaType for u64 {
-    fn lua_type() -> Cow<'static, str> {
-        "number".into()
-    }
-}
+impl_lua_type!("number" for i16, i32, i128, u16, u64, f32);
 
 impl<T> LuaType for Option<T>
 where
@@ -79,17 +80,7 @@ impl LuaType for LuaValue {
     }
 }
 
-impl LuaType for mlua::Function {
-    fn lua_type() -> Cow<'static, str> {
-        "function".into()
-    }
-}
-
-impl LuaType for mlua::RegistryKey {
-    fn lua_type() -> Cow<'static, str> {
-        "function".into()
-    }
-}
+impl_lua_type!("function" for mlua::Function, mlua::RegistryKey);
 
 /// The z-level layer where the window will be placed.
 #[derive(Clone, Copy, LuaEnum)]
