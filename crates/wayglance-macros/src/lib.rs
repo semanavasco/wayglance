@@ -157,6 +157,12 @@ pub fn derive_stubbed(input: TokenStream) -> TokenStream {
             }
         }
 
+        impl crate::lua::stubs::LuaType for #ident {
+            fn lua_type() -> std::borrow::Cow<'static, str> {
+                std::borrow::Cow::Borrowed(#lua_name)
+            }
+        }
+
         // Register the class in the inventory for Lua stubs
         inventory::submit! {
             crate::lua::stubs::StubFactory {
