@@ -21,7 +21,7 @@ pub struct Wayglance;
 )]
 #[ret(
     doc = "interval A table representing the interval timer.",
-    ty = "dynamic"
+    ty = "Interval"
 )]
 pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<LuaValue> {
     let table = lua.create_table()?;
@@ -40,7 +40,7 @@ pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<L
 )]
 #[ret(
     doc = "signal A table representing the signal listener.",
-    ty = "dynamic"
+    ty = "Signal"
 )]
 pub fn on_signal(lua: &Lua, signals: StringOrStrings, callback: LuaFn) -> mlua::Result<LuaValue> {
     let table = lua.create_table()?;

@@ -8,7 +8,7 @@ wayglance = {}
 
 --- The `hyprland` module, which provides functions for querying Hyprland state and dispatching
 --- commands, as well as forwarding events from the Hyprland IPC listener.
----
+--- 
 --- ### Signals
 --- The following signals are emitted on the `wayglance` signal bus:
 --- - `hyprland::workspace_changed` : Emitted when the user switches to a different workspace.
@@ -67,42 +67,53 @@ wayglance.hyprland = {}
 ---@field orientation Orientation The orientation of the container.
 ---@field spacing ? number The spacing between children in the container, in pixels. (Default: 0)
 ---@field children ? Widget[] The child widgets contained within this container.
----@field id ? string | dynamic Optional widget ID, used for CSS styling and querying.
----@field class_list ? string[] | dynamic Optional list of CSS classes applied to the widget.
----@field halign ? Alignment | dynamic Optional horizontal alignment for the widget.
----@field valign ? Alignment | dynamic Optional vertical alignment for the widget.
----@field hexpand ? boolean | dynamic Whether the widget should expand to fill available horizontal space. (Default: false)
----@field vexpand ? boolean | dynamic Whether the widget should expand to fill available vertical space. (Default: false)
+---@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.
+---@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
+---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 
 --- A clickable button widget.
 ---@class Button : Widget
 ---@field on_click function Function to execute when the button is clicked.
 ---@field child Widget The child widget to display inside the button.
----@field id ? string | dynamic Optional widget ID, used for CSS styling and querying.
----@field class_list ? string[] | dynamic Optional list of CSS classes applied to the widget.
----@field halign ? Alignment | dynamic Optional horizontal alignment for the widget.
----@field valign ? Alignment | dynamic Optional vertical alignment for the widget.
----@field hexpand ? boolean | dynamic Whether the widget should expand to fill available horizontal space. (Default: false)
----@field vexpand ? boolean | dynamic Whether the widget should expand to fill available vertical space. (Default: false)
+---@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.
+---@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
+---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 
 --- A simple widget that displays a text label.
 ---@class Label : Widget
----@field text string | dynamic The text content of the label. Can be a static string or a dynamic expression that evaluates to a string.
----@field id ? string | dynamic Optional widget ID, used for CSS styling and querying.
----@field class_list ? string[] | dynamic Optional list of CSS classes applied to the widget.
----@field halign ? Alignment | dynamic Optional horizontal alignment for the widget.
----@field valign ? Alignment | dynamic Optional vertical alignment for the widget.
----@field hexpand ? boolean | dynamic Whether the widget should expand to fill available horizontal space. (Default: false)
----@field vexpand ? boolean | dynamic Whether the widget should expand to fill available vertical space. (Default: false)
+---@field text string | Interval | Signal The text content of the label. Can be a static string or a dynamic expression that evaluates to a string.
+---@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.
+---@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
+---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
+
+--- Representation of a dynamic value that updates at regular intervals by calling a Lua callback.
+---@class Interval
+---@field callback function A Lua callback to compute the value every `interval` milliseconds.
+---@field interval number The interval in milliseconds at which to call the Lua callback and update the value.
+
+--- Representation of a dynamic value that updates in response to one or more signals by calling a
+--- Lua callback.
+---@class Signal
+---@field callback function A Lua callback to compute the value whenever any of the specified signals are emitted.
+---@field signals string[] The signal or signals that trigger updates to this value. Each signal is a string name that can be emitted via the `wayglance.emitSignal` function or by internal event handlers.
 
 --- Common properties shared by all widgets (layout, CSS classes, IDs, etc).
 ---@class Widget
----@field id ? string | dynamic Optional widget ID, used for CSS styling and querying.
----@field class_list ? string[] | dynamic Optional list of CSS classes applied to the widget.
----@field halign ? Alignment | dynamic Optional horizontal alignment for the widget.
----@field valign ? Alignment | dynamic Optional vertical alignment for the widget.
----@field hexpand ? boolean | dynamic Whether the widget should expand to fill available horizontal space. (Default: false)
----@field vexpand ? boolean | dynamic Whether the widget should expand to fill available vertical space. (Default: false)
+---@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.
+---@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
+---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 
 --- Anchor points for the window to stick to specific edges of the monitor.
 ---@class Anchors
@@ -172,13 +183,13 @@ function wayglance.hyprland.killActiveWindow() end
 --- Schedules the provided callback to be called repeatedly at the specified interval (in ms).
 ---@param callback function The callback to call after interval ms have passed.
 ---@param interval number The interval in milliseconds to wait before calling the callback.
----@return dynamic interval A table representing the interval timer.
+---@return Interval interval A table representing the interval timer.
 function wayglance.setInterval(callback, interval) end
 
 --- Listen for one or more signals and call the provided callback when they are emitted.
 ---@param signals string | string[] The signal or signals to listen for.
 ---@param callback function The callback to call when the signal(s) are emitted.
----@return dynamic signal A table representing the signal listener.
+---@return Signal signal A table representing the signal listener.
 function wayglance.onSignal(signals, callback) end
 
 --- Emit a signal with the given name and optional data payload.

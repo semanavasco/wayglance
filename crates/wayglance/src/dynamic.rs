@@ -15,24 +15,39 @@ use gtk4::{
     prelude::WidgetExt,
 };
 use mlua::FromLua;
+use wayglance_macros::LuaClass;
 
 use crate::lua::{LUA, stubs::LuaType};
+
+/// Representation of a dynamic value that updates at regular intervals by calling a Lua callback.
+#[derive(LuaClass)]
+pub struct Interval {
+    /// A Lua callback to compute the value every `interval` milliseconds.
+    callback: mlua::RegistryKey,
+    /// The interval in milliseconds at which to call the Lua callback and update the value.
+    interval: u64,
+}
+
+/// Representation of a dynamic value that updates in response to one or more signals by calling a
+/// Lua callback.
+#[derive(LuaClass)]
+pub struct Signal {
+    /// A Lua callback to compute the value whenever any of the specified signals are emitted.
+    callback: mlua::RegistryKey,
+    /// The signal or signals that trigger updates to this value. Each signal is a string name that
+    /// can be emitted via the `wayglance.emitSignal` function or by internal event handlers.
+    signals: Vec<String>,
+}
 
 /// A value that is either resolved statically at parse time, or computed dynamically.
 pub enum MaybeDynamic<T> {
     /// A plain value of type `T`.
     Static(T),
     /// A dynamic value computed by a Lua callback every `interval` milliseconds.
-    Interval {
-        callback: mlua::RegistryKey,
-        interval: u64,
-    },
+    Interval(Interval),
     /// A dynamic value computed by a Lua callback whenever any of the specified signals are
     /// emitted.
-    Signal {
-        callback: mlua::RegistryKey,
-        signals: Vec<String>,
-    },
+    Signal(Signal),
 }
 
 impl<T> LuaType for MaybeDynamic<T>
@@ -41,7 +56,7 @@ where
 {
     fn lua_type() -> Cow<'static, str> {
         let base_type = T::lua_type();
-        format!("{} | dynamic", base_type).into()
+        format!("{} | Interval | Signal", base_type).into()
     }
 }
 
@@ -59,10 +74,10 @@ where
                     let registry = lua.create_registry_value(callback)?;
                     let interval = t.get("interval")?;
 
-                    return Ok(MaybeDynamic::Interval {
+                    return Ok(MaybeDynamic::Interval(Interval {
                         callback: registry,
                         interval,
-                    });
+                    }));
                 }
                 "signal" => {
                     let callback: mlua::Function = t.get("callback")?;
@@ -85,10 +100,10 @@ where
                         }
                     };
 
-                    return Ok(MaybeDynamic::Signal {
+                    return Ok(MaybeDynamic::Signal(Signal {
                         callback: registry,
                         signals,
-                    });
+                    }));
                 }
                 _ => {
                     return Err(mlua::Error::FromLuaConversionError {
@@ -138,11 +153,11 @@ where
                 apply_fn(widget, val.clone());
                 Ok(())
             }
-            MaybeDynamic::Interval { callback, interval } => {
-                bind_interval(widget, callback, *interval, prop_name, apply_fn)
+            MaybeDynamic::Interval(i) => {
+                bind_interval(widget, &i.callback, i.interval, prop_name, apply_fn)
             }
-            MaybeDynamic::Signal { callback, signals } => {
-                bind_signals(widget, callback, signals, prop_name, apply_fn)
+            MaybeDynamic::Signal(s) => {
+                bind_signals(widget, &s.callback, &s.signals, prop_name, apply_fn)
             }
         }
     }
