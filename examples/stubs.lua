@@ -73,6 +73,7 @@ wayglance.hyprland = {}
 ---@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
 
 --- A clickable button widget.
 ---@class Button : Widget
@@ -84,6 +85,7 @@ wayglance.hyprland = {}
 ---@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
 
 --- A simple widget that displays a text label.
 ---@class Label : Widget
@@ -94,6 +96,7 @@ wayglance.hyprland = {}
 ---@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
 
 --- Representation of a dynamic value that updates at regular intervals by calling a Lua callback.
 ---@class Interval
@@ -114,6 +117,7 @@ wayglance.hyprland = {}
 ---@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
 
 --- The top-level configuration for the wayglance application shell.
 --- 

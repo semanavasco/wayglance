@@ -40,6 +40,10 @@ local function theme_button(target_theme, color_class)
     on_click = function()
       wayglance.emitSignal("theme_changed", target_theme)
     end,
+    visible = wayglance.onSignal("theme_changed", function(new_theme)
+      current_theme = new_theme or current_theme
+      return current_theme ~= target_theme
+    end),
   })
 end
 

@@ -93,6 +93,9 @@ pub struct Properties {
     /// Whether the widget should expand to fill available vertical space.
     #[lua_attr(default = false)]
     pub vexpand: MaybeDynamic<bool>,
+    /// Whether the widget is visible.
+    #[lua_attr(default = true)]
+    pub visible: MaybeDynamic<bool>,
 }
 
 impl Properties {
@@ -120,6 +123,9 @@ impl Properties {
             vexpand: table
                 .get::<Option<MaybeDynamic<bool>>>("vexpand")?
                 .unwrap_or(MaybeDynamic::Static(false)),
+            visible: table
+                .get::<Option<MaybeDynamic<bool>>>("visible")?
+                .unwrap_or(MaybeDynamic::Static(true)),
         })
     }
 
@@ -162,6 +168,10 @@ impl Properties {
 
         self.vexpand.bind(widget, "vexpand", |w, vexpand| {
             w.set_vexpand(vexpand);
+        })?;
+
+        self.visible.bind(widget, "visible", |w, visible| {
+            w.set_visible(visible);
         })?;
 
         Ok(())

@@ -124,9 +124,6 @@ fn open_window_instance(
     match instance.child.build() {
         Ok(child) => {
             window.set_child(Some(&child));
-
-            // TODO: Allow configuring whether the window/child should be visible or not
-
             window.present();
         }
         Err(e) => tracing::error!(
