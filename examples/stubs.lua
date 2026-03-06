@@ -66,7 +66,7 @@ wayglance.hyprland = {}
 ---@class Container : Widget
 ---@field orientation Orientation The orientation of the container.
 ---@field spacing ? number The spacing between children in the container, in pixels. (Default: 0)
----@field children ? Widget[] The child widgets contained within this container.
+---@field children ? Widget[] | Interval | Signal The child widgets contained within this container.
 ---@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
 ---@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
 ---@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.

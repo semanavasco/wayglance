@@ -41,6 +41,26 @@ impl IntoLua for Interval {
     }
 }
 
+impl FromLua for Interval {
+    fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
+        let table = match &value {
+            mlua::Value::Table(t) => t,
+            _ => {
+                return Err(mlua::Error::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "Interval".to_string(),
+                    message: Some("Expected a table".to_string()),
+                });
+            }
+        };
+
+        Ok(Interval {
+            callback: lua.create_registry_value(table.get::<mlua::Function>("callback")?)?,
+            interval: table.get("interval")?,
+        })
+    }
+}
+
 /// Representation of a dynamic value that updates in response to one or more signals by calling a
 /// Lua callback.
 #[derive(LuaClass)]
@@ -62,6 +82,41 @@ impl IntoLua for Signal {
         )?;
         table.set("signal", self.signals)?;
         Ok(mlua::Value::Table(table))
+    }
+}
+
+impl FromLua for Signal {
+    fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
+        let table = match &value {
+            mlua::Value::Table(t) => t,
+            _ => {
+                return Err(mlua::Error::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "Signal".to_string(),
+                    message: Some("Expected a table".to_string()),
+                });
+            }
+        };
+
+        let signals_val: mlua::Value = table.get("signal")?;
+        let signals = match signals_val {
+            mlua::Value::String(s) => vec![s.to_str()?.to_string()],
+            mlua::Value::Table(t) => t
+                .sequence_values::<String>()
+                .collect::<mlua::Result<Vec<String>>>()?,
+            _ => {
+                return Err(mlua::Error::FromLuaConversionError {
+                    from: signals_val.type_name(),
+                    to: "String or Table of Strings".to_string(),
+                    message: Some("Expected a signal name or a list of signal names".to_string()),
+                });
+            }
+        };
+
+        Ok(Signal {
+            callback: lua.create_registry_value(table.get::<mlua::Function>("callback")?)?,
+            signals,
+        })
     }
 }
 
@@ -190,7 +245,7 @@ where
 }
 
 /// Internal helper to bind an interval-based dynamic value.
-fn bind_interval<T, W, F>(
+pub fn bind_interval<T, W, F>(
     widget: &W,
     callback_key: &mlua::RegistryKey,
     interval: u64,
@@ -281,7 +336,7 @@ impl SignalBus {
 }
 
 /// Internal helper to bind a signal-based dynamic value.
-fn bind_signals<T, W, F>(
+pub fn bind_signals<T, W, F>(
     widget: &W,
     callback_key: &mlua::RegistryKey,
     signals: &[String],

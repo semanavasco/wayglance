@@ -1,9 +1,13 @@
 use anyhow::Result;
-use gtk4::{Box as GtkBox, prelude::BoxExt};
+use gtk4::{
+    Box as GtkBox,
+    prelude::{BoxExt, WidgetExt},
+};
 use mlua::{FromLua, Lua, Value as LuaValue};
 use wayglance_macros::{LuaClass, WidgetBuilder};
 
 use crate::{
+    dynamic::{MaybeDynamic, bind_interval, bind_signals},
     lua::types::Orientation,
     widgets::{Properties, Widget},
 };
@@ -21,7 +25,7 @@ pub struct Container {
     pub spacing: i32,
     /// The child widgets contained within this container.
     #[lua_attr(optional)]
-    pub children: Vec<Box<dyn Widget>>,
+    pub children: MaybeDynamic<Vec<Box<dyn Widget>>>,
 }
 
 impl Widget for Container {
@@ -30,8 +34,54 @@ impl Widget for Container {
 
         self.properties.apply(&container)?;
 
-        for child in &self.children {
-            container.append(&child.build()?);
+        match &self.children {
+            MaybeDynamic::Static(children) => {
+                for child in children {
+                    container.append(&child.build()?);
+                }
+            }
+            MaybeDynamic::Interval(signal) => {
+                bind_interval(
+                    &container,
+                    &signal.callback,
+                    signal.interval,
+                    "children",
+                    |w, children: Vec<Box<dyn Widget>>| {
+                        while let Some(child) = w.first_child() {
+                            w.remove(&child);
+                        }
+                        for child in children {
+                            match child.build() {
+                                Ok(child_widget) => w.append(&child_widget),
+                                Err(e) => {
+                                    tracing::error!("Failed to build child widget: {}", e);
+                                }
+                            }
+                        }
+                    },
+                )?;
+            }
+            MaybeDynamic::Signal(signal) => {
+                bind_signals(
+                    &container,
+                    &signal.callback,
+                    &signal.signals,
+                    "children",
+                    |w, children: Vec<Box<dyn Widget>>| {
+                        while let Some(child) = w.first_child() {
+                            w.remove(&child);
+                        }
+                        for child in children {
+                            match child.build() {
+                                Ok(child_widget) => w.append(&child_widget),
+                                Err(e) => {
+                                    tracing::error!("Failed to build child widget: {}", e);
+                                }
+                            }
+                        }
+                    },
+                )?;
+            }
         }
 
         Ok(container.into())
@@ -56,8 +106,8 @@ impl FromLua for Container {
             orientation: table.get("orientation")?,
             spacing: table.get::<Option<i32>>("spacing")?.unwrap_or(0),
             children: table
-                .get::<Option<Vec<Box<dyn Widget>>>>("children")?
-                .unwrap_or_default(),
+                .get::<Option<MaybeDynamic<Vec<Box<dyn Widget>>>>>("children")?
+                .unwrap_or(MaybeDynamic::Static(vec![])),
         })
     }
 }

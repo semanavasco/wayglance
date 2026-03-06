@@ -2,33 +2,23 @@
 
 -- state ---------------------------------------------------------------------
 
-local WorkspaceIds = {}
 local ActiveWorkspace = 1
 local ActiveWindowTitle = ""
 
-local function load_initial_state()
-  local workspaces = wayglance.hyprland.getWorkspaces() or {}
-
-  for _, workspace in ipairs(workspaces) do
-    if type(workspace.id) == "number" and workspace.id > 0 then
-      WorkspaceIds[#WorkspaceIds + 1] = workspace.id
+local function update_active_workspace()
+  local monitors = wayglance.hyprland.getMonitors() or {}
+  for _, monitor in ipairs(monitors) do
+    if monitor.focused then
+      ActiveWorkspace = monitor.active_workspace.id
+      return
     end
   end
+end
 
-  table.sort(WorkspaceIds)
-
-  if #WorkspaceIds == 0 then
-    WorkspaceIds = { 1, 2, 3, 4, 5 }
-  end
+local function load_initial_state()
+  update_active_workspace()
 
   local window = wayglance.hyprland.getActiveWindow() or {}
-
-  if window and window.workspace and type(window.workspace.id) == "number" then
-    ActiveWorkspace = window.workspace.id
-  else
-    ActiveWorkspace = WorkspaceIds[1]
-  end
-
   if window and window.title then
     ActiveWindowTitle = window.title
   end
@@ -38,17 +28,11 @@ load_initial_state()
 
 -- widgets -------------------------------------------------------------------
 
-local function workspace_button(id)
+local function workspace_button(id, is_active)
   return Button({
     child = Label({
       text = tostring(id),
-      class_list = wayglance.onSignal("hyprland::workspace_changed", function(workspace)
-        if workspace and workspace.id then
-          ActiveWorkspace = workspace.id
-        end
-
-        return { id == ActiveWorkspace and "ws-active" or "ws-inactive" }
-      end),
+      class_list = { is_active and "ws-active" or "ws-inactive" },
       valign = "center",
     }),
     class_list = { "ws-btn" },
@@ -60,16 +44,35 @@ local function workspace_button(id)
 end
 
 local function workspaces_widget()
-  local btns = {}
-  for i, workspace_id in ipairs(WorkspaceIds) do
-    btns[i] = workspace_button(workspace_id)
-  end
   return Container({
     id = "workspaces",
     orientation = "horizontal",
     spacing = 4,
     valign = "center",
-    children = btns,
+    children = wayglance.onSignal({
+      "hyprland::workspace_changed",
+      "hyprland::workspace_added",
+      "hyprland::workspace_deleted",
+      "hyprland::workspace_moved",
+      "hyprland::workspace_renamed",
+      "hyprland::active_monitor_changed",
+    }, function()
+      update_active_workspace()
+
+      local workspaces = wayglance.hyprland.getWorkspaces() or {}
+      table.sort(workspaces, function(a, b)
+        return a.workspace.id < b.workspace.id
+      end)
+
+      local btns = {}
+      for _, ws_info in ipairs(workspaces) do
+        local id = ws_info.workspace.id
+        if type(id) == "number" and id > 0 then
+          table.insert(btns, workspace_button(id, id == ActiveWorkspace))
+        end
+      end
+      return btns
+    end),
   })
 end
 
