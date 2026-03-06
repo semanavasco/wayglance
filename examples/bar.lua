@@ -119,6 +119,57 @@ local function date_widget()
     end, 60000),
     id = "date",
     valign = "center",
+    -- Dynamic Calendar Tooltip
+    tooltip = wayglance.setInterval(function()
+      local now = os.date("*t")
+      local year, month, today = now.year, now.month, now.day
+
+      local tz = os.date("%Z")
+      local day_of_year = os.date("%j")
+      local week_num = os.date("%V")
+
+      local info_str = string.format(
+        "<span size='small'>Timezone: <span foreground='#cdd6f4'>%s</span>\n"
+          .. "Day: <span foreground='#cba6f7'>%s</span>/365 | "
+          .. "Week: <span foreground='#fab387'>%s</span>/52</span>\n\n",
+        tz,
+        day_of_year,
+        week_num
+      )
+
+      -- Calculate Calendar layout
+      local days_in_month = os.date("*t", os.time({ year = year, month = month + 1, day = 0 })).day
+      local first_day_wday = tonumber(os.date("%w", os.time({ year = year, month = month, day = 1 })))
+      local start_col = first_day_wday == 0 and 7 or first_day_wday
+
+      -- Draw the Calendar
+      local cal_str = "<span font_family='JetBrains Mono, monospace'>\n"
+      cal_str = cal_str .. "<span foreground='#cba6f7' font_weight='bold'>Mo Tu We Th Fr Sa Su</span>\n"
+
+      for _ = 1, start_col - 1 do
+        cal_str = cal_str .. "   "
+      end
+
+      for d = 1, days_in_month do
+        local day_str = string.format("%2d", d)
+
+        if d == today then
+          day_str = "<span foreground='#a6e3a1' font_weight='bold'><u>" .. day_str .. "</u></span>"
+        end
+
+        cal_str = cal_str .. day_str
+
+        if (start_col + d - 1) % 7 == 0 and d ~= days_in_month then
+          cal_str = cal_str .. "\n"
+        elseif d ~= days_in_month then
+          cal_str = cal_str .. " "
+        end
+      end
+
+      cal_str = cal_str .. "</span>"
+
+      return info_str .. cal_str
+    end, 60000),
   })
 end
 

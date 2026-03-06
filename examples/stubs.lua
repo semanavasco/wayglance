@@ -74,6 +74,7 @@ wayglance.hyprland = {}
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
+---@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
 
 --- A clickable button widget.
 ---@class Button : Widget
@@ -86,6 +87,7 @@ wayglance.hyprland = {}
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
+---@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
 
 --- A simple widget that displays a text label.
 ---@class Label : Widget
@@ -97,6 +99,7 @@ wayglance.hyprland = {}
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
+---@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
 
 --- Representation of a dynamic value that updates at regular intervals by calling a Lua callback.
 ---@class Interval
@@ -118,6 +121,7 @@ wayglance.hyprland = {}
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
+---@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
 
 --- The top-level configuration for the wayglance application shell.
 --- 

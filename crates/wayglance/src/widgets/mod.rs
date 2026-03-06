@@ -96,6 +96,8 @@ pub struct Properties {
     /// Whether the widget is visible.
     #[lua_attr(default = true)]
     pub visible: MaybeDynamic<bool>,
+    /// Optional tooltip markup text for the widget.
+    pub tooltip: MaybeDynamic<Option<String>>,
 }
 
 impl Properties {
@@ -126,6 +128,9 @@ impl Properties {
             visible: table
                 .get::<Option<MaybeDynamic<bool>>>("visible")?
                 .unwrap_or(MaybeDynamic::Static(true)),
+            tooltip: table
+                .get::<Option<MaybeDynamic<Option<String>>>>("tooltip")?
+                .unwrap_or(MaybeDynamic::Static(None)),
         })
     }
 
@@ -172,6 +177,10 @@ impl Properties {
 
         self.visible.bind(widget, "visible", |w, visible| {
             w.set_visible(visible);
+        })?;
+
+        self.tooltip.bind(widget, "tooltip", |w, tooltip| {
+            w.set_tooltip_markup(tooltip.as_deref());
         })?;
 
         Ok(())

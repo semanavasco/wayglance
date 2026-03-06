@@ -33,7 +33,7 @@ local function date_widget()
 end
 
 -- A helper to generate our theme-switching buttons
-local function theme_button(target_theme, color_class)
+local function theme_button(target_theme, color_class, hex_color, pretty_name)
   return Button({
     child = Label({ text = "" }),
     class_list = { "theme-btn", color_class },
@@ -44,6 +44,12 @@ local function theme_button(target_theme, color_class)
       current_theme = new_theme or current_theme
       return current_theme ~= target_theme
     end),
+    tooltip = string.format(
+      "<span font_weight='bold' foreground='%s'>Activate %s Theme</span>\n"
+        .. "<span size='small'>Changes the global color scheme</span>",
+      hex_color,
+      pretty_name
+    ),
   })
 end
 
@@ -54,9 +60,9 @@ local function theme_switcher_widget()
     spacing = 15,
     class_list = { "switcher-container" },
     children = {
-      theme_button("theme-purple", "btn-purple"),
-      theme_button("theme-green", "btn-green"),
-      theme_button("theme-orange", "btn-orange"),
+      theme_button("theme-purple", "btn-purple", "#cba6f7", "Purple"),
+      theme_button("theme-green", "btn-green", "#a6e3a1", "Green"),
+      theme_button("theme-orange", "btn-orange", "#fab387", "Orange"),
     },
   })
 end

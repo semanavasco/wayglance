@@ -74,3 +74,18 @@ window {
   color: #fab387;
   text-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
 }
+
+/* -- tooltip ------------------------------------------------------------------ */
+tooltip {
+  background-color: rgba(30, 30, 46, 0.95); /* Deep dark purple/gray */
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+tooltip label {
+  color: #cdd6f4;
+  font-family: "JetBrains Mono", monospace;
+  padding: 8px 12px;
+  line-height: 1.4;
+}
