@@ -115,6 +115,24 @@ wayglance.hyprland = {}
 ---@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 
+--- The top-level configuration for the wayglance application shell.
+--- 
+--- A `Shell` acts as a container for global configuration (like the application title and styles)
+--- and a list of [`Window`] definitions that define the UI structure.
+---@class Shell
+---@field title string The global title of the shell, which determines the GTK `application_id`.
+---@field style ? string Path to an optional global CSS stylesheet.
+---@field windows Window[] All the window definitions registered in this shell.
+
+--- Detailed information about a physical monitor where a shell window is being displayed.
+---@class Monitor
+---@field name string The name of the monitor (e.g., "eDP-1").
+---@field id number The unique identifier for the monitor (currently defaults to -1).
+---@field width number The width of the monitor in pixels.
+---@field height number The height of the monitor in pixels.
+---@field refresh_rate number The refresh rate of the monitor in Hz.
+---@field scale number The UI scale factor (e.g., 1.0, 2.0).
+
 --- Anchor points for the window to stick to specific edges of the monitor.
 ---@class Anchors
 ---@field top ? boolean Whether to anchor the window to the top edge of the monitor. (Default: false)
@@ -165,6 +183,16 @@ wayglance.hyprland = {}
 ---@field monitor string The name of the monitor.
 ---@field workspace ? string The name of the workspace on the monitor, if available.
 
+--- A window that can be instantiated on one or more monitors.
+---@class Window
+---@field name string The unique name of this window, used for identification and debugging.
+---@field monitors string[] A list of monitor connector names to display this window on. If empty, all monitors.
+---@field layer Layer The layer to display this window on.
+---@field exclusive_zone boolean Whether this window should reserve space on the monitor (like a panel) or be free-floating.
+---@field anchors Anchors The edges of the monitor to anchor this window to.
+---@field margins Margins The margins to apply on each edge when anchored.
+---@field layout any The layout of the window. Can be a table (static widget) or a function (monitor) -> widget.
+
 --- Returns information about the currently active window in Hyprland, including its title, class,
 --- PID, monitor, workspace, position, and size. If there is no active window, a nil value is
 --- returned.
@@ -180,6 +208,16 @@ function wayglance.hyprland.toggleFloating() end
 --- Closes the currently active window in Hyprland.
 function wayglance.hyprland.killActiveWindow() end
 
+--- Emit a signal with the given name and optional data payload.
+---@param signal string The name of the signal to emit.
+---@param data ? any Optional data to include with the signal. Can be any Lua value.
+function wayglance.emitSignal(signal, data) end
+
+--- Creates a new shell configuration.
+---@param config table The global shell configuration.
+---@return Shell shell The shell object.
+function wayglance.shell(config) end
+
 --- Schedules the provided callback to be called repeatedly at the specified interval (in ms).
 ---@param callback function The callback to call after interval ms have passed.
 ---@param interval number The interval in milliseconds to wait before calling the callback.
@@ -191,11 +229,6 @@ function wayglance.setInterval(callback, interval) end
 ---@param callback function The callback to call when the signal(s) are emitted.
 ---@return Signal signal A table representing the signal listener.
 function wayglance.onSignal(signals, callback) end
-
---- Emit a signal with the given name and optional data payload.
----@param signal string The name of the signal to emit.
----@param data ? any Optional data to include with the signal. Can be any Lua value.
-function wayglance.emitSignal(signal, data) end
 
 --- Switches the focus to the workspace with the given numerical ID.
 ---@param workspace_id number The numerical ID of the workspace to switch to.

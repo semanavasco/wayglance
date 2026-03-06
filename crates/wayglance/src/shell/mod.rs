@@ -1,169 +1,141 @@
 //! This module handles the application shell, including GTK initialization, window management, and
 //! monitor-specific configuration.
 
-pub mod config;
+pub mod lifecycle;
 mod style;
+mod window;
 
-use std::rc::Rc;
-
-use gtk4::{
-    Application, ApplicationWindow, gdk,
-    gio::prelude::{ApplicationExt, ApplicationExtManual, ListModelExt},
-    glib,
-    glib::ExitCode,
-    prelude::{Cast, DisplayExt, GtkWindowExt, MonitorExt},
+use crate::shell::window::Window;
+use anyhow::{Context, Result, anyhow};
+use mlua::{IntoLua, Lua, Table as LuaTable, UserData, Value as LuaValue};
+use std::{
+    path::{Path, PathBuf},
+    sync::OnceLock,
 };
-use gtk4_layer_shell::{Edge, LayerShell};
+use wayglance_macros::LuaClass;
 
-use config::Config;
+static PATH: OnceLock<PathBuf> = OnceLock::new();
 
-/// Initializes and runs the GTK application.
-///
-/// This function:
-/// 1. Creates the GTK Application with a unique ID based on the config title.
-/// 2. Loads the CSS style if provided.
-/// 3. Sets up window management for all detected monitors.
-/// 4. Handles dynamic monitor hotplugging.
-/// 5. Runs the GTK main loop.
-///
-/// Returns the application's exit code when it finishes.
-pub fn run_app(config: Config) -> ExitCode {
-    let app = Application::builder()
-        .application_id(format!(
-            "com.github.semanavasco.{}",
-            config.title.to_lowercase().replace(" ", "-")
-        ))
-        .build();
-
-    // Load the style on startup, before any windows are created
-    let style_path = config.style.clone();
-    app.connect_startup(move |_| {
-        if let Some(style_path) = &style_path {
-            tracing::info!("Loading style from {}", style_path);
-
-            if let Err(e) = style::load(style_path) {
-                tracing::error!("Failed to load style: {}", e);
-            }
-        }
-    });
-
-    // Wrap the config in an Rc so it can be shared across closures without cloning
-    let config = Rc::new(config);
-    app.connect_activate(move |app| {
-        // Start the window manager event listener if corresponding features are enabled
-        #[cfg(any(feature = "hyprland"))]
-        crate::modules::wm::start_listener();
-
-        let display = match gdk::Display::default() {
-            Some(d) => d,
-            None => {
-                tracing::error!("No GDK display found");
-                return;
-            }
-        };
-
-        let monitors = display.monitors();
-
-        // Open a window on each monitor detected at startup
-        for i in 0..monitors.n_items() {
-            if let Some(monitor) = monitors
-                .item(i)
-                .and_then(|m: glib::Object| m.downcast::<gdk::Monitor>().ok())
-            {
-                open_window_for_monitor(app, &config, &monitor);
-            }
-        }
-
-        // React to monitors being added or removed while the app is running
-        //
-        // Removed items have already left the list by the time this fires; their windows are
-        // closed via `connect_invalidate` registered per-window
-        let app_clone = app.clone();
-        let config_clone = Rc::clone(&config);
-        monitors.connect_items_changed(move |list: &gtk4::gio::ListModel, pos, _removed, added| {
-            for i in pos..(pos + added) {
-                if let Some(monitor) = list
-                    .item(i)
-                    .and_then(|m: glib::Object| m.downcast::<gdk::Monitor>().ok())
-                {
-                    open_window_for_monitor(&app_clone, &config_clone, &monitor);
-                }
-            }
-        });
-    });
-
-    app.run_with_args::<&str>(&[])
+/// Helper function to get the directory of the currently loaded config file.
+pub fn get_config_dir() -> Result<PathBuf> {
+    match PATH.get() {
+        Some(path) => Ok(path
+            .parent()
+            .context("Config path has no parent directory")?
+            .to_path_buf()),
+        None => anyhow::bail!("Couldn't get config path"),
+    }
 }
 
-/// Opens a new window on the specified monitor if it matches the config criteria.
-fn open_window_for_monitor(app: &Application, config: &Config, monitor: &gdk::Monitor) {
-    let connector = monitor
-        .connector()
-        .map(|s: glib::GString| s.to_string())
-        .unwrap_or_else(|| "unknown".to_string());
-
-    if !config.monitors.is_empty() && !config.monitors.contains(&connector) {
-        return;
-    }
-
-    tracing::info!("Opening window on monitor: {}", connector);
-
-    let window = build_window(app, config, monitor);
-
-    match config.child.build() {
-        Ok(child) => window.set_child(Some(&child)),
-        Err(e) => tracing::error!("Failed to build child widget: {}", e),
-    }
-
-    // Close this window when its monitor is invalidated
-    let window_clone = window.clone();
-    monitor.connect_invalidate(move |_| {
-        tracing::info!("Monitor {} invalidated, closing window", connector);
-        window_clone.close();
-    });
-
-    window.present();
+/// The top-level configuration for the wayglance application shell.
+///
+/// A `Shell` acts as a container for global configuration (like the application title and styles)
+/// and a list of [`Window`] definitions that define the UI structure.
+#[derive(Clone, LuaClass)]
+pub struct Shell {
+    /// The global title of the shell, which determines the GTK `application_id`.
+    pub title: String,
+    /// Path to an optional global CSS stylesheet.
+    pub style: Option<String>,
+    /// All the window definitions registered in this shell.
+    pub windows: Vec<Window>,
 }
 
-/// Builds and configures a new application window based on the provided config and monitor.
-fn build_window(app: &Application, config: &Config, monitor: &gdk::Monitor) -> ApplicationWindow {
-    let window = ApplicationWindow::builder()
-        .application(app)
-        .title(config.title.clone())
-        .build();
+// TODO: Ensure the window function is properly registered as a method of the Shell class in Lua.
+// Need to edit LuaClass macro or lua_func macro to support this, as currently it only supports
+// free functions and not class methods.
 
-    window.init_layer_shell();
-    window.set_monitor(Some(monitor));
+/// Adds a new window definition to the shell configuration.
+fn window(this: &mut Shell, name: String, config: LuaTable) -> mlua::Result<()> {
+    let template = Window::parse(name, config).map_err(|e| mlua::Error::external(e))?;
+    this.windows.push(template);
+    Ok(())
+}
 
-    if config.exclusive_zone {
-        window.auto_exclusive_zone_enable();
+impl UserData for Shell {
+    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut(
+            "window",
+            |_lua, this, (name, config): (String, LuaTable)| window(this, name, config),
+        );
     }
+}
 
-    window.set_layer(config.layer.into());
+/// Detailed information about a physical monitor where a shell window is being displayed.
+#[derive(Clone, LuaClass)]
+pub struct Monitor {
+    /// The name of the monitor (e.g., "eDP-1").
+    pub name: String,
+    /// The unique identifier for the monitor (currently defaults to -1).
+    pub id: i128,
+    /// The width of the monitor in pixels.
+    pub width: i32,
+    /// The height of the monitor in pixels.
+    pub height: i32,
+    /// The refresh rate of the monitor in Hz.
+    pub refresh_rate: f32,
+    /// The UI scale factor (e.g., 1.0, 2.0).
+    pub scale: f32,
+}
 
-    if let Some(anchors) = &config.anchors {
-        let anchor_states = [
-            (Edge::Top, anchors.top),
-            (Edge::Bottom, anchors.bottom),
-            (Edge::Left, anchors.left),
-            (Edge::Right, anchors.right),
-        ];
-        for (edge, state) in anchor_states {
-            window.set_anchor(edge, state);
+impl IntoLua for Monitor {
+    fn into_lua(self, lua: &Lua) -> mlua::Result<LuaValue> {
+        let table = lua.create_table()?;
+        table.set("name", self.name)?;
+        table.set("id", self.id)?;
+        table.set("width", self.width)?;
+        table.set("height", self.height)?;
+        table.set("refresh_rate", self.refresh_rate)?;
+        table.set("scale", self.scale)?;
+        Ok(LuaValue::Table(table))
+    }
+}
+
+impl From<&gtk4::gdk::Monitor> for Monitor {
+    fn from(monitor: &gtk4::gdk::Monitor) -> Self {
+        use gtk4::prelude::MonitorExt;
+        let connector = monitor
+            .connector()
+            .map(|s: gtk4::glib::GString| s.to_string())
+            .unwrap_or_else(|| "unknown".to_string());
+
+        Monitor {
+            name: connector,
+            id: -1,
+            width: monitor.geometry().width(),
+            height: monitor.geometry().height(),
+            refresh_rate: monitor.refresh_rate() as f32 / 1000.0,
+            scale: monitor.scale_factor() as f32,
         }
     }
+}
 
-    if let Some(margins) = &config.margins {
-        let margin_states = [
-            (Edge::Top, margins.top),
-            (Edge::Bottom, margins.bottom),
-            (Edge::Left, margins.left),
-            (Edge::Right, margins.right),
-        ];
-        for (edge, state) in margin_states {
-            window.set_margin(edge, state);
-        }
+/// Loads the configuration from the specified Lua file.
+pub fn load(path: &str) -> Result<Shell> {
+    let path = Path::new(path);
+
+    if !path.exists() {
+        anyhow::bail!("Config file not found: {}", path.display());
     }
 
-    window
+    PATH.set(path.to_path_buf())
+        .map_err(|_| anyhow!("Couldn't set config path"))?;
+
+    let content = std::fs::read_to_string(path)?;
+
+    let lua = Lua::new();
+    crate::lua::register_lua(&lua)?;
+
+    let value: LuaValue = lua.load(&content).set_name("config").eval()?;
+
+    let shell = match value {
+        LuaValue::UserData(ud) => ud.borrow::<Shell>()?.clone(),
+        _ => anyhow::bail!("Config script must return a wayglance.shell"),
+    };
+
+    crate::lua::LUA
+        .set(lua)
+        .map_err(|_| anyhow!("Couldn't set Lua instance"))?;
+
+    Ok(shell)
 }

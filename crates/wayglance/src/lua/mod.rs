@@ -12,7 +12,7 @@ mod wayglance;
 use std::{collections::HashSet, sync::OnceLock};
 
 use anyhow::Result;
-use mlua::Lua;
+use mlua::{Lua, Table};
 
 use crate::lua::stubs::{Module, Stub, StubFactory};
 
@@ -49,6 +49,11 @@ pub fn register_lua(lua: &Lua) -> Result<()> {
 
     let wayglance = lua.create_table()?;
     globals.set("wayglance", &wayglance)?;
+
+    wayglance.set(
+        "shell",
+        lua.create_function(|_, config: Table| wayglance::shell(config))?,
+    )?;
 
     wayglance.set(
         "setInterval",

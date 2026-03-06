@@ -1,11 +1,9 @@
-use std::path::PathBuf;
-
+use super::get_config_dir;
 use anyhow::{Context, Result};
 use gtk4::{
     CssProvider, STYLE_PROVIDER_PRIORITY_USER, gdk::Display, style_context_add_provider_for_display,
 };
-
-use crate::shell::config::get_config_dir;
+use std::path::PathBuf;
 
 /// Loads a CSS style from the specified path and applies it to the GTK application.
 /// The path can be either absolute or relative to the config file directory.

@@ -57,28 +57,31 @@ local function theme_switcher_widget()
   })
 end
 
-return function()
-  return {
-    title = "Clock",
-    style = "clock.css",
-    layer = "background",
-    exclusive_zone = false,
-    anchors = {
-      top = true,
-      left = true,
-      right = true,
-      bottom = true,
+local shell = wayglance.shell({
+  title = "Clock",
+  style = "clock.css",
+})
+
+shell:window("clock-window", {
+  layer = "background",
+  exclusive_zone = false,
+  anchors = {
+    top = true,
+    left = true,
+    right = true,
+    bottom = true,
+  },
+  layout = Container({
+    orientation = "vertical",
+    valign = "center",
+    halign = "center",
+    spacing = 10,
+    children = {
+      clock_widget(),
+      date_widget(),
+      theme_switcher_widget(),
     },
-    child = Container({
-      orientation = "vertical",
-      valign = "center",
-      halign = "center",
-      spacing = 10,
-      children = {
-        clock_widget(),
-        date_widget(),
-        theme_switcher_widget(),
-      },
-    }),
-  }
-end
+  }),
+})
+
+return shell

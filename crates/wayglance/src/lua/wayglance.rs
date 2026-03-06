@@ -1,9 +1,10 @@
-use mlua::{Function as LuaFn, Lua, Value as LuaValue};
+use mlua::{Function as LuaFn, Lua, Table, Value as LuaValue};
 use wayglance_macros::{LuaModule, lua_func};
 
 use crate::{
     dynamic::{Interval, SIGNAL_BUS, Signal},
     lua::types::StringOrStrings,
+    shell::Shell,
 };
 
 /// The `wayglance` module, which provides helper functions for dynamic bindings and event
@@ -11,6 +12,23 @@ use crate::{
 #[allow(dead_code)]
 #[derive(LuaModule)]
 pub struct Wayglance;
+
+/// Creates a new shell configuration.
+#[lua_func(module = "wayglance")]
+#[arg(name = "config", doc = "The global shell configuration.")]
+#[ret(doc = "shell The shell object.")]
+pub fn shell(config: Table) -> mlua::Result<Shell> {
+    let title = config
+        .get::<Option<String>>("title")?
+        .unwrap_or_else(|| "wayglance".to_string());
+    let style = config.get::<Option<String>>("style")?;
+
+    Ok(Shell {
+        title,
+        style,
+        windows: Vec::new(),
+    })
+}
 
 /// Schedules the provided callback to be called repeatedly at the specified interval (in ms).
 #[lua_func(name = "setInterval", skip = "lua", module = "wayglance")]

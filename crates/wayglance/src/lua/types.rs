@@ -11,7 +11,7 @@ use std::borrow::Cow;
 
 use gtk4::{Align as GtkAlign, Orientation as GtkOrientation};
 use gtk4_layer_shell::Layer as GtkLayer;
-use mlua::{FromLua, IntoLua, Lua, Value as LuaValue};
+use mlua::{FromLua, IntoLua, Lua, Table as LuaTable, Value as LuaValue};
 use wayglance_macros::{LuaClass, LuaEnum};
 
 use crate::lua::stubs::LuaType;
@@ -82,6 +82,12 @@ impl LuaType for LuaValue {
 
 impl_lua_type!("function" for mlua::Function, mlua::RegistryKey);
 
+impl LuaType for LuaTable {
+    fn lua_type() -> Cow<'static, str> {
+        "table".into()
+    }
+}
+
 /// The z-level layer where the window will be placed.
 #[derive(Clone, Copy, LuaEnum)]
 pub enum Layer {
@@ -130,7 +136,7 @@ impl From<Layer> for GtkLayer {
 }
 
 /// Anchor points for the window to stick to specific edges of the monitor.
-#[derive(LuaClass)]
+#[derive(Clone, Default, LuaClass)]
 pub struct Anchors {
     /// Whether to anchor the window to the top edge of the monitor.
     #[lua_attr(default = false)]
@@ -169,7 +175,7 @@ impl FromLua for Anchors {
 }
 
 /// Margin in pixels from each edge of the monitor.
-#[derive(LuaClass)]
+#[derive(Clone, Default, LuaClass)]
 pub struct Margins {
     /// Margin from the top edge of the monitor, in pixels.
     #[lua_attr(default = 0)]

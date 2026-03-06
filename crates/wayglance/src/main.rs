@@ -5,15 +5,11 @@ mod modules;
 mod shell;
 mod widgets;
 
+use crate::{cli::Command, shell::lifecycle};
 use anyhow::Result;
 use clap::Parser;
 use cli::Cli;
 use gtk4::glib::ExitCode;
-
-use crate::{
-    cli::Command,
-    shell::{config::Config, run_app},
-};
 
 fn main() -> Result<ExitCode> {
     let cli = Cli::parse();
@@ -25,9 +21,9 @@ fn main() -> Result<ExitCode> {
 
             tracing_subscriber::fmt().with_env_filter(env_filter).init();
 
-            let config = Config::load(&config)?;
+            let shell = shell::load(&config)?;
 
-            Ok(run_app(config))
+            Ok(lifecycle::run_app(shell))
         }
         Command::GenStubs => {
             let stubs = lua::gen_stubs()?;
