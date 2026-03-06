@@ -14,7 +14,7 @@ use gtk4::{
     glib::{self, object::IsA},
     prelude::WidgetExt,
 };
-use mlua::FromLua;
+use mlua::{FromLua, IntoLua};
 use wayglance_macros::LuaClass;
 
 use crate::lua::{LUA, stubs::LuaType};
@@ -23,9 +23,22 @@ use crate::lua::{LUA, stubs::LuaType};
 #[derive(LuaClass)]
 pub struct Interval {
     /// A Lua callback to compute the value every `interval` milliseconds.
-    callback: mlua::RegistryKey,
+    pub callback: mlua::RegistryKey,
     /// The interval in milliseconds at which to call the Lua callback and update the value.
-    interval: u64,
+    pub interval: u64,
+}
+
+impl IntoLua for Interval {
+    fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        let table = lua.create_table()?;
+        table.set("__wayglance_dynamic", "interval")?;
+        table.set(
+            "callback",
+            lua.registry_value::<mlua::Function>(&self.callback)?,
+        )?;
+        table.set("interval", self.interval)?;
+        Ok(mlua::Value::Table(table))
+    }
 }
 
 /// Representation of a dynamic value that updates in response to one or more signals by calling a
@@ -33,10 +46,23 @@ pub struct Interval {
 #[derive(LuaClass)]
 pub struct Signal {
     /// A Lua callback to compute the value whenever any of the specified signals are emitted.
-    callback: mlua::RegistryKey,
+    pub callback: mlua::RegistryKey,
     /// The signal or signals that trigger updates to this value. Each signal is a string name that
     /// can be emitted via the `wayglance.emitSignal` function or by internal event handlers.
-    signals: Vec<String>,
+    pub signals: Vec<String>,
+}
+
+impl IntoLua for Signal {
+    fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        let table = lua.create_table()?;
+        table.set("__wayglance_dynamic", "signal")?;
+        table.set(
+            "callback",
+            lua.registry_value::<mlua::Function>(&self.callback)?,
+        )?;
+        table.set("signal", self.signals)?;
+        Ok(mlua::Value::Table(table))
+    }
 }
 
 /// A value that is either resolved statically at parse time, or computed dynamically.

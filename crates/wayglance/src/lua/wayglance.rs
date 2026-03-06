@@ -1,7 +1,10 @@
 use mlua::{Function as LuaFn, Lua, Value as LuaValue};
 use wayglance_macros::{LuaModule, lua_func};
 
-use crate::{dynamic::SIGNAL_BUS, lua::types::StringOrStrings};
+use crate::{
+    dynamic::{Interval, SIGNAL_BUS, Signal},
+    lua::types::StringOrStrings,
+};
 
 /// The `wayglance` module, which provides helper functions for dynamic bindings and event
 /// handling.
@@ -19,16 +22,12 @@ pub struct Wayglance;
     name = "interval",
     doc = "The interval in milliseconds to wait before calling the callback."
 )]
-#[ret(
-    doc = "interval A table representing the interval timer.",
-    ty = "Interval"
-)]
-pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<LuaValue> {
-    let table = lua.create_table()?;
-    table.set("__wayglance_dynamic", "interval")?;
-    table.set("callback", callback)?;
-    table.set("interval", interval)?;
-    Ok(LuaValue::Table(table))
+#[ret(doc = "interval A table representing the interval timer.")]
+pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<Interval> {
+    Ok(Interval {
+        callback: lua.create_registry_value(callback)?,
+        interval,
+    })
 }
 
 /// Listen for one or more signals and call the provided callback when they are emitted.
@@ -38,16 +37,15 @@ pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<L
     name = "callback",
     doc = "The callback to call when the signal(s) are emitted."
 )]
-#[ret(
-    doc = "signal A table representing the signal listener.",
-    ty = "Signal"
-)]
-pub fn on_signal(lua: &Lua, signals: StringOrStrings, callback: LuaFn) -> mlua::Result<LuaValue> {
-    let table = lua.create_table()?;
-    table.set("__wayglance_dynamic", "signal")?;
-    table.set("signal", signals)?;
-    table.set("callback", callback)?;
-    Ok(LuaValue::Table(table))
+#[ret(doc = "signal A table representing the signal listener.")]
+pub fn on_signal(lua: &Lua, signals: StringOrStrings, callback: LuaFn) -> mlua::Result<Signal> {
+    Ok(Signal {
+        signals: match signals {
+            StringOrStrings::Single(s) => vec![s],
+            StringOrStrings::Multiple(v) => v,
+        },
+        callback: lua.create_registry_value(callback)?,
+    })
 }
 
 /// Emit a signal with the given name and optional data payload.
