@@ -442,6 +442,16 @@ pub fn derive_widget_builder(input: TokenStream) -> TokenStream {
                 }),
             }
         }
+
+        inventory::submit! {
+            crate::widgets::WidgetFactory {
+                name: #type_name,
+                build: |value, lua| {
+                    let widget = #ident::from_lua(value, lua)?;
+                    Ok(Box::new(widget))
+                },
+            }
+        }
     };
 
     TokenStream::from(expanded)

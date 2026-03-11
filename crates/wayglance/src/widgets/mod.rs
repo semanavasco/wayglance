@@ -1,9 +1,6 @@
 mod button;
-use button::Button;
 mod container;
-use container::Container;
 mod label;
-use label::Label;
 
 use crate::{
     dynamic::MaybeReactive,
@@ -31,6 +28,13 @@ impl LuaType for Box<dyn Widget> {
     }
 }
 
+/// Factory struct used for dynamic widget creation based on a "type" field in Lua tables.
+pub struct WidgetFactory {
+    pub name: &'static str,
+    pub build: fn(LuaValue, &Lua) -> mlua::Result<Box<dyn Widget>>,
+}
+inventory::collect!(WidgetFactory);
+
 impl FromLua for Box<dyn Widget> {
     /// Deserializes a Lua table into a specific `Widget` trait object.
     /// The table must contain a `type` field (e.g., "button", "label") to determine which widget
@@ -50,25 +54,16 @@ impl FromLua for Box<dyn Widget> {
 
         let widget_type: String = table.get("type")?;
 
-        match widget_type.as_str() {
-            "button" => {
-                let button = Button::from_lua(value, lua)?;
-                Ok(Box::new(button))
-            }
-            "container" => {
-                let container = Container::from_lua(value, lua)?;
-                Ok(Box::new(container))
-            }
-            "label" => {
-                let label = Label::from_lua(value, lua)?;
-                Ok(Box::new(label))
-            }
-            _ => Err(mlua::Error::FromLuaConversionError {
+        let factory = inventory::iter::<WidgetFactory>
+            .into_iter()
+            .find(|f| f.name == widget_type)
+            .ok_or_else(|| mlua::Error::FromLuaConversionError {
                 from: value.type_name(),
                 to: "Widget".to_string(),
                 message: Some(format!("Unknown widget type: {}", widget_type)),
-            }),
-        }
+            })?;
+
+        Ok((factory.build)(value, lua)?)
     }
 }
 

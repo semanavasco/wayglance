@@ -9,7 +9,7 @@ use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A simple widget that displays a text label.
 #[derive(LuaClass, WidgetBuilder)]
-pub struct Label {
+struct Label {
     #[lua_attr(parent)]
     pub properties: Properties,
     /// The text content of the label. Can be a static string or a dynamic expression that

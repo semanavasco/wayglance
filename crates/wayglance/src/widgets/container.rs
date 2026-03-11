@@ -15,7 +15,7 @@ use wayglance_macros::{LuaClass, WidgetBuilder};
 /// A container widget that can hold multiple child widgets, arranged either horizontally or
 /// vertically.
 #[derive(LuaClass, WidgetBuilder)]
-pub struct Container {
+struct Container {
     #[lua_attr(parent)]
     pub properties: Properties,
     /// The orientation of the container.
