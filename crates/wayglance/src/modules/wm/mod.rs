@@ -3,7 +3,7 @@ use async_channel::Receiver;
 use gtk4::glib;
 use mlua::{IntoLua, Lua, Value as LuaValue};
 
-use crate::dynamic::SIGNAL_BUS;
+use crate::dynamic::signals::SIGNAL_BUS;
 use crate::lua::LUA;
 
 #[cfg(feature = "hyprland")]

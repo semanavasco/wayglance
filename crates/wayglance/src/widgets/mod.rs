@@ -5,17 +5,15 @@ use container::Container;
 mod label;
 use label::Label;
 
-use std::borrow::Cow;
-
+use crate::{
+    dynamic::MaybeReactive,
+    lua::{stubs::LuaType, types::Alignment},
+};
 use anyhow::Result;
 use gtk4::{glib::object::IsA, prelude::WidgetExt};
 use mlua::{FromLua, Lua, Value as LuaValue};
+use std::borrow::Cow;
 use wayglance_macros::LuaClass;
-
-use crate::{
-    dynamic::MaybeDynamic,
-    lua::{stubs::LuaType, types::Alignment},
-};
 
 /// Base trait for all UI components in wayglance.
 pub trait Widget {
@@ -79,25 +77,25 @@ impl FromLua for Box<dyn Widget> {
 #[lua_class(name = "Widget")]
 pub struct Properties {
     /// Optional widget ID, used for CSS styling and querying.
-    pub id: MaybeDynamic<Option<String>>,
+    pub id: MaybeReactive<Option<String>>,
     /// Optional list of CSS classes applied to the widget.
     #[lua_attr(optional)]
-    pub class_list: MaybeDynamic<Vec<String>>,
+    pub class_list: MaybeReactive<Vec<String>>,
     /// Optional horizontal alignment for the widget.
-    pub halign: MaybeDynamic<Option<Alignment>>,
+    pub halign: MaybeReactive<Option<Alignment>>,
     /// Optional vertical alignment for the widget.
-    pub valign: MaybeDynamic<Option<Alignment>>,
+    pub valign: MaybeReactive<Option<Alignment>>,
     /// Whether the widget should expand to fill available horizontal space.
     #[lua_attr(default = false)]
-    pub hexpand: MaybeDynamic<bool>,
+    pub hexpand: MaybeReactive<bool>,
     /// Whether the widget should expand to fill available vertical space.
     #[lua_attr(default = false)]
-    pub vexpand: MaybeDynamic<bool>,
+    pub vexpand: MaybeReactive<bool>,
     /// Whether the widget is visible.
     #[lua_attr(default = true)]
-    pub visible: MaybeDynamic<bool>,
+    pub visible: MaybeReactive<bool>,
     /// Optional tooltip markup text for the widget.
-    pub tooltip: MaybeDynamic<Option<String>>,
+    pub tooltip: MaybeReactive<Option<String>>,
 }
 
 impl Properties {
@@ -108,29 +106,29 @@ impl Properties {
     fn parse(table: &mlua::Table) -> mlua::Result<Self> {
         Ok(Properties {
             id: table
-                .get::<Option<MaybeDynamic<Option<String>>>>("id")?
-                .unwrap_or(MaybeDynamic::Static(None)),
+                .get::<Option<MaybeReactive<Option<String>>>>("id")?
+                .unwrap_or(MaybeReactive::Static(None)),
             class_list: table
-                .get::<Option<MaybeDynamic<Vec<String>>>>("class_list")?
-                .unwrap_or(MaybeDynamic::Static(Vec::new())),
+                .get::<Option<MaybeReactive<Vec<String>>>>("class_list")?
+                .unwrap_or(MaybeReactive::Static(Vec::new())),
             halign: table
-                .get::<Option<MaybeDynamic<Option<Alignment>>>>("halign")?
-                .unwrap_or(MaybeDynamic::Static(None)),
+                .get::<Option<MaybeReactive<Option<Alignment>>>>("halign")?
+                .unwrap_or(MaybeReactive::Static(None)),
             valign: table
-                .get::<Option<MaybeDynamic<Option<Alignment>>>>("valign")?
-                .unwrap_or(MaybeDynamic::Static(None)),
+                .get::<Option<MaybeReactive<Option<Alignment>>>>("valign")?
+                .unwrap_or(MaybeReactive::Static(None)),
             hexpand: table
-                .get::<Option<MaybeDynamic<bool>>>("hexpand")?
-                .unwrap_or(MaybeDynamic::Static(false)),
+                .get::<Option<MaybeReactive<bool>>>("hexpand")?
+                .unwrap_or(MaybeReactive::Static(false)),
             vexpand: table
-                .get::<Option<MaybeDynamic<bool>>>("vexpand")?
-                .unwrap_or(MaybeDynamic::Static(false)),
+                .get::<Option<MaybeReactive<bool>>>("vexpand")?
+                .unwrap_or(MaybeReactive::Static(false)),
             visible: table
-                .get::<Option<MaybeDynamic<bool>>>("visible")?
-                .unwrap_or(MaybeDynamic::Static(true)),
+                .get::<Option<MaybeReactive<bool>>>("visible")?
+                .unwrap_or(MaybeReactive::Static(true)),
             tooltip: table
-                .get::<Option<MaybeDynamic<Option<String>>>>("tooltip")?
-                .unwrap_or(MaybeDynamic::Static(None)),
+                .get::<Option<MaybeReactive<Option<String>>>>("tooltip")?
+                .unwrap_or(MaybeReactive::Static(None)),
         })
     }
 

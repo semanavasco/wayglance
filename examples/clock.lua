@@ -1,33 +1,39 @@
 -- Example background clock widget using wayglance
 
--- State to track the current theme
-local current_theme = "theme-purple"
+-- State
+local current_theme = wayglance.state("theme-purple")
 
 -- Widgets
 local function clock_widget()
+  local time_state = wayglance.state(os.date("%H:%M:%S"))
+
+  wayglance.setInterval(function()
+    time_state:set(os.date("%H:%M:%S"))
+  end, 1000)
+
   return Label({
-    text = wayglance.setInterval(function()
-      return os.date("%H:%M:%S")
-    end, 1000),
+    text = time_state,
     id = "clock",
     halign = "center",
-    class_list = wayglance.onSignal("theme_changed", function(new_theme)
-      current_theme = new_theme or current_theme
-      return { "clock-text", current_theme }
+    class_list = current_theme:bind(function(theme)
+      return { "clock-text", theme }
     end),
   })
 end
 
 local function date_widget()
+  local date_state = wayglance.state(os.date("%A, %B %d, %Y"))
+
+  wayglance.setInterval(function()
+    date_state:set(os.date("%A, %B %d, %Y"))
+  end, 60000)
+
   return Label({
-    text = wayglance.setInterval(function()
-      return os.date("%A, %B %d, %Y")
-    end, 60000),
+    text = date_state,
     id = "date",
     halign = "center",
-    class_list = wayglance.onSignal("theme_changed", function(new_theme)
-      current_theme = new_theme or current_theme
-      return { "date-text", current_theme }
+    class_list = current_theme:bind(function(theme)
+      return { "date-text", theme }
     end),
   })
 end
@@ -38,11 +44,10 @@ local function theme_button(target_theme, color_class, hex_color, pretty_name)
     child = Label({ text = "" }),
     class_list = { "theme-btn", color_class },
     on_click = function()
-      wayglance.emitSignal("theme_changed", target_theme)
+      current_theme:set(target_theme)
     end,
-    visible = wayglance.onSignal("theme_changed", function(new_theme)
-      current_theme = new_theme or current_theme
-      return current_theme ~= target_theme
+    visible = current_theme:bind(function(theme)
+      return theme ~= target_theme
     end),
     tooltip = string.format(
       "<span font_weight='bold' foreground='%s'>Activate %s Theme</span>\n"

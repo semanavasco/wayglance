@@ -9,12 +9,11 @@ pub mod stubs;
 pub mod types;
 mod wayglance;
 
-use std::{collections::HashSet, sync::OnceLock};
-
+use crate::dynamic;
 use anyhow::Result;
 use mlua::{Lua, Table};
-
-use crate::lua::stubs::{Module, Stub, StubFactory};
+use std::{collections::HashSet, sync::OnceLock};
+use stubs::{Module, Stub, StubFactory};
 
 /// Global Lua instance used by dynamic bindings and modules event forwarding.
 /// This is set during config loading, after the Lua environment is initialized and the config file
@@ -50,6 +49,8 @@ pub fn register_lua(lua: &Lua) -> Result<()> {
     let wayglance = lua.create_table()?;
     globals.set("wayglance", &wayglance)?;
 
+    wayglance.set("state", lua.create_function(dynamic::state::state)?)?;
+
     wayglance.set(
         "shell",
         lua.create_function(|_, config: Table| wayglance::shell(config))?,
@@ -57,17 +58,17 @@ pub fn register_lua(lua: &Lua) -> Result<()> {
 
     wayglance.set(
         "setInterval",
-        lua.create_function(|lua, (cb, ms)| wayglance::set_interval(lua, cb, ms))?,
+        lua.create_function(|lua, (cb, ms)| dynamic::timer::set_interval(lua, cb, ms))?,
     )?;
 
     wayglance.set(
         "onSignal",
-        lua.create_function(|lua, (sigs, cb)| wayglance::on_signal(lua, sigs, cb))?,
+        lua.create_function(|lua, (sigs, cb)| dynamic::signals::on_signal(lua, sigs, cb))?,
     )?;
 
     wayglance.set(
         "emitSignal",
-        lua.create_function(|_, (sig, data)| wayglance::emit_signal(sig, data))?,
+        lua.create_function(|_, (sig, data)| dynamic::signals::emit_signal(sig, data))?,
     )?;
 
     // Inject Lua bindings for the window manager, if any are enabled
@@ -141,15 +142,15 @@ pub fn gen_stubs() -> Result<String> {
         if let stubs::FnType::Function {
             module: Some(mod_path),
         } = f.ty
+            && !module_path_set.contains(mod_path)
         {
-            if !module_path_set.contains(mod_path) {
-                anyhow::bail!(
-                    "Function '{}' belongs to unknown module path '{}'",
-                    f.name,
-                    mod_path
-                );
-            }
+            anyhow::bail!(
+                "Function '{}' belongs to unknown module path '{}'",
+                f.name,
+                mod_path
+            );
         }
+
         function_strings.push(f.to_string());
     }
 

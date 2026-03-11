@@ -7,14 +7,12 @@
 //! This module also implements the [`LuaType`] trait, which provides a string representation
 //! of the type for documentation generation and error messages in Lua parsing.
 
-use std::borrow::Cow;
-
+use crate::lua::stubs::LuaType;
 use gtk4::{Align as GtkAlign, Orientation as GtkOrientation};
 use gtk4_layer_shell::Layer as GtkLayer;
 use mlua::{FromLua, IntoLua, Lua, Table as LuaTable, Value as LuaValue};
+use std::borrow::Cow;
 use wayglance_macros::{LuaClass, LuaEnum};
-
-use crate::lua::stubs::LuaType;
 
 /// Simple macro to implement LuaType for multiple types with the same Lua type string.
 macro_rules! impl_lua_type {
@@ -39,7 +37,7 @@ impl LuaType for bool {
     }
 }
 
-impl_lua_type!("number" for i16, i32, i128, u16, u64, f32);
+impl_lua_type!("number" for i16, i32, i128, u16, u64, f32, usize);
 
 impl<T> LuaType for Option<T>
 where

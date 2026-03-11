@@ -1,16 +1,16 @@
-use anyhow::Result;
+use crate::{
+    dynamic::{MaybeReactive, state::State},
+    lua::{LUA, types::Orientation},
+    widgets::{Properties, Widget},
+};
+use anyhow::{Context, Result};
 use gtk4::{
     Box as GtkBox,
     prelude::{BoxExt, WidgetExt},
 };
 use mlua::{FromLua, Lua, Value as LuaValue};
+use std::rc::Rc;
 use wayglance_macros::{LuaClass, WidgetBuilder};
-
-use crate::{
-    dynamic::{MaybeDynamic, bind_interval, bind_signals},
-    lua::types::Orientation,
-    widgets::{Properties, Widget},
-};
 
 /// A container widget that can hold multiple child widgets, arranged either horizontally or
 /// vertically.
@@ -25,7 +25,7 @@ pub struct Container {
     pub spacing: i32,
     /// The child widgets contained within this container.
     #[lua_attr(optional)]
-    pub children: MaybeDynamic<Vec<Box<dyn Widget>>>,
+    pub children: MaybeReactive<Vec<Box<dyn Widget>>>,
 }
 
 impl Widget for Container {
@@ -35,52 +35,72 @@ impl Widget for Container {
         self.properties.apply(&container)?;
 
         match &self.children {
-            MaybeDynamic::Static(children) => {
+            MaybeReactive::Static(children) => {
                 for child in children {
                     container.append(&child.build()?);
                 }
             }
-            MaybeDynamic::Interval(signal) => {
-                bind_interval(
-                    &container,
-                    &signal.callback,
-                    signal.interval,
-                    "children",
-                    |w, children: Vec<Box<dyn Widget>>| {
-                        while let Some(child) = w.first_child() {
-                            w.remove(&child);
+            MaybeReactive::Bound(state) => {
+                let lua = LUA.get().context("Lua instance not initialized")?;
+
+                // Build initial children from state
+                let current = state.get(lua)?;
+                if let Ok(children) = Vec::<Box<dyn Widget>>::from_lua(current, lua) {
+                    for child in &children {
+                        container.append(&child.build()?);
+                    }
+                }
+
+                // Subscribe for future updates: rebuild all children when state changes
+                // TODO: optimize by diffing old vs new children and only updating changed ones
+                let transform_fn = state
+                    .transform
+                    .as_ref()
+                    .map(|k| lua.registry_value::<mlua::Function>(k))
+                    .transpose()?;
+
+                let container_clone = container.clone();
+                let subscriber: Rc<dyn Fn(LuaValue)> = Rc::new(move |value: LuaValue| {
+                    let Some(lua) = LUA.get() else { return };
+
+                    let resolved = if let Some(ref func) = transform_fn {
+                        match func.call::<LuaValue>(value) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                tracing::error!("Error in container children transform: {}", e);
+                                return;
+                            }
                         }
-                        for child in children {
-                            match child.build() {
-                                Ok(child_widget) => w.append(&child_widget),
-                                Err(e) => {
-                                    tracing::error!("Failed to build child widget: {}", e);
+                    } else {
+                        value
+                    };
+
+                    match Vec::<Box<dyn Widget>>::from_lua(resolved, lua) {
+                        Ok(children) => {
+                            while let Some(child) = container_clone.first_child() {
+                                container_clone.remove(&child);
+                            }
+                            for child in &children {
+                                match child.build() {
+                                    Ok(w) => container_clone.append(&w),
+                                    Err(e) => {
+                                        tracing::error!("Error building dynamic child: {}", e)
+                                    }
                                 }
                             }
                         }
-                    },
-                )?;
-            }
-            MaybeDynamic::Signal(signal) => {
-                bind_signals(
-                    &container,
-                    &signal.callback,
-                    &signal.signals,
-                    "children",
-                    |w, children: Vec<Box<dyn Widget>>| {
-                        while let Some(child) = w.first_child() {
-                            w.remove(&child);
+                        Err(e) => {
+                            tracing::error!("Error parsing dynamic children: {}", e);
                         }
-                        for child in children {
-                            match child.build() {
-                                Ok(child_widget) => w.append(&child_widget),
-                                Err(e) => {
-                                    tracing::error!("Failed to build child widget: {}", e);
-                                }
-                            }
-                        }
-                    },
-                )?;
+                    }
+                });
+
+                let state_id = state.id;
+                if let Some(sub_id) = state.subscribe(subscriber) {
+                    container.connect_destroy(move |_| {
+                        State::unsubscribe(state_id, sub_id);
+                    });
+                }
             }
         }
 
@@ -106,8 +126,8 @@ impl FromLua for Container {
             orientation: table.get("orientation")?,
             spacing: table.get::<Option<i32>>("spacing")?.unwrap_or(0),
             children: table
-                .get::<Option<MaybeDynamic<Vec<Box<dyn Widget>>>>>("children")?
-                .unwrap_or(MaybeDynamic::Static(vec![])),
+                .get::<Option<MaybeReactive<Vec<Box<dyn Widget>>>>>("children")?
+                .unwrap_or(MaybeReactive::Static(Vec::new())),
         })
     }
 }

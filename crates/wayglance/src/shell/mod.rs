@@ -50,7 +50,7 @@ pub struct Shell {
     doc = "The configuration for this window."
 )]
 fn window(this: &mut Shell, name: String, config: LuaTable) -> mlua::Result<()> {
-    let template = Window::parse(name, config).map_err(|e| mlua::Error::external(e))?;
+    let template = Window::parse(name, config).map_err(mlua::Error::external)?;
     this.windows.push(template);
     Ok(())
 }

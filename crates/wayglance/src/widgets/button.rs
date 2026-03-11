@@ -1,12 +1,11 @@
-use anyhow::{Context, Result};
-use gtk4::{Button as GtkButton, prelude::ButtonExt};
-use mlua::{FromLua, Lua, Value as LuaValue};
-use wayglance_macros::{LuaClass, WidgetBuilder};
-
 use crate::{
     lua::LUA,
     widgets::{Properties, Widget},
 };
+use anyhow::{Context, Result};
+use gtk4::{Button as GtkButton, prelude::ButtonExt};
+use mlua::{FromLua, Lua, Value as LuaValue};
+use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A clickable button widget.
 #[derive(LuaClass, WidgetBuilder)]

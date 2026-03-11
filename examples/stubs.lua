@@ -68,67 +68,71 @@ local HyprlandWindow = {}
 ---@class Container : Widget
 ---@field orientation Orientation The orientation of the container.
 ---@field spacing ? number The spacing between children in the container, in pixels. (Default: 0)
----@field children ? Widget[] | Interval | Signal The child widgets contained within this container.
----@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
----@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
----@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.
----@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
----@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
----@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
----@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
----@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
+---@field children ? Widget[] | State The child widgets contained within this container.
+---@field id ? string | State Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | State Optional horizontal alignment for the widget.
+---@field valign ? Alignment | State Optional vertical alignment for the widget.
+---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field tooltip ? string | State Optional tooltip markup text for the widget.
 local Container = {}
 
 --- A clickable button widget.
 ---@class Button : Widget
 ---@field on_click function Function to execute when the button is clicked.
 ---@field child Widget The child widget to display inside the button.
----@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
----@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
----@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.
----@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
----@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
----@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
----@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
----@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
+---@field id ? string | State Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | State Optional horizontal alignment for the widget.
+---@field valign ? Alignment | State Optional vertical alignment for the widget.
+---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field tooltip ? string | State Optional tooltip markup text for the widget.
 local Button = {}
 
 --- A simple widget that displays a text label.
 ---@class Label : Widget
----@field text string | Interval | Signal The text content of the label. Can be a static string or a dynamic expression that evaluates to a string.
----@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
----@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
----@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.
----@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
----@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
----@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
----@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
----@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
+---@field text string | State The text content of the label. Can be a static string or a dynamic expression that evaluates to a string.
+---@field id ? string | State Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | State Optional horizontal alignment for the widget.
+---@field valign ? Alignment | State Optional vertical alignment for the widget.
+---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field tooltip ? string | State Optional tooltip markup text for the widget.
 local Label = {}
 
---- Representation of a dynamic value that updates at regular intervals by calling a Lua callback.
----@class Interval
----@field callback function A Lua callback to compute the value every `interval` milliseconds.
----@field interval number The interval in milliseconds at which to call the Lua callback and update the value.
-local Interval = {}
+--- A handle to a reactive state entry. Contains the state ID and an optional transform function.
+--- Can be used on properties that support it (e.g. `label.text`) to provide dynamic values that
+--- automatically update when the state changes.
+--- Provides methods to either read, write or bind with/out a transform function.
+--- 
+--- # INTERNAL USE ONLY
+--- Not intended for direct use. Should only be constructed via the `wayglance.state()` Lua
+--- function, which ensures the state is properly registered and rooted in the Lua registry.
+---@class State
+---@field id number The ID of this state in the registry.
+---@field transform ? function An optional Lua transform function applied when this state is used as a binding. Stored as a registry key so it survives across Lua calls.
+local State = {}
 
---- Representation of a dynamic value that updates in response to one or more signals by calling a
---- Lua callback.
----@class Signal
----@field callback function A Lua callback to compute the value whenever any of the specified signals are emitted.
----@field signals string[] The signal or signals that trigger updates to this value. Each signal is a string name that can be emitted via the `wayglance.emitSignal` function or by internal event handlers.
-local Signal = {}
+--- A handle that can be used to cancel a scheduled task or a signal subscription.
+---@class CancelHandle
+local CancelHandle = {}
 
 --- Common properties shared by all widgets (layout, CSS classes, IDs, etc).
 ---@class Widget
----@field id ? string | Interval | Signal Optional widget ID, used for CSS styling and querying.
----@field class_list ? string[] | Interval | Signal Optional list of CSS classes applied to the widget.
----@field halign ? Alignment | Interval | Signal Optional horizontal alignment for the widget.
----@field valign ? Alignment | Interval | Signal Optional vertical alignment for the widget.
----@field hexpand ? boolean | Interval | Signal Whether the widget should expand to fill available horizontal space. (Default: false)
----@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
----@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
----@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
+---@field id ? string | State Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | State Optional horizontal alignment for the widget.
+---@field valign ? Alignment | State Optional vertical alignment for the widget.
+---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field tooltip ? string | State Optional tooltip markup text for the widget.
 local Widget = {}
 
 --- The top-level configuration for the wayglance application shell.
@@ -233,11 +237,6 @@ function wayglance.hyprland.toggleFloating() end
 --- Closes the currently active window in Hyprland.
 function wayglance.hyprland.killActiveWindow() end
 
---- Emit a signal with the given name and optional data payload.
----@param signal string The name of the signal to emit.
----@param data ? any Optional data to include with the signal. Can be any Lua value.
-function wayglance.emitSignal(signal, data) end
-
 --- Creates a new shell configuration.
 ---@param config table The global shell configuration.
 ---@return Shell shell The shell object.
@@ -246,14 +245,58 @@ function wayglance.shell(config) end
 --- Schedules the provided callback to be called repeatedly at the specified interval (in ms).
 ---@param callback function The callback to call after interval ms have passed.
 ---@param interval number The interval in milliseconds to wait before calling the callback.
----@return Interval interval A table representing the interval timer.
+---@return CancelHandle handle A handle that can be used to cancel the scheduled callback with :cancel().
 function wayglance.setInterval(callback, interval) end
+
+--- Creates a new reactive state with the given initial value.
+--- Can be used on properties that support it (e.g. `label.text`) to provide dynamic values that
+--- automatically update when the state changes.
+--- 
+--- # Example:
+--- ```lua
+--- local count = wayglance.state(0)
+--- 
+--- -- ... inside layout:
+--- Label({ text = count:bind(function(count)
+--- return "Count: " .. count
+--- end) }) -- bind state to label text with transform function
+--- 
+--- -- ... somewhere else in the code:
+--- wayglance.setInterval(function()
+--- local current = count:get() -- read current state value
+--- count:set(current + 1) -- update state value, triggers UI update
+--- end, 1000) -- repeat every 1000 ms
+--- ```
+---@param initial any The initial value of the state.
+---@return State state A reactive state handle.
+function wayglance.state(initial) end
+
+--- Creates a new state binding with a transform function that maps the state value to a new value.
+---@param transform function A function that transforms the state value and returns the transformed result.
+---@return table
+function State:bind(transform) end
+
+--- Updates the value of a reactive state and notifies all subscribers.
+---@param value any The new value to set for the state.
+function State:set(value) end
+
+--- Retrieves the current value of a reactive state.
+---@return any
+function State:get() end
+
+--- Cancels the scheduled task or signal subscription.
+function CancelHandle:cancel() end
 
 --- Listen for one or more signals and call the provided callback when they are emitted.
 ---@param signals string | string[] The signal or signals to listen for.
 ---@param callback function The callback to call when the signal(s) are emitted.
----@return Signal signal A table representing the signal listener.
+---@return CancelHandle handle A handle that can be used to cancel the signal subscription with :cancel().
 function wayglance.onSignal(signals, callback) end
+
+--- Emit a signal with the given name and optional data payload.
+---@param signal string The name of the signal to emit.
+---@param data ? any Optional data to include with the signal. Can be any Lua value.
+function wayglance.emitSignal(signal, data) end
 
 --- Adds a new window definition to the shell configuration.
 ---@param name string The unique name of the window.
