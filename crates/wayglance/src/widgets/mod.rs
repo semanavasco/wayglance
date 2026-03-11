@@ -94,6 +94,9 @@ pub struct Properties {
     /// Whether the widget is visible.
     #[lua_attr(default = true)]
     pub visible: MaybeReactive<bool>,
+    /// Whether the widget can receive keyboard focus.
+    #[lua_attr(default = true)]
+    pub focusable: MaybeReactive<bool>,
     /// Optional tooltip markup text for the widget.
     pub tooltip: MaybeReactive<Option<String>>,
 }
@@ -125,6 +128,9 @@ impl Properties {
                 .unwrap_or(MaybeReactive::Static(false)),
             visible: table
                 .get::<Option<MaybeReactive<bool>>>("visible")?
+                .unwrap_or(MaybeReactive::Static(true)),
+            focusable: table
+                .get::<Option<MaybeReactive<bool>>>("focusable")?
                 .unwrap_or(MaybeReactive::Static(true)),
             tooltip: table
                 .get::<Option<MaybeReactive<Option<String>>>>("tooltip")?
@@ -175,6 +181,10 @@ impl Properties {
 
         self.visible.bind(widget, "visible", |w, visible| {
             w.set_visible(visible);
+        })?;
+
+        self.focusable.bind(widget, "focusable", |w, focusable| {
+            w.set_focusable(focusable);
         })?;
 
         self.tooltip.bind(widget, "tooltip", |w, tooltip| {

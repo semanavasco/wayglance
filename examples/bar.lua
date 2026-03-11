@@ -46,6 +46,7 @@ local function workspace_button(id, is_active)
     }),
     class_list = { "ws-btn" },
     valign = "center",
+    focusable = false,
     on_click = function()
       wayglance.hyprland.switchWorkspace(id)
     end,

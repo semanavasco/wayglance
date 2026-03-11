@@ -76,6 +76,7 @@ local HyprlandWindow = {}
 ---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
 local Container = {}
 
@@ -90,6 +91,7 @@ local Container = {}
 ---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
 local Button = {}
 
@@ -103,6 +105,7 @@ local Button = {}
 ---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
 local Label = {}
 
@@ -132,6 +135,7 @@ local CancelHandle = {}
 ---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
 ---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
 local Widget = {}
 
