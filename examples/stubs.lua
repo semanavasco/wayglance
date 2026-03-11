@@ -55,11 +55,13 @@ wayglance.hyprland = {}
 ---@field y number The y-coordinate of the window's top-left corner.
 ---@field floating boolean Whether the window is currently floating.
 ---@field fullscreen boolean Whether the window is currently in fullscreen mode.
+local HyprlandActiveWindowInfo = {}
 
 --- Basic information about a window, including its title and class.
 ---@class HyprlandWindow
 ---@field title string The title of the window.
 ---@field class string The class of the window.
+local HyprlandWindow = {}
 
 --- A container widget that can hold multiple child widgets, arranged either horizontally or
 --- vertically.
@@ -75,6 +77,7 @@ wayglance.hyprland = {}
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
 ---@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
+local Container = {}
 
 --- A clickable button widget.
 ---@class Button : Widget
@@ -88,6 +91,7 @@ wayglance.hyprland = {}
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
 ---@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
+local Button = {}
 
 --- A simple widget that displays a text label.
 ---@class Label : Widget
@@ -100,17 +104,20 @@ wayglance.hyprland = {}
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
 ---@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
+local Label = {}
 
 --- Representation of a dynamic value that updates at regular intervals by calling a Lua callback.
 ---@class Interval
 ---@field callback function A Lua callback to compute the value every `interval` milliseconds.
 ---@field interval number The interval in milliseconds at which to call the Lua callback and update the value.
+local Interval = {}
 
 --- Representation of a dynamic value that updates in response to one or more signals by calling a
 --- Lua callback.
 ---@class Signal
 ---@field callback function A Lua callback to compute the value whenever any of the specified signals are emitted.
 ---@field signals string[] The signal or signals that trigger updates to this value. Each signal is a string name that can be emitted via the `wayglance.emitSignal` function or by internal event handlers.
+local Signal = {}
 
 --- Common properties shared by all widgets (layout, CSS classes, IDs, etc).
 ---@class Widget
@@ -122,6 +129,7 @@ wayglance.hyprland = {}
 ---@field vexpand ? boolean | Interval | Signal Whether the widget should expand to fill available vertical space. (Default: false)
 ---@field visible ? boolean | Interval | Signal Whether the widget is visible. (Default: true)
 ---@field tooltip ? string | Interval | Signal Optional tooltip markup text for the widget.
+local Widget = {}
 
 --- The top-level configuration for the wayglance application shell.
 --- 
@@ -131,6 +139,7 @@ wayglance.hyprland = {}
 ---@field title string The global title of the shell, which determines the GTK `application_id`.
 ---@field style ? string Path to an optional global CSS stylesheet.
 ---@field windows Window[] All the window definitions registered in this shell.
+local Shell = {}
 
 --- Detailed information about a physical monitor where a shell window is being displayed.
 ---@class Monitor
@@ -140,6 +149,7 @@ wayglance.hyprland = {}
 ---@field height number The height of the monitor in pixels.
 ---@field refresh_rate number The refresh rate of the monitor in Hz.
 ---@field scale number The UI scale factor (e.g., 1.0, 2.0).
+local Monitor = {}
 
 --- Anchor points for the window to stick to specific edges of the monitor.
 ---@class Anchors
@@ -147,6 +157,7 @@ wayglance.hyprland = {}
 ---@field right ? boolean Whether to anchor the window to the right edge of the monitor. (Default: false)
 ---@field bottom ? boolean Whether to anchor the window to the bottom edge of the monitor. (Default: false)
 ---@field left ? boolean Whether to anchor the window to the left edge of the monitor. (Default: false)
+local Anchors = {}
 
 --- Margin in pixels from each edge of the monitor.
 ---@class Margins
@@ -154,11 +165,13 @@ wayglance.hyprland = {}
 ---@field right ? number Margin from the right edge of the monitor, in pixels. (Default: 0)
 ---@field bottom ? number Margin from the bottom edge of the monitor, in pixels. (Default: 0)
 ---@field left ? number Margin from the left edge of the monitor, in pixels. (Default: 0)
+local Margins = {}
 
 --- Basic information about a workspace, including its ID and name.
 ---@class HyprlandWorkspace
 ---@field id number The unique identifier for the workspace.
 ---@field name string The name of the workspace.
+local HyprlandWorkspace = {}
 
 --- Detailed information about a workspace in Hyprland, including its ID, name,
 --- associated monitor, number of windows, last focused window title, and whether it is fullscreen.
@@ -170,6 +183,7 @@ wayglance.hyprland = {}
 ---@field monitor_id ? number The unique identifier of the monitor this workspace is on.
 ---@field id number The unique identifier for the workspace.
 ---@field name string The name of the workspace.
+local HyprlandWorkspaceInfo = {}
 
 --- Information about a monitor in Hyprland, including its ID, name, resolution,
 --- position, and currently active workspace.
@@ -184,22 +198,25 @@ wayglance.hyprland = {}
 ---@field refresh_rate number The refresh rate of the monitor in Hz.
 ---@field scale number The UI scale factor for the monitor.
 ---@field active_workspace HyprlandWorkspace Basic information about the currently active workspace on this monitor.
+local HyprlandMonitorInfo = {}
 
 --- Basic information about an active monitor, including its name and the name of the active
 --- workspace.
 ---@class HyprlandActiveMonitor
 ---@field monitor string The name of the monitor.
 ---@field workspace ? string The name of the workspace on the monitor, if available.
+local HyprlandActiveMonitor = {}
 
 --- A window that can be instantiated on one or more monitors.
 ---@class Window
----@field name string The unique name of this window, used for identification and debugging.
----@field monitors string[] A list of monitor connector names to display this window on. If empty, all monitors.
+---@field name ? string The unique name of this window, used for identification and debugging. (Default: Gets the name from `window` method)
+---@field monitors ? string[] A list of monitor connector names to display this window on. If empty, all monitors.
 ---@field layer Layer The layer to display this window on.
----@field exclusive_zone boolean Whether this window should reserve space on the monitor (like a panel) or be free-floating.
----@field anchors Anchors The edges of the monitor to anchor this window to.
----@field margins Margins The margins to apply on each edge when anchored.
+---@field exclusive_zone ? boolean Whether this window should reserve space on the monitor (like a panel) or be free-floating. (Default: false)
+---@field anchors ? Anchors The edges of the monitor to anchor this window to.
+---@field margins ? Margins The margins to apply on each edge when anchored.
 ---@field layout any The layout of the window. Can be a table (static widget) or a function (monitor) -> widget.
+local Window = {}
 
 --- Returns information about the currently active window in Hyprland, including its title, class,
 --- PID, monitor, workspace, position, and size. If there is no active window, a nil value is
@@ -237,6 +254,11 @@ function wayglance.setInterval(callback, interval) end
 ---@param callback function The callback to call when the signal(s) are emitted.
 ---@return Signal signal A table representing the signal listener.
 function wayglance.onSignal(signals, callback) end
+
+--- Adds a new window definition to the shell configuration.
+---@param name string The unique name of the window.
+---@param config Window The configuration for this window.
+function Shell:window(name, config) end
 
 --- Switches the focus to the workspace with the given numerical ID.
 ---@param workspace_id number The numerical ID of the workspace to switch to.

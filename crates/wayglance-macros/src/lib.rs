@@ -239,7 +239,9 @@ pub fn lua_func(attr: TokenStream, item: TokenStream) -> TokenStream {
     let name = &input.sig.ident;
     let mut name_str = name.to_string();
     let func_doc = extract_doc(&input.attrs);
-    let mut module = quote! { None };
+
+    let mut module = None;
+    let mut class = None;
 
     // Parse attributes passed directly to the macro
     let mut skip_args = HashSet::new();
@@ -259,13 +261,29 @@ pub fn lua_func(attr: TokenStream, item: TokenStream) -> TokenStream {
         if meta.path.is_ident("module") {
             let value = meta.value()?;
             let s: LitStr = value.parse()?;
-            module = quote! { Some(#s) };
+            module = Some(s.value());
+        }
+
+        if meta.path.is_ident("class") {
+            let value = meta.value()?;
+            let s: LitStr = value.parse()?;
+            class = Some(s.value());
         }
 
         Ok(())
     });
 
     let _ = attr_parser.parse(attr);
+
+    let fn_type = if let Some(class) = class {
+        quote! { crate::lua::stubs::FnType::Method { class: #class } }
+    } else {
+        let module_quote = match module {
+            Some(m) => quote! { Some(#m) },
+            None => quote! { None },
+        };
+        quote! { crate::lua::stubs::FnType::Function { module: #module_quote } }
+    };
 
     struct ArgOverride {
         ty: Option<String>,
@@ -391,7 +409,7 @@ pub fn lua_func(attr: TokenStream, item: TokenStream) -> TokenStream {
         inventory::submit! {
             crate::lua::stubs::StubFactory {
                 build: || crate::lua::stubs::Stub::Function(crate::lua::stubs::Function {
-                    module: #module,
+                    ty: #fn_type,
                     name: #name_str,
                     doc: #func_doc,
                     args: std::borrow::Cow::Owned(vec![#(#args),*]),

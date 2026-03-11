@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
     sync::OnceLock,
 };
-use wayglance_macros::LuaClass;
+use wayglance_macros::{LuaClass, lua_func};
 
 static PATH: OnceLock<PathBuf> = OnceLock::new();
 
@@ -41,11 +41,14 @@ pub struct Shell {
     pub windows: Vec<Window>,
 }
 
-// TODO: Ensure the window function is properly registered as a method of the Shell class in Lua.
-// Need to edit LuaClass macro or lua_func macro to support this, as currently it only supports
-// free functions and not class methods.
-
 /// Adds a new window definition to the shell configuration.
+#[lua_func(class = "Shell", skip = "this")]
+#[arg(name = "name", doc = "The unique name of the window.")]
+#[arg(
+    name = "config",
+    ty = "Window",
+    doc = "The configuration for this window."
+)]
 fn window(this: &mut Shell, name: String, config: LuaTable) -> mlua::Result<()> {
     let template = Window::parse(name, config).map_err(|e| mlua::Error::external(e))?;
     this.windows.push(template);

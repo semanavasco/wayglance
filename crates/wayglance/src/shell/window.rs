@@ -11,16 +11,21 @@ use wayglance_macros::LuaClass;
 #[derive(Clone, LuaClass)]
 pub struct Window {
     /// The unique name of this window, used for identification and debugging.
+    #[lua_attr(default = "Gets the name from `window` method")]
     pub name: String,
     /// A list of monitor connector names to display this window on. If empty, all monitors.
+    #[lua_attr(optional)]
     pub monitors: Vec<String>,
     /// The layer to display this window on.
     pub layer: Layer,
     /// Whether this window should reserve space on the monitor (like a panel) or be free-floating.
+    #[lua_attr(default = false)]
     pub exclusive_zone: bool,
     /// The edges of the monitor to anchor this window to.
+    #[lua_attr(optional)]
     pub anchors: Anchors,
     /// The margins to apply on each edge when anchored.
+    #[lua_attr(optional)]
     pub margins: Margins,
     /// The layout of the window. Can be a table (static widget) or a function (monitor) -> widget.
     pub layout: LuaValue,

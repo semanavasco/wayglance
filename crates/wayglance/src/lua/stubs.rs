@@ -81,6 +81,8 @@ impl fmt::Display for Class {
             writeln!(f, "{}", attr)?;
         }
 
+        writeln!(f, "local {} = {{}}", self.name)?;
+
         Ok(())
     }
 }
@@ -103,9 +105,16 @@ impl fmt::Display for Enum {
     }
 }
 
+/// Represents the type of a Lua function, which can be either a standalone function or a method
+/// of a class.
+pub enum FnType {
+    Function { module: Option<&'static str> },
+    Method { class: &'static str },
+}
+
 /// Represents a Lua function, including its name, documentation, arguments, and return type.
 pub struct Function {
-    pub module: Option<&'static str>,
+    pub ty: FnType,
     pub name: &'static str,
     pub doc: &'static str,
     pub args: Cow<'static, [Attr]>,
@@ -137,10 +146,15 @@ impl fmt::Display for Function {
             writeln!(f)?;
         }
 
-        let full_name = if let Some(module) = self.module {
-            format!("{}.{}", module, self.name)
-        } else {
-            self.name.to_string()
+        let full_name = match &self.ty {
+            FnType::Function { module } => {
+                if let Some(module) = module {
+                    format!("{}.{}", module, self.name)
+                } else {
+                    self.name.to_string()
+                }
+            }
+            FnType::Method { class } => format!("{}:{}", class, self.name),
         };
 
         write!(

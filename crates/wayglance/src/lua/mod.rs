@@ -138,14 +138,17 @@ pub fn gen_stubs() -> Result<String> {
 
     let mut function_strings = Vec::new();
     for f in functions {
-        if let Some(mod_path) = f.module
-            && !module_path_set.contains(mod_path)
+        if let stubs::FnType::Function {
+            module: Some(mod_path),
+        } = f.ty
         {
-            anyhow::bail!(
-                "Function '{}' belongs to unknown module path '{}'",
-                f.name,
-                mod_path
-            );
+            if !module_path_set.contains(mod_path) {
+                anyhow::bail!(
+                    "Function '{}' belongs to unknown module path '{}'",
+                    f.name,
+                    mod_path
+                );
+            }
         }
         function_strings.push(f.to_string());
     }
