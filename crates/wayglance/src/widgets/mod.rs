@@ -4,7 +4,10 @@ mod label;
 
 use crate::{
     dynamic::MaybeReactive,
-    lua::{stubs::LuaType, types::Alignment},
+    lua::{
+        stubs::LuaType,
+        types::{Alignment, Margins},
+    },
 };
 use anyhow::Result;
 use gtk4::{glib::object::IsA, prelude::WidgetExt};
@@ -94,6 +97,17 @@ pub struct Properties {
     pub focusable: MaybeReactive<bool>,
     /// Optional tooltip markup text for the widget.
     pub tooltip: MaybeReactive<Option<String>>,
+    /// Optional margins around the widget.
+    pub margins: MaybeReactive<Margins>,
+    /// Optional width request for the widget.
+    #[lua_attr(default = -1)]
+    pub width_request: MaybeReactive<i32>,
+    /// Optional height request for the widget.
+    #[lua_attr(default = -1)]
+    pub height_request: MaybeReactive<i32>,
+    /// Whether the widget should be sensitive to user input.
+    #[lua_attr(default = true)]
+    pub sensitive: MaybeReactive<bool>,
 }
 
 impl Properties {
@@ -130,6 +144,18 @@ impl Properties {
             tooltip: table
                 .get::<Option<MaybeReactive<Option<String>>>>("tooltip")?
                 .unwrap_or(MaybeReactive::Static(None)),
+            margins: table
+                .get::<Option<MaybeReactive<Margins>>>("margins")?
+                .unwrap_or(MaybeReactive::Static(Margins::default())),
+            width_request: table
+                .get::<Option<MaybeReactive<i32>>>("width_request")?
+                .unwrap_or(MaybeReactive::Static(-1)),
+            height_request: table
+                .get::<Option<MaybeReactive<i32>>>("height_request")?
+                .unwrap_or(MaybeReactive::Static(-1)),
+            sensitive: table
+                .get::<Option<MaybeReactive<bool>>>("sensitive")?
+                .unwrap_or(MaybeReactive::Static(true)),
         })
     }
 
@@ -184,6 +210,27 @@ impl Properties {
 
         self.tooltip.bind(widget, "tooltip", |w, tooltip| {
             w.set_tooltip_markup(tooltip.as_deref());
+        })?;
+
+        self.margins.bind(widget, "margins", |w, margins| {
+            w.set_margin_start(margins.left);
+            w.set_margin_end(margins.right);
+            w.set_margin_top(margins.top);
+            w.set_margin_bottom(margins.bottom);
+        })?;
+
+        self.width_request
+            .bind(widget, "width_request", |w, width| {
+                w.set_width_request(width);
+            })?;
+
+        self.height_request
+            .bind(widget, "height_request", |w, height| {
+                w.set_height_request(height);
+            })?;
+
+        self.sensitive.bind(widget, "sensitive", |w, sensitive| {
+            w.set_sensitive(sensitive);
         })?;
 
         Ok(())

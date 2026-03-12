@@ -44,6 +44,7 @@ local function workspace_button(id, is_active)
       class_list = { is_active and "ws-active" or "ws-inactive" },
       valign = "center",
     }),
+    sensitive = not is_active,
     class_list = { "ws-btn" },
     valign = "center",
     focusable = false,
