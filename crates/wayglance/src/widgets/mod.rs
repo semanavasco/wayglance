@@ -3,6 +3,7 @@ mod container;
 mod icon;
 mod image;
 mod label;
+mod progress_bar;
 
 use crate::{
     dynamic::MaybeReactive,

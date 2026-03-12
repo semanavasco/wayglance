@@ -103,6 +103,10 @@ local Container = {}
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 local Button = {}
 
+--- A handle that can be used to cancel a scheduled task or a signal subscription.
+---@class CancelHandle
+local CancelHandle = {}
+
 --- A simple widget that displays a text label.
 ---@class Label : Widget
 ---@field text string | State The text content of the label. Can be a static string or a dynamic expression that evaluates to a string.
@@ -172,9 +176,9 @@ local Image = {}
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 local Widget = {}
 
---- A widget that displays a GTK system icon.
+--- A widget that displays a GTK icon.
 ---@class Icon : Widget
----@field name string | State The name of the icon to display (e.g. "network-wireless-symbolic").
+---@field name string | State The name of the icon to display (e.g. "audio-volume-high").
 ---@field size ? number | State The size of the icon in pixels. (Default: 24)
 ---@field use_fallback ? boolean | State Whether to use a fallback icon if the specified icon name is not found. (Default: true)
 ---@field id ? string | State Optional widget ID, used for CSS styling and querying.
@@ -211,6 +215,27 @@ local Shell = {}
 ---@field refresh_rate number The refresh rate of the monitor in Hz.
 ---@field scale number The UI scale factor (e.g., 1.0, 2.0).
 local Monitor = {}
+
+--- A widget that displays a progress bar.
+---@class ProgressBar : Widget
+---@field fraction ? number | State The fraction of the progress bar that is filled, between 0.0 and 1.0. (Default: 0.0)
+---@field text ? string | State The text to display over the progress bar if provided.
+---@field inverted ? boolean | State Whether the progress bar is inverted. (Default: false)
+---@field orientation ? Orientation | State The orientation of the progress bar. (Default: horizontal)
+---@field id ? string | State Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | State Optional horizontal alignment for the widget.
+---@field valign ? Alignment | State Optional vertical alignment for the widget.
+---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
+---@field tooltip ? string | State Optional tooltip markup text for the widget.
+---@field margins Margins | State Optional margins around the widget.
+---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
+---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
+---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+local ProgressBar = {}
 
 --- Anchor points for the window to stick to specific edges of the monitor.
 ---@class Anchors
@@ -268,10 +293,6 @@ local HyprlandMonitorInfo = {}
 ---@field workspace ? string The name of the workspace on the monitor, if available.
 local HyprlandActiveMonitor = {}
 
---- A handle that can be used to cancel a scheduled task or a signal subscription.
----@class CancelHandle
-local CancelHandle = {}
-
 --- A window that can be instantiated on one or more monitors.
 ---@class Window
 ---@field name ? string The unique name of this window, used for identification and debugging. (Default: Gets the name from `window` method)
@@ -308,6 +329,9 @@ function wayglance.shell(config) end
 ---@param interval number The interval in milliseconds to wait before calling the callback.
 ---@return CancelHandle handle A handle that can be used to cancel the scheduled callback with :cancel().
 function wayglance.setInterval(callback, interval) end
+
+--- Cancels the scheduled task or signal subscription.
+function CancelHandle:cancel() end
 
 --- Creates a new reactive state with the given initial value.
 --- Can be used on properties that support it (e.g. `label.text`) to provide dynamic values that
@@ -399,9 +423,6 @@ function wayglance.hyprland.moveActiveToWorkspace(workspace_id) end
 ---@return HyprlandMonitorInfo[] monitors A list of information about all connected monitors.
 function wayglance.hyprland.getMonitors() end
 
---- Cancels the scheduled task or signal subscription.
-function CancelHandle:cancel() end
-
 --- A container widget that can hold multiple child widgets, arranged either horizontally or
 --- vertically.
 ---@param config Container The configuration table for the Container widget.
@@ -423,7 +444,12 @@ function Label(config) end
 ---@return Widget widget The constructed widget.
 function Image(config) end
 
---- A widget that displays a GTK system icon.
+--- A widget that displays a GTK icon.
 ---@param config Icon The configuration table for the Icon widget.
 ---@return Widget widget The constructed widget.
 function Icon(config) end
+
+--- A widget that displays a progress bar.
+---@param config ProgressBar The configuration table for the ProgressBar widget.
+---@return Widget widget The constructed widget.
+function ProgressBar(config) end

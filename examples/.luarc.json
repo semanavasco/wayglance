@@ -1,5 +1,13 @@
 {
   "diagnostics": {
-    "globals": ["Label", "Container", "Button", "Image", "Icon", "wayglance"]
+    "globals": [
+      "Label",
+      "Container",
+      "Button",
+      "Image",
+      "Icon",
+      "ProgressBar",
+      "wayglance"
+    ]
   }
 }
