@@ -129,7 +129,11 @@ where
                     };
 
                     match T::from_lua(value, lua) {
-                        Ok(val) => apply_fn.borrow_mut()(&widget_clone, val),
+                        Ok(val) => {
+                            if let Ok(mut f) = apply_fn.try_borrow_mut() {
+                                f(&widget_clone, val);
+                            }
+                        }
                         Err(e) => {
                             tracing::error!("Error converting state value for {}: {}", prop_name, e)
                         }
