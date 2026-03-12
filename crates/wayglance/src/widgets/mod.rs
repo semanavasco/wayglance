@@ -1,5 +1,7 @@
 mod button;
 mod container;
+mod icon;
+mod image;
 mod label;
 
 use crate::{

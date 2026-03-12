@@ -134,9 +134,26 @@ local Label = {}
 ---@field transform ? function An optional Lua transform function applied when this state is used as a binding. Stored as a registry key so it survives across Lua calls.
 local State = {}
 
---- A handle that can be used to cancel a scheduled task or a signal subscription.
----@class CancelHandle
-local CancelHandle = {}
+--- A widget that displays an image from a file path.
+---@class Image : Widget
+---@field src string | State The file path to the image to display.
+---@field alternative_text ? string | State The alternative textual description for the picture.
+---@field keep_aspect_ratio ? boolean | State Whether to maintain the aspect ratio of the image. (Default: true)
+---@field can_shrink ? boolean | State Whether the image can be shrunk to smaller than its original size. (Default: true)
+---@field id ? string | State Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | State Optional horizontal alignment for the widget.
+---@field valign ? Alignment | State Optional vertical alignment for the widget.
+---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
+---@field tooltip ? string | State Optional tooltip markup text for the widget.
+---@field margins Margins | State Optional margins around the widget.
+---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
+---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
+---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+local Image = {}
 
 --- Common properties shared by all widgets (layout, CSS classes, IDs, etc).
 ---@class Widget
@@ -154,6 +171,26 @@ local CancelHandle = {}
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 local Widget = {}
+
+--- A widget that displays a GTK system icon.
+---@class Icon : Widget
+---@field name string | State The name of the icon to display (e.g. "network-wireless-symbolic").
+---@field size ? number | State The size of the icon in pixels. (Default: 24)
+---@field use_fallback ? boolean | State Whether to use a fallback icon if the specified icon name is not found. (Default: true)
+---@field id ? string | State Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | State Optional horizontal alignment for the widget.
+---@field valign ? Alignment | State Optional vertical alignment for the widget.
+---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
+---@field tooltip ? string | State Optional tooltip markup text for the widget.
+---@field margins Margins | State Optional margins around the widget.
+---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
+---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
+---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+local Icon = {}
 
 --- The top-level configuration for the wayglance application shell.
 --- 
@@ -231,6 +268,10 @@ local HyprlandMonitorInfo = {}
 ---@field workspace ? string The name of the workspace on the monitor, if available.
 local HyprlandActiveMonitor = {}
 
+--- A handle that can be used to cancel a scheduled task or a signal subscription.
+---@class CancelHandle
+local CancelHandle = {}
+
 --- A window that can be instantiated on one or more monitors.
 ---@class Window
 ---@field name ? string The unique name of this window, used for identification and debugging. (Default: Gets the name from `window` method)
@@ -304,9 +345,6 @@ function State:set(value) end
 ---@return any
 function State:get() end
 
---- Cancels the scheduled task or signal subscription.
-function CancelHandle:cancel() end
-
 --- Listen for one or more signals and call the provided callback when they are emitted.
 ---@param signals string | string[] The signal or signals to listen for.
 ---@param callback function The callback to call when the signal(s) are emitted.
@@ -361,6 +399,9 @@ function wayglance.hyprland.moveActiveToWorkspace(workspace_id) end
 ---@return HyprlandMonitorInfo[] monitors A list of information about all connected monitors.
 function wayglance.hyprland.getMonitors() end
 
+--- Cancels the scheduled task or signal subscription.
+function CancelHandle:cancel() end
+
 --- A container widget that can hold multiple child widgets, arranged either horizontally or
 --- vertically.
 ---@param config Container The configuration table for the Container widget.
@@ -376,3 +417,13 @@ function Button(config) end
 ---@param config Label The configuration table for the Label widget.
 ---@return Widget widget The constructed widget.
 function Label(config) end
+
+--- A widget that displays an image from a file path.
+---@param config Image The configuration table for the Image widget.
+---@return Widget widget The constructed widget.
+function Image(config) end
+
+--- A widget that displays a GTK system icon.
+---@param config Icon The configuration table for the Icon widget.
+---@return Widget widget The constructed widget.
+function Icon(config) end
