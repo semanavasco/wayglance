@@ -9,14 +9,15 @@ mod slider;
 use crate::{
     dynamic::MaybeReactive,
     lua::{
+        LUA,
         stubs::LuaType,
         types::{Alignment, Margins},
     },
 };
 use anyhow::Result;
-use gtk4::{glib::object::IsA, prelude::WidgetExt};
+use gtk4::{EventControllerScroll, EventControllerScrollFlags, glib::object::IsA, prelude::*};
 use mlua::{FromLua, Lua, Value as LuaValue};
-use std::borrow::Cow;
+use std::{borrow::Cow, rc::Rc};
 use wayglance_macros::LuaClass;
 
 /// Base trait for all UI components in wayglance.
@@ -112,6 +113,8 @@ pub struct Properties {
     /// Whether the widget should be sensitive to user input.
     #[lua_attr(default = true)]
     pub sensitive: MaybeReactive<bool>,
+    /// Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
+    pub on_scroll: Option<Rc<mlua::RegistryKey>>,
 }
 
 impl Properties {
@@ -120,6 +123,22 @@ impl Properties {
     /// Used turbofish syntax extensively to provide defaults for all properties without crashing
     /// if they are missing from the Lua table but still crashing if they are of the wrong type.
     fn parse(table: &mlua::Table) -> mlua::Result<Self> {
+        let lua = LUA
+            .get()
+            .ok_or_else(|| mlua::Error::RuntimeError("Lua instance not initialized".to_string()))?;
+
+        let on_scroll = match table.get::<LuaValue>("on_scroll")? {
+            LuaValue::Function(f) => Some(Rc::new(lua.create_registry_value(f)?)),
+            LuaValue::Nil => None,
+            _ => {
+                return Err(mlua::Error::FromLuaConversionError {
+                    from: "non-function",
+                    to: "Widget on_scroll".to_string(),
+                    message: Some("Expected a function for on_scroll".to_string()),
+                });
+            }
+        };
+
         Ok(Properties {
             id: table
                 .get::<Option<MaybeReactive<Option<String>>>>("id")?
@@ -160,6 +179,7 @@ impl Properties {
             sensitive: table
                 .get::<Option<MaybeReactive<bool>>>("sensitive")?
                 .unwrap_or(MaybeReactive::Static(true)),
+            on_scroll,
         })
     }
 
@@ -236,6 +256,29 @@ impl Properties {
         self.sensitive.bind(widget, "sensitive", |w, sensitive| {
             w.set_sensitive(sensitive);
         })?;
+
+        if let Some(ref on_scroll) = self.on_scroll {
+            let scroll_controller =
+                EventControllerScroll::new(EventControllerScrollFlags::BOTH_AXES);
+
+            let on_scroll = on_scroll.clone();
+
+            scroll_controller.connect_scroll(move |_, dx, dy| {
+                let Some(lua) = LUA.get() else {
+                    return gtk4::glib::Propagation::Proceed;
+                };
+
+                if let Ok(func) = lua.registry_value::<mlua::Function>(&on_scroll) {
+                    if let Err(e) = func.call::<()>((dx, dy)) {
+                        tracing::error!("Error calling on_scroll function: {}", e);
+                    }
+                }
+
+                gtk4::glib::Propagation::Stop
+            });
+
+            widget.add_controller(scroll_controller);
+        }
 
         Ok(())
     }

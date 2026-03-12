@@ -100,6 +100,13 @@ local function workspaces_widget(state, update_active_workspace)
     spacing = 4,
     valign = "center",
     children = children_state,
+    on_scroll = function(_, dy)
+      if dy < 0 then
+        wayglance.hyprland.switchWorkspaceRelative(-1)
+      else
+        wayglance.hyprland.switchWorkspaceRelative(1)
+      end
+    end,
   })
 end
 

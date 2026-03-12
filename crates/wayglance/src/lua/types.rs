@@ -11,7 +11,7 @@ use crate::lua::stubs::LuaType;
 use gtk4::{Align as GtkAlign, Orientation as GtkOrientation};
 use gtk4_layer_shell::Layer as GtkLayer;
 use mlua::{FromLua, IntoLua, Lua, Table as LuaTable, Value as LuaValue};
-use std::borrow::Cow;
+use std::{borrow::Cow, rc::Rc};
 use wayglance_macros::{LuaClass, LuaEnum};
 
 /// Simple macro to implement LuaType for multiple types with the same Lua type string.
@@ -38,6 +38,15 @@ impl LuaType for bool {
 }
 
 impl_lua_type!("number" for i16, i32, i128, u16, u64, f32, f64, usize);
+
+impl<T> LuaType for Rc<T>
+where
+    T: LuaType,
+{
+    fn lua_type() -> Cow<'static, str> {
+        T::lua_type()
+    }
+}
 
 impl<T> LuaType for Option<T>
 where

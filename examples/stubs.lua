@@ -82,6 +82,7 @@ local HyprlandWindow = {}
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
 local Container = {}
 
 --- A clickable button widget.
@@ -101,6 +102,7 @@ local Container = {}
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
 local Button = {}
 
 --- A simple widget that displays a text label.
@@ -119,6 +121,7 @@ local Button = {}
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
 local Label = {}
 
 --- A handle to a reactive state entry. Contains the state ID and an optional transform function.
@@ -153,7 +156,12 @@ local State = {}
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
 local Image = {}
+
+--- A handle that can be used to cancel a scheduled task or a signal subscription.
+---@class CancelHandle
+local CancelHandle = {}
 
 --- A widget that allows users to select a value from a range by sliding a handle.
 ---@class Slider : Widget
@@ -179,6 +187,7 @@ local Image = {}
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
 local Slider = {}
 
 --- Common properties shared by all widgets (layout, CSS classes, IDs, etc).
@@ -196,6 +205,7 @@ local Slider = {}
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
 local Widget = {}
 
 --- A widget that displays a GTK icon.
@@ -216,6 +226,7 @@ local Widget = {}
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
 local Icon = {}
 
 --- The top-level configuration for the wayglance application shell.
@@ -257,6 +268,7 @@ local Monitor = {}
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
 local ProgressBar = {}
 
 --- Anchor points for the window to stick to specific edges of the monitor.
@@ -274,10 +286,6 @@ local Anchors = {}
 ---@field bottom ? number Margin from the bottom edge of the monitor, in pixels. (Default: 0)
 ---@field left ? number Margin from the left edge of the monitor, in pixels. (Default: 0)
 local Margins = {}
-
---- A handle that can be used to cancel a scheduled task or a signal subscription.
----@class CancelHandle
-local CancelHandle = {}
 
 --- Basic information about a workspace, including its ID and name.
 ---@class HyprlandWorkspace
@@ -403,13 +411,13 @@ function wayglance.onSignal(signals, callback) end
 ---@param data ? any Optional data to include with the signal. Can be any Lua value.
 function wayglance.emitSignal(signal, data) end
 
+--- Cancels the scheduled task or signal subscription.
+function CancelHandle:cancel() end
+
 --- Adds a new window definition to the shell configuration.
 ---@param name string The unique name of the window.
 ---@param config Window The configuration for this window.
 function Shell:window(name, config) end
-
---- Cancels the scheduled task or signal subscription.
-function CancelHandle:cancel() end
 
 --- Switches the focus to the workspace with the given numerical ID.
 ---@param workspace_id number The numerical ID of the workspace to switch to.
