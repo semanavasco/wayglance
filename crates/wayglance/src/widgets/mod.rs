@@ -69,7 +69,7 @@ impl FromLua for Box<dyn Widget> {
                 message: Some(format!("Unknown widget type: {}", widget_type)),
             })?;
 
-        Ok((factory.build)(value, lua)?)
+        (factory.build)(value, lua)
     }
 }
 

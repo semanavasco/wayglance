@@ -1,10 +1,9 @@
-use std::path::PathBuf;
-
 use super::Widget;
 use crate::{dynamic::MaybeReactive, shell::get_config_dir, widgets::Properties};
 use anyhow::Result;
 use gtk4::Picture;
 use mlua::FromLua;
+use std::path::PathBuf;
 use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A widget that displays an image from a file path.

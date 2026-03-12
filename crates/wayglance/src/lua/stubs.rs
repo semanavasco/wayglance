@@ -1,5 +1,4 @@
-use std::borrow::Cow;
-use std::fmt;
+use std::{borrow::Cow, fmt};
 
 /// Trait for types that can generate Lua stubs for themselves.
 pub trait Stubbed {
