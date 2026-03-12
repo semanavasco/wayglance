@@ -103,10 +103,6 @@ local Container = {}
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 local Button = {}
 
---- A handle that can be used to cancel a scheduled task or a signal subscription.
----@class CancelHandle
-local CancelHandle = {}
-
 --- A simple widget that displays a text label.
 ---@class Label : Widget
 ---@field text string | State The text content of the label. Can be a static string or a dynamic expression that evaluates to a string.
@@ -158,6 +154,32 @@ local State = {}
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 local Image = {}
+
+--- A widget that allows users to select a value from a range by sliding a handle.
+---@class Slider : Widget
+---@field value ? number | State The current value of the slider. (Default: 0.0)
+---@field min ? number | State The minimum value of the slider. (Default: 0.0)
+---@field max ? number | State The maximum value of the slider. (Default: 100.0)
+---@field step ? number | State The step increment for the slider. (Default: 1.0)
+---@field page_step ? number | State The page step increment for the slider. (Default: 10.0)
+---@field digits ? number | State The number of decimal digits for the slider value. If `nil`, falls back to 1 digit.
+---@field draw_value ? boolean | State Whether to draw the current value next to the slider. (Default: true)
+---@field orientation ? Orientation | State The orientation of the slider. (Default: horizontal)
+---@field on_change function Function to execute when the slider value changes.
+---@field id ? string | State Optional widget ID, used for CSS styling and querying.
+---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
+---@field halign ? Alignment | State Optional horizontal alignment for the widget.
+---@field valign ? Alignment | State Optional vertical alignment for the widget.
+---@field hexpand ? boolean | State Whether the widget should expand to fill available horizontal space. (Default: false)
+---@field vexpand ? boolean | State Whether the widget should expand to fill available vertical space. (Default: false)
+---@field visible ? boolean | State Whether the widget is visible. (Default: true)
+---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
+---@field tooltip ? string | State Optional tooltip markup text for the widget.
+---@field margins Margins | State Optional margins around the widget.
+---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
+---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
+---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
+local Slider = {}
 
 --- Common properties shared by all widgets (layout, CSS classes, IDs, etc).
 ---@class Widget
@@ -253,6 +275,10 @@ local Anchors = {}
 ---@field left ? number Margin from the left edge of the monitor, in pixels. (Default: 0)
 local Margins = {}
 
+--- A handle that can be used to cancel a scheduled task or a signal subscription.
+---@class CancelHandle
+local CancelHandle = {}
+
 --- Basic information about a workspace, including its ID and name.
 ---@class HyprlandWorkspace
 ---@field id number The unique identifier for the workspace.
@@ -330,9 +356,6 @@ function wayglance.shell(config) end
 ---@return CancelHandle handle A handle that can be used to cancel the scheduled callback with :cancel().
 function wayglance.setInterval(callback, interval) end
 
---- Cancels the scheduled task or signal subscription.
-function CancelHandle:cancel() end
-
 --- Creates a new reactive state with the given initial value.
 --- Can be used on properties that support it (e.g. `label.text`) to provide dynamic values that
 --- automatically update when the state changes.
@@ -384,6 +407,9 @@ function wayglance.emitSignal(signal, data) end
 ---@param name string The unique name of the window.
 ---@param config Window The configuration for this window.
 function Shell:window(name, config) end
+
+--- Cancels the scheduled task or signal subscription.
+function CancelHandle:cancel() end
 
 --- Switches the focus to the workspace with the given numerical ID.
 ---@param workspace_id number The numerical ID of the workspace to switch to.
@@ -443,6 +469,11 @@ function Label(config) end
 ---@param config Image The configuration table for the Image widget.
 ---@return Widget widget The constructed widget.
 function Image(config) end
+
+--- A widget that allows users to select a value from a range by sliding a handle.
+---@param config Slider The configuration table for the Slider widget.
+---@return Widget widget The constructed widget.
+function Slider(config) end
 
 --- A widget that displays a GTK icon.
 ---@param config Icon The configuration table for the Icon widget.
