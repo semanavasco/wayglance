@@ -358,8 +358,14 @@ function wayglance.hyprland.killActiveWindow() end
 ---@return Shell shell The shell object.
 function wayglance.shell(config) end
 
+--- Schedules the provided callback to be called once after the specified time (in ms).
+---@param callback function The callback to call after `time` ms have passed.
+---@param time number The time in milliseconds to wait before calling the callback.
+---@return CancelHandle handle A handle that can be used to cancel the scheduled callback with :cancel().
+function wayglance.setTimeout(callback, time) end
+
 --- Schedules the provided callback to be called repeatedly at the specified interval (in ms).
----@param callback function The callback to call after interval ms have passed.
+---@param callback function The callback to call after `interval` ms have passed.
 ---@param interval number The interval in milliseconds to wait before calling the callback.
 ---@return CancelHandle handle A handle that can be used to cancel the scheduled callback with :cancel().
 function wayglance.setInterval(callback, interval) end

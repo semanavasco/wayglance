@@ -57,6 +57,11 @@ pub fn register_lua(lua: &Lua) -> Result<()> {
     )?;
 
     wayglance.set(
+        "setTimeout",
+        lua.create_function(|lua, (cb, ms)| dynamic::timer::set_timeout(lua, cb, ms))?,
+    )?;
+
+    wayglance.set(
         "setInterval",
         lua.create_function(|lua, (cb, ms)| dynamic::timer::set_interval(lua, cb, ms))?,
     )?;
