@@ -430,7 +430,21 @@ pub fn derive_widget_builder(input: TokenStream) -> TokenStream {
 
     let name = ident.to_string();
     let type_name = name.to_lowercase();
+    let mut class_name = name.clone();
     let doc = extract_doc(&input.attrs);
+
+    for attr in &input.attrs {
+        if attr.path().is_ident("lua_class") {
+            let _ = attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("name") {
+                    let value = meta.value()?;
+                    let s: LitStr = value.parse()?;
+                    class_name = s.value();
+                }
+                Ok(())
+            });
+        }
+    }
 
     let expanded = quote! {
         inventory::submit! {
@@ -438,6 +452,7 @@ pub fn derive_widget_builder(input: TokenStream) -> TokenStream {
                 build: || crate::lua::stubs::Stub::WidgetBuilder(crate::lua::stubs::WidgetBuilder {
                     name: #name,
                     type_name: #type_name,
+                    class_name: #class_name,
                     doc: #doc,
                 }),
             }

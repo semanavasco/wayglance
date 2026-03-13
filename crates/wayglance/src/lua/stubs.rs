@@ -173,6 +173,7 @@ impl fmt::Display for Function {
 pub struct WidgetBuilder {
     pub name: &'static str,
     pub type_name: &'static str,
+    pub class_name: &'static str,
     pub doc: &'static str,
 }
 
@@ -186,7 +187,7 @@ impl fmt::Display for WidgetBuilder {
         writeln!(
             f,
             "---@param config {} The configuration table for the {} widget.",
-            self.name, self.name
+            self.class_name, self.class_name
         )?;
         writeln!(f, "---@return Widget widget The constructed widget.")?;
         write!(f, "function {}(config) end", self.name)

@@ -11,6 +11,7 @@ use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A widget that displays a progress bar.
 #[derive(LuaClass, WidgetBuilder)]
+#[lua_class(name = "ProgressBarWidget")]
 pub struct ProgressBar {
     #[lua_attr(parent)]
     pub properties: Properties,

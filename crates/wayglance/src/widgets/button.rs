@@ -9,6 +9,7 @@ use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A clickable button widget.
 #[derive(LuaClass, WidgetBuilder)]
+#[lua_class(name = "ButtonWidget")]
 struct Button {
     #[lua_attr(parent)]
     pub properties: Properties,

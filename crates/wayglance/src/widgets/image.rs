@@ -8,6 +8,7 @@ use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A widget that displays an image from a file path.
 #[derive(LuaClass, WidgetBuilder)]
+#[lua_class(name = "ImageWidget")]
 pub struct Image {
     #[lua_attr(parent)]
     pub properties: Properties,

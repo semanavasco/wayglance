@@ -7,6 +7,7 @@ use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A widget that displays a GTK icon.
 #[derive(LuaClass, WidgetBuilder)]
+#[lua_class(name = "IconWidget")]
 pub struct Icon {
     #[lua_attr(parent)]
     pub properties: Properties,

@@ -65,7 +65,7 @@ local HyprlandWindow = {}
 
 --- A container widget that can hold multiple child widgets, arranged either horizontally or
 --- vertically.
----@class Container : Widget
+---@class ContainerWidget : Widget
 ---@field orientation Orientation The orientation of the container.
 ---@field spacing ? number The spacing between children in the container, in pixels. (Default: 0)
 ---@field children ? Widget[] | State The child widgets contained within this container.
@@ -78,15 +78,15 @@ local HyprlandWindow = {}
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
 ---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
----@field margins Margins | State Optional margins around the widget.
+---@field margins ? Margins | State Optional margins around the widget.
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 ---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
-local Container = {}
+local ContainerWidget = {}
 
 --- A clickable button widget.
----@class Button : Widget
+---@class ButtonWidget : Widget
 ---@field on_click function Function to execute when the button is clicked.
 ---@field child Widget The child widget to display inside the button.
 ---@field id ? string | State Optional widget ID, used for CSS styling and querying.
@@ -98,15 +98,19 @@ local Container = {}
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
 ---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
----@field margins Margins | State Optional margins around the widget.
+---@field margins ? Margins | State Optional margins around the widget.
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 ---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
-local Button = {}
+local ButtonWidget = {}
+
+--- A handle that can be used to cancel a scheduled task or a signal subscription.
+---@class CancelHandle
+local CancelHandle = {}
 
 --- A simple widget that displays a text label.
----@class Label : Widget
+---@class LabelWidget : Widget
 ---@field text string | State The text content of the label. Can be a static string or a dynamic expression that evaluates to a string.
 ---@field id ? string | State Optional widget ID, used for CSS styling and querying.
 ---@field class_list ? string[] | State Optional list of CSS classes applied to the widget.
@@ -117,12 +121,12 @@ local Button = {}
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
 ---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
----@field margins Margins | State Optional margins around the widget.
+---@field margins ? Margins | State Optional margins around the widget.
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 ---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
-local Label = {}
+local LabelWidget = {}
 
 --- A handle to a reactive state entry. Contains the state ID and an optional transform function.
 --- Can be used on properties that support it (e.g. `label.text`) to provide dynamic values that
@@ -138,7 +142,7 @@ local Label = {}
 local State = {}
 
 --- A widget that displays an image from a file path.
----@class Image : Widget
+---@class ImageWidget : Widget
 ---@field src string | State The file path to the image to display.
 ---@field alternative_text ? string | State The alternative textual description for the picture.
 ---@field keep_aspect_ratio ? boolean | State Whether to maintain the aspect ratio of the image. (Default: true)
@@ -152,19 +156,15 @@ local State = {}
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
 ---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
----@field margins Margins | State Optional margins around the widget.
+---@field margins ? Margins | State Optional margins around the widget.
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 ---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
-local Image = {}
-
---- A handle that can be used to cancel a scheduled task or a signal subscription.
----@class CancelHandle
-local CancelHandle = {}
+local ImageWidget = {}
 
 --- A widget that allows users to select a value from a range by sliding a handle.
----@class Slider : Widget
+---@class SliderWidget : Widget
 ---@field value ? number | State The current value of the slider. (Default: 0.0)
 ---@field min ? number | State The minimum value of the slider. (Default: 0.0)
 ---@field max ? number | State The maximum value of the slider. (Default: 100.0)
@@ -183,12 +183,12 @@ local CancelHandle = {}
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
 ---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
----@field margins Margins | State Optional margins around the widget.
+---@field margins ? Margins | State Optional margins around the widget.
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 ---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
-local Slider = {}
+local SliderWidget = {}
 
 --- Common properties shared by all widgets (layout, CSS classes, IDs, etc).
 ---@class Widget
@@ -201,7 +201,7 @@ local Slider = {}
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
 ---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
----@field margins Margins | State Optional margins around the widget.
+---@field margins ? Margins | State Optional margins around the widget.
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
@@ -209,7 +209,7 @@ local Slider = {}
 local Widget = {}
 
 --- A widget that displays a GTK icon.
----@class Icon : Widget
+---@class IconWidget : Widget
 ---@field name string | State The name of the icon to display (e.g. "audio-volume-high").
 ---@field size ? number | State The size of the icon in pixels. (Default: 24)
 ---@field use_fallback ? boolean | State Whether to use a fallback icon if the specified icon name is not found. (Default: true)
@@ -222,12 +222,12 @@ local Widget = {}
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
 ---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
----@field margins Margins | State Optional margins around the widget.
+---@field margins ? Margins | State Optional margins around the widget.
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 ---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
-local Icon = {}
+local IconWidget = {}
 
 --- The top-level configuration for the wayglance application shell.
 --- 
@@ -250,7 +250,7 @@ local Shell = {}
 local Monitor = {}
 
 --- A widget that displays a progress bar.
----@class ProgressBar : Widget
+---@class ProgressBarWidget : Widget
 ---@field fraction ? number | State The fraction of the progress bar that is filled, between 0.0 and 1.0. (Default: 0.0)
 ---@field text ? string | State The text to display over the progress bar if provided.
 ---@field inverted ? boolean | State Whether the progress bar is inverted. (Default: false)
@@ -264,12 +264,12 @@ local Monitor = {}
 ---@field visible ? boolean | State Whether the widget is visible. (Default: true)
 ---@field focusable ? boolean | State Whether the widget can receive keyboard focus. (Default: true)
 ---@field tooltip ? string | State Optional tooltip markup text for the widget.
----@field margins Margins | State Optional margins around the widget.
+---@field margins ? Margins | State Optional margins around the widget.
 ---@field width_request ? number | State Optional width request for the widget. (Default: - 1)
 ---@field height_request ? number | State Optional height request for the widget. (Default: - 1)
 ---@field sensitive ? boolean | State Whether the widget should be sensitive to user input. (Default: true)
 ---@field on_scroll ? function Optional function to execute when scrolling over the widget. Receives (dx, dy) as arguments.
-local ProgressBar = {}
+local ProgressBarWidget = {}
 
 --- Anchor points for the window to stick to specific edges of the monitor.
 ---@class Anchors
@@ -364,6 +364,9 @@ function wayglance.shell(config) end
 ---@return CancelHandle handle A handle that can be used to cancel the scheduled callback with :cancel().
 function wayglance.setInterval(callback, interval) end
 
+--- Cancels the scheduled task or signal subscription.
+function CancelHandle:cancel() end
+
 --- Creates a new reactive state with the given initial value.
 --- Can be used on properties that support it (e.g. `label.text`) to provide dynamic values that
 --- automatically update when the state changes.
@@ -411,9 +414,6 @@ function wayglance.onSignal(signals, callback) end
 ---@param data ? any Optional data to include with the signal. Can be any Lua value.
 function wayglance.emitSignal(signal, data) end
 
---- Cancels the scheduled task or signal subscription.
-function CancelHandle:cancel() end
-
 --- Adds a new window definition to the shell configuration.
 ---@param name string The unique name of the window.
 ---@param config Window The configuration for this window.
@@ -459,36 +459,36 @@ function wayglance.hyprland.getMonitors() end
 
 --- A container widget that can hold multiple child widgets, arranged either horizontally or
 --- vertically.
----@param config Container The configuration table for the Container widget.
+---@param config ContainerWidget The configuration table for the ContainerWidget widget.
 ---@return Widget widget The constructed widget.
 function Container(config) end
 
 --- A clickable button widget.
----@param config Button The configuration table for the Button widget.
+---@param config ButtonWidget The configuration table for the ButtonWidget widget.
 ---@return Widget widget The constructed widget.
 function Button(config) end
 
 --- A simple widget that displays a text label.
----@param config Label The configuration table for the Label widget.
+---@param config LabelWidget The configuration table for the LabelWidget widget.
 ---@return Widget widget The constructed widget.
 function Label(config) end
 
 --- A widget that displays an image from a file path.
----@param config Image The configuration table for the Image widget.
+---@param config ImageWidget The configuration table for the ImageWidget widget.
 ---@return Widget widget The constructed widget.
 function Image(config) end
 
 --- A widget that allows users to select a value from a range by sliding a handle.
----@param config Slider The configuration table for the Slider widget.
+---@param config SliderWidget The configuration table for the SliderWidget widget.
 ---@return Widget widget The constructed widget.
 function Slider(config) end
 
 --- A widget that displays a GTK icon.
----@param config Icon The configuration table for the Icon widget.
+---@param config IconWidget The configuration table for the IconWidget widget.
 ---@return Widget widget The constructed widget.
 function Icon(config) end
 
 --- A widget that displays a progress bar.
----@param config ProgressBar The configuration table for the ProgressBar widget.
+---@param config ProgressBarWidget The configuration table for the ProgressBarWidget widget.
 ---@return Widget widget The constructed widget.
 function ProgressBar(config) end

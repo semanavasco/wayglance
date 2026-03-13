@@ -11,6 +11,7 @@ use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A widget that allows users to select a value from a range by sliding a handle.
 #[derive(LuaClass, WidgetBuilder)]
+#[lua_class(name = "SliderWidget")]
 pub struct Slider {
     #[lua_attr(parent)]
     pub properties: Properties,

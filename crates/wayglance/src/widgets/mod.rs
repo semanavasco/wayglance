@@ -103,6 +103,7 @@ pub struct Properties {
     /// Optional tooltip markup text for the widget.
     pub tooltip: MaybeReactive<Option<String>>,
     /// Optional margins around the widget.
+    #[lua_attr(optional)]
     pub margins: MaybeReactive<Margins>,
     /// Optional width request for the widget.
     #[lua_attr(default = -1)]

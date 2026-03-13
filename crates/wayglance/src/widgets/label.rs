@@ -9,6 +9,7 @@ use wayglance_macros::{LuaClass, WidgetBuilder};
 
 /// A simple widget that displays a text label.
 #[derive(LuaClass, WidgetBuilder)]
+#[lua_class(name = "LabelWidget")]
 struct Label {
     #[lua_attr(parent)]
     pub properties: Properties,
