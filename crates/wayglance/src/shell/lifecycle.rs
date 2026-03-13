@@ -5,9 +5,8 @@ use super::{
 use gtk4::{
     Application, ApplicationWindow, gdk,
     gio::prelude::{ApplicationExt, ApplicationExtManual, ListModelExt},
-    glib,
-    glib::ExitCode,
-    prelude::{Cast, DisplayExt, GtkWindowExt, MonitorExt},
+    glib::{self, ExitCode},
+    prelude::{Cast, DisplayExt, GtkWindowExt, MonitorExt, WidgetExt},
 };
 use gtk4_layer_shell::{Edge, LayerShell};
 use std::rc::Rc;
@@ -124,7 +123,21 @@ fn open_window_instance(
     match instance.child.build() {
         Ok(child) => {
             window.set_child(Some(&child));
-            window.present();
+
+            let child_clone = child.clone();
+            let window_clone = window.clone();
+
+            child.connect_visible_notify(move |_| {
+                if child_clone.get_visible() {
+                    window_clone.present();
+                } else {
+                    window_clone.hide();
+                }
+            });
+
+            if child.get_visible() {
+                window.present();
+            }
         }
         Err(e) => tracing::error!(
             "Failed to build child widget for window '{}': {}",
