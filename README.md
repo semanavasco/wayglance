@@ -7,7 +7,7 @@ wayglance is a Wayland toolkit made in Rust for building custom desktop widgets 
 Run with a configuration file:
 
 ```bash
-wayglance run --config examples/bar.lua
+wayglance run examples/bar.lua
 ```
 
 Generate Lua stubs for better IDE integration (e.g., with Lua Language Server):

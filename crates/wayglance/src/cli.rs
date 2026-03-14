@@ -13,7 +13,6 @@ pub enum Command {
     /// Run the Wayglance widget with the specified Lua shell configuration file
     Run {
         /// The path to the Lua configuration file
-        #[arg(short, long)]
         config: String,
 
         /// Set the logging level (error, warn, info, debug, trace)
