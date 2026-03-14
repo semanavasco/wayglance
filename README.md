@@ -2,6 +2,8 @@
 
 wayglance is a Wayland toolkit made in Rust for building custom desktop widgets and bars in Lua. It provides a simple API to create and manage GTK-based widgets, handle events, and interact with the Wayland compositor.
 
+Documentation including **installation instructions**, **API reference**, etc, can be found [here](https://semanavasco.com/wayglance).
+
 ## Usage
 
 Run with a configuration file:
