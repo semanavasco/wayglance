@@ -176,12 +176,12 @@ fn state_set(lua: &Lua, this: Table, value: LuaValue) -> mlua::Result<()> {
 }
 
 /// Creates a new state binding with a transform function that maps the state value to a new value.
-#[lua_func(name = "bind", class = "State", skip = "lua", skip = "this")]
+#[lua_func(name = "as", class = "State", skip = "lua", skip = "this")]
 #[arg(
     name = "transform",
     doc = "A function that transforms the state value and returns the transformed result."
 )]
-fn state_bind(lua: &Lua, this: Table, transform: LuaFn) -> mlua::Result<Table> {
+fn state_as(lua: &Lua, this: Table, transform: LuaFn) -> mlua::Result<Table> {
     let id = this.get::<usize>("__state_id")?;
     let binding = lua.create_table()?;
     binding.set("__state_id", id)?;
@@ -198,7 +198,7 @@ fn state_bind(lua: &Lua, this: Table, transform: LuaFn) -> mlua::Result<Table> {
 /// local count = wayglance.state(0)
 ///
 /// -- ... inside layout:
-/// Label({ text = count:bind(function(count)
+/// Label({ text = count:as(function(count)
 ///    return "Count: " .. count
 /// end) }) -- bind state to label text with transform function
 ///
@@ -233,9 +233,9 @@ pub fn state(lua: &Lua, initial: LuaValue) -> mlua::Result<Table> {
     )?;
 
     metatable.set(
-        "bind",
+        "as",
         lua.create_function(move |lua, (this, transform): (Table, LuaFn)| {
-            state_bind(lua, this, transform)
+            state_as(lua, this, transform)
         })?,
     )?;
 

@@ -382,7 +382,7 @@ function CancelHandle:cancel() end
 --- local count = wayglance.state(0)
 --- 
 --- -- ... inside layout:
---- Label({ text = count:bind(function(count)
+--- Label({ text = count:as(function(count)
 --- return "Count: " .. count
 --- end) }) -- bind state to label text with transform function
 --- 
@@ -399,7 +399,7 @@ function wayglance.state(initial) end
 --- Creates a new state binding with a transform function that maps the state value to a new value.
 ---@param transform function A function that transforms the state value and returns the transformed result.
 ---@return table
-function State:bind(transform) end
+function State:as(transform) end
 
 --- Updates the value of a reactive state and notifies all subscribers.
 ---@param value any The new value to set for the state.

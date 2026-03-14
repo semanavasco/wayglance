@@ -15,7 +15,7 @@ local function clock_widget()
     text = time_state,
     id = "clock",
     halign = "center",
-    class_list = current_theme:bind(function(theme)
+    class_list = current_theme:as(function(theme)
       return { "clock-text", theme }
     end),
   })
@@ -32,7 +32,7 @@ local function date_widget()
     text = date_state,
     id = "date",
     halign = "center",
-    class_list = current_theme:bind(function(theme)
+    class_list = current_theme:as(function(theme)
       return { "date-text", theme }
     end),
   })
@@ -46,7 +46,7 @@ local function theme_button(target_theme, color_class, hex_color, pretty_name)
     on_click = function()
       current_theme:set(target_theme)
     end,
-    visible = current_theme:bind(function(theme)
+    visible = current_theme:as(function(theme)
       return theme ~= target_theme
     end),
     tooltip = string.format(
