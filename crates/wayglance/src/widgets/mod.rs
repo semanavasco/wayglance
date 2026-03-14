@@ -269,10 +269,10 @@ impl Properties {
                     return gtk4::glib::Propagation::Proceed;
                 };
 
-                if let Ok(func) = lua.registry_value::<mlua::Function>(&on_scroll) {
-                    if let Err(e) = func.call::<()>((dx, dy)) {
-                        tracing::error!("Error calling on_scroll function: {}", e);
-                    }
+                if let Ok(func) = lua.registry_value::<mlua::Function>(&on_scroll)
+                    && let Err(e) = func.call::<()>((dx, dy))
+                {
+                    tracing::error!("Error calling on_scroll function: {}", e);
                 }
 
                 gtk4::glib::Propagation::Stop
