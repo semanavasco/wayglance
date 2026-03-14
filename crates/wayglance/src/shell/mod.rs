@@ -115,18 +115,32 @@ impl From<&gtk4::gdk::Monitor> for Monitor {
 
 /// Loads the configuration from the specified Lua file.
 pub fn load(path: &str) -> Result<Shell> {
-    let path = Path::new(path);
-
-    if !path.exists() {
-        anyhow::bail!("Config file not found: {}", path.display());
+    let path_ref = Path::new(path);
+    if !path_ref.exists() {
+        anyhow::bail!("Config file not found: {}", path_ref.display());
     }
 
-    PATH.set(path.to_path_buf())
+    let path = path_ref
+        .canonicalize()
+        .context("Failed to canonicalize config path")?;
+
+    PATH.set(path.clone())
         .map_err(|_| anyhow!("Couldn't set config path"))?;
 
-    let content = std::fs::read_to_string(path)?;
+    let content = std::fs::read_to_string(&path)?;
 
     let lua = Lua::new();
+
+    // Add the config directory to the package search path
+    if let Some(parent) = path.parent() {
+        let parent_str = parent.to_string_lossy();
+        let lua_code = format!(
+            "package.path = package.path .. ';{}/?.lua;{}/?/init.lua'",
+            parent_str, parent_str
+        );
+        lua.load(&lua_code).exec()?;
+    }
+
     crate::lua::register_lua(&lua)?;
 
     let value: LuaValue = lua.load(&content).set_name("config").eval()?;
