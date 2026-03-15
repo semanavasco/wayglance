@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Timers - wayglance documentation</title>
+        <title>Timers - waypane documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8b0f6fe1.js";
+            window.path_to_searchindex_js = "../searchindex-52016b87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-159f6911.js"></script>
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">wayglance documentation</h1>
+                    <h1 class="menu-title">waypane documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -175,8 +175,8 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="timers"><a class="header" href="#timers">Timers</a></h1>
-<p><code>wayglance</code> provides a set of timer functions that allow you to execute Lua code after a delay or at regular intervals. These timers are integrated with the GTK main loop, ensuring they don’t block the UI thread.</p>
-<h2 id="wayglancesettimeoutcallback-milliseconds"><a class="header" href="#wayglancesettimeoutcallback-milliseconds"><code>wayglance.setTimeout(callback, milliseconds)</code></a></h2>
+<p><code>waypane</code> provides a set of timer functions that allow you to execute Lua code after a delay or at regular intervals. These timers are integrated with the GTK main loop, ensuring they don’t block the UI thread.</p>
+<h2 id="waypanesettimeoutcallback-milliseconds"><a class="header" href="#waypanesettimeoutcallback-milliseconds"><code>waypane.setTimeout(callback, milliseconds)</code></a></h2>
 <p>Executes a callback function once after a specified delay.</p>
 <ul>
 <li><strong>callback</strong>: The function to execute.</li>
@@ -184,14 +184,14 @@
 <li><strong>Returns</strong>: A <code>CancelHandle</code>.</li>
 </ul>
 <p><strong>Example:</strong></p>
-<pre><code class="language-lua">local handle = wayglance.setTimeout(function()
+<pre><code class="language-lua">local handle = waypane.setTimeout(function()
   print("This message appears after 2 seconds!")
 end, 2000)
 
 -- You can cancel it before it fires:
 handle:cancel()
 </code></pre>
-<h2 id="wayglancesetintervalcallback-milliseconds"><a class="header" href="#wayglancesetintervalcallback-milliseconds"><code>wayglance.setInterval(callback, milliseconds)</code></a></h2>
+<h2 id="waypanesetintervalcallback-milliseconds"><a class="header" href="#waypanesetintervalcallback-milliseconds"><code>waypane.setInterval(callback, milliseconds)</code></a></h2>
 <p>Executes a callback function repeatedly at a specified interval.</p>
 <ul>
 <li><strong>callback</strong>: The function to execute.</li>
@@ -199,7 +199,7 @@ handle:cancel()
 <li><strong>Returns</strong>: A <code>CancelHandle</code>.</li>
 </ul>
 <p><strong>Example:</strong></p>
-<pre><code class="language-lua">local handle = wayglance.setInterval(function()
+<pre><code class="language-lua">local handle = waypane.setInterval(function()
   print("This message appears every second!")
 end, 1000)
 
@@ -216,9 +216,9 @@ handle:cancel()
 </ul>
 <h2 id="example-periodic-update"><a class="header" href="#example-periodic-update">Example: Periodic Update</a></h2>
 <p>Timers are commonly used to update state values periodically, such as for a clock widget.</p>
-<pre><code class="language-lua">local time_state = wayglance.state(os.date("%H:%M:%S"))
+<pre><code class="language-lua">local time_state = waypane.state(os.date("%H:%M:%S"))
 
-local timer = wayglance.setInterval(function()
+local timer = waypane.setInterval(function()
   time_state:set(os.date("%H:%M:%S"))
 end, 1000)
 

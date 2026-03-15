@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Lua API - wayglance documentation</title>
+        <title>Lua API - waypane documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8b0f6fe1.js";
+            window.path_to_searchindex_js = "../searchindex-52016b87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-159f6911.js"></script>
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">wayglance documentation</h1>
+                    <h1 class="menu-title">waypane documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -175,7 +175,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="lua-api"><a class="header" href="#lua-api">Lua API</a></h1>
-<p><code>wayglance</code> exposes a Lua API that allows you to define your desktop environment’s structure, behavior, and appearance. The API is designed to be intuitive and powerful, leveraging Lua’s flexibility to provide a seamless development experience.</p>
+<p><code>waypane</code> exposes a Lua API that allows you to define your desktop environment’s structure, behavior, and appearance. The API is designed to be intuitive and powerful, leveraging Lua’s flexibility to provide a seamless development experience.</p>
 <p>This section covers the core components of the Lua API:</p>
 <ul>
 <li><strong><a href="./shell_windows.html">Shell &amp; Windows</a></strong>: Defining the overall structure of your desktop environment, including how to create windows and manage their layout.</li>
@@ -184,15 +184,15 @@
 <li><strong><a href="./timers.html">Timers</a></strong>: Working with intervals and timeouts for time-based updates.</li>
 <li><strong><a href="./signals.html">Signals</a></strong>: Subscribing to and emitting events to react to the desktop environment.</li>
 </ul>
-<h2 id="the-wayglance-table"><a class="header" href="#the-wayglance-table">The <code>wayglance</code> Table</a></h2>
-<p>Most of the core functionality is organized under the global <code>wayglance</code> table. This includes functions for creating the shell, managing state, and interacting with modules like Hyprland.</p>
+<h2 id="the-waypane-table"><a class="header" href="#the-waypane-table">The <code>waypane</code> Table</a></h2>
+<p>Most of the core functionality is organized under the global <code>waypane</code> table. This includes functions for creating the shell, managing state, and interacting with modules like Hyprland.</p>
 <pre><code class="language-lua">-- Example usage
-local shell = wayglance.shell({ title = "My Bar" })
-local my_state = wayglance.state(0)
+local shell = waypane.shell({ title = "My Bar" })
+local my_state = waypane.state(0)
 </code></pre>
 <h2 id="type-hints--autocompletion"><a class="header" href="#type-hints--autocompletion">Type Hints &amp; Autocompletion</a></h2>
 <p>To get the most out of the Lua API, it is highly recommended to use the <code>gen-stubs</code> command to generate type definitions for your IDE. This will provide you with autocompletion, type checking, and inline documentation as you write your scripts.</p>
-<pre><code class="language-bash">wayglance gen-stubs &gt; stubs.lua
+<pre><code class="language-bash">waypane gen-stubs &gt; stubs.lua
 </code></pre>
 
                     </main>

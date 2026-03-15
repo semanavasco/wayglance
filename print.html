@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>wayglance documentation</title>
+        <title>waypane documentation</title>
         <meta name="robots" content="noindex">
 
 
@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-8b0f6fe1.js";
+            window.path_to_searchindex_js = "searchindex-52016b87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-159f6911.js"></script>
@@ -138,7 +138,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">wayglance documentation</h1>
+                    <h1 class="menu-title">waypane documentation</h1>
 
                     <div class="right-buttons">
                         <a href="print.html" title="Print this book" aria-label="Print this book">
@@ -176,13 +176,13 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>wayglance is a Wayland toolkit made in <a href="https://rust-lang.org">Rust</a> for building custom desktop widgets and bars in Lua. It provides a simple API to create and manage GTK-based widgets, handle events, and interact with the Wayland compositor.</p>
+<p>waypane is a Wayland toolkit made in <a href="https://rust-lang.org">Rust</a> for building custom desktop widgets and bars in Lua. It provides a simple API to create and manage GTK-based widgets, handle events, and interact with the Wayland compositor.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
-<p>This guide will help you set up and run your first wayglance configuration.</p>
-<p>For now, wayglance can only be installed from source.</p>
+<p>This guide will help you set up and run your first waypane configuration.</p>
+<p>For now, waypane can only be installed from source.</p>
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
-<p>Before building wayglance, ensure you have the following installed:</p>
+<p>Before building waypane, ensure you have the following installed:</p>
 <ul>
 <li><strong>Rust</strong>: The Rust toolchain (use <a href="https://rustup.rs/">rustup</a> to install).</li>
 <li><strong>GTK4</strong>: The development libraries for GTK4.</li>
@@ -195,9 +195,9 @@
 </blockquote>
 <h3 id="building"><a class="header" href="#building">Building</a></h3>
 <p>Start by cloning the repository and navigating into it:</p>
-<pre><code class="language-bash">git clone https://github.com/semanavasco/wayglance.git
+<pre><code class="language-bash">git clone https://github.com/semanavasco/waypane.git
 </code></pre>
-<pre><code class="language-bash">cd wayglance
+<pre><code class="language-bash">cd waypane
 </code></pre>
 <p>Then, build the project using Cargo:</p>
 <pre><code class="language-bash">cargo build --release --no-default-features
@@ -206,34 +206,34 @@
 <pre><code class="language-bash">cargo build --release --no-default-features --features hyprland
 </code></pre>
 <h3 id="installation"><a class="header" href="#installation">Installation</a></h3>
-<p>You can also install wayglance system-wide using Cargo:</p>
-<pre><code class="language-bash">cargo install --path crates/wayglance --no-default-features --features hyprland
+<p>You can also install waypane system-wide using Cargo:</p>
+<pre><code class="language-bash">cargo install --path crates/waypane --no-default-features --features hyprland
 </code></pre>
 <h2 id="running-your-first-widget"><a class="header" href="#running-your-first-widget">Running your First Widget</a></h2>
-<p>wayglance requires a Lua configuration file to define its UI and behavior. You can run it by passing the path to your config:</p>
-<pre><code class="language-bash">wayglance run examples/bar.lua
+<p>waypane requires a Lua configuration file to define its UI and behavior. You can run it by passing the path to your config:</p>
+<pre><code class="language-bash">waypane run examples/bar.lua
 </code></pre>
 <p>You can also set the log level using the <code>-l</code> or <code>--log-level</code> flag (defaults to <code>info</code>):</p>
-<pre><code class="language-bash">wayglance run examples/bar.lua --log-level debug
+<pre><code class="language-bash">waypane run examples/bar.lua --log-level debug
 </code></pre>
 <p>Available log levels are: <code>error</code>, <code>warn</code>, <code>info</code>, <code>debug</code>, and <code>trace</code>. Pass nonsense value to disable logging entirely (e.g. <code>none</code>).</p>
 <h2 id="ide-integration-recommended"><a class="header" href="#ide-integration-recommended">IDE Integration (Recommended)</a></h2>
 <p>To get autocompletion and type hints in your Lua editor, generate a stubs file:</p>
-<pre><code class="language-bash">wayglance gen-stubs &gt; stubs.lua
+<pre><code class="language-bash">waypane gen-stubs &gt; stubs.lua
 </code></pre>
 <p>Place this file in your project directory. If you’re using the <a href="https://luals.github.io/">Lua Language Server</a>, it will automatically pick up the definitions.</p>
 <blockquote>
 <p><strong>Note:</strong> You may need an additional <code>.luarc.json</code> file to supress warnings about undefined globals. Here’s an example:</p>
 <pre><code class="language-json">{
   "diagnostics": {
-    "globals": ["Label", "Container", "Button", ..., "wayglance"]
+    "globals": ["Label", "Container", "Button", ..., "waypane"]
   }
 }
 </code></pre>
 </blockquote>
 <h2 id="basic-config-structure"><a class="header" href="#basic-config-structure">Basic Config Structure</a></h2>
-<p>A minimal wayglance configuration file (<code>config.lua</code>) looks like this:</p>
-<pre><code class="language-lua">local shell = wayglance.shell({
+<p>A minimal waypane configuration file (<code>config.lua</code>) looks like this:</p>
+<pre><code class="language-lua">local shell = waypane.shell({
   title = "My Bar",
 })
 
@@ -242,20 +242,20 @@ shell:window("main-window", {
   anchors = { top = true, left = true, right = true },
 
   layout = Label({
-    text = "Hello, wayglance!",
+    text = "Hello, waypane!",
   })
 })
 
 return shell
 </code></pre>
-<p>Save this to a file and run it with wayglance to see your first widget in action!</p>
+<p>Save this to a file and run it with waypane to see your first widget in action!</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="core-concepts"><a class="header" href="#core-concepts">Core Concepts</a></h1>
-<p>wayglance is built around a few fundamental concepts that work together to create a dynamic desktop environment.</p>
+<p>waypane is built around a few fundamental concepts that work together to create a dynamic desktop environment.</p>
 <h2 id="the-shell"><a class="header" href="#the-shell">The Shell</a></h2>
 <p>The <code>Shell</code> is the top-level object in your configuration. It manages global settings like the application title and any custom CSS styles you want to apply. It also acts as a container for your window definitions.</p>
 <p>A typical configuration returns a <code>Shell</code> object at the end of the file.</p>
-<pre><code class="language-lua">local shell = wayglance.shell({
+<pre><code class="language-lua">local shell = waypane.shell({
   title = "My Desktop",
   style = "style.css",
 })
@@ -268,11 +268,11 @@ return shell
 <p>A <code>Window</code> represents a single UI element on your desktop, such as a status bar, a dashboard, or a standalone widget. Windows are defined using the <code>shell:window</code> method and specify their layer, placement, and layout.</p>
 <p>Windows can be configured to appear on specific monitors or all of them. Their layout is defined by providing a main Widget, or a function that returns one.</p>
 <h2 id="widgets"><a class="header" href="#widgets">Widgets</a></h2>
-<p><code>Widgets</code> are the building blocks of your UI. wayglance provides a variety of built-in widgets like <code>Label</code>, <code>Button</code>, <code>Container</code>, <code>Icon</code>, and more. Widgets are declarative, meaning you describe their state and properties, and wayglance handles the rendering and updates.</p>
+<p><code>Widgets</code> are the building blocks of your UI. waypane provides a variety of built-in widgets like <code>Label</code>, <code>Button</code>, <code>Container</code>, <code>Icon</code>, and more. Widgets are declarative, meaning you describe their state and properties, and waypane handles the rendering and updates.</p>
 <p>Many widget properties can be <strong>reactive</strong>, meaning they automatically update when the underlying data changes.</p>
 <h2 id="reactive-state"><a class="header" href="#reactive-state">Reactive State</a></h2>
-<p><code>State</code> is a core part of wayglance’s dynamic nature. By using <code>wayglance.state()</code>, you can create observable data points that widgets can subscribe to. When the state changes, any widget property bound to that state will automatically refresh.</p>
-<pre><code class="language-lua">local time = wayglance.state(os.date("%H:%M"))
+<p><code>State</code> is a core part of waypane’s dynamic nature. By using <code>waypane.state()</code>, you can create observable data points that widgets can subscribe to. When the state changes, any widget property bound to that state will automatically refresh.</p>
+<pre><code class="language-lua">local time = waypane.state(os.date("%H:%M"))
 
 -- Later, when `time`'s internal value changes, the label will update automatically
 local my_label = Label({
@@ -280,10 +280,10 @@ local my_label = Label({
 })
 </code></pre>
 <h2 id="signals-and-events"><a class="header" href="#signals-and-events">Signals and Events</a></h2>
-<p><code>Signals</code> are a way to react to asynchronous events, such as workspace changes in Hyprland or custom events emitted by your own scripts. You can use <code>wayglance.onSignal()</code> to register callbacks for specific signals, allowing your UI to respond to the desktop environment in real-time.</p>
+<p><code>Signals</code> are a way to react to asynchronous events, such as workspace changes in Hyprland or custom events emitted by your own scripts. You can use <code>waypane.onSignal()</code> to register callbacks for specific signals, allowing your UI to respond to the desktop environment in real-time.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="lua-api"><a class="header" href="#lua-api">Lua API</a></h1>
-<p><code>wayglance</code> exposes a Lua API that allows you to define your desktop environment’s structure, behavior, and appearance. The API is designed to be intuitive and powerful, leveraging Lua’s flexibility to provide a seamless development experience.</p>
+<p><code>waypane</code> exposes a Lua API that allows you to define your desktop environment’s structure, behavior, and appearance. The API is designed to be intuitive and powerful, leveraging Lua’s flexibility to provide a seamless development experience.</p>
 <p>This section covers the core components of the Lua API:</p>
 <ul>
 <li><strong><a href="#shell--windows">Shell &amp; Windows</a></strong>: Defining the overall structure of your desktop environment, including how to create windows and manage their layout.</li>
@@ -292,21 +292,21 @@ local my_label = Label({
 <li><strong><a href="#timers">Timers</a></strong>: Working with intervals and timeouts for time-based updates.</li>
 <li><strong><a href="#signals">Signals</a></strong>: Subscribing to and emitting events to react to the desktop environment.</li>
 </ul>
-<h2 id="the-wayglance-table"><a class="header" href="#the-wayglance-table">The <code>wayglance</code> Table</a></h2>
-<p>Most of the core functionality is organized under the global <code>wayglance</code> table. This includes functions for creating the shell, managing state, and interacting with modules like Hyprland.</p>
+<h2 id="the-waypane-table"><a class="header" href="#the-waypane-table">The <code>waypane</code> Table</a></h2>
+<p>Most of the core functionality is organized under the global <code>waypane</code> table. This includes functions for creating the shell, managing state, and interacting with modules like Hyprland.</p>
 <pre><code class="language-lua">-- Example usage
-local shell = wayglance.shell({ title = "My Bar" })
-local my_state = wayglance.state(0)
+local shell = waypane.shell({ title = "My Bar" })
+local my_state = waypane.state(0)
 </code></pre>
 <h2 id="type-hints--autocompletion"><a class="header" href="#type-hints--autocompletion">Type Hints &amp; Autocompletion</a></h2>
 <p>To get the most out of the Lua API, it is highly recommended to use the <code>gen-stubs</code> command to generate type definitions for your IDE. This will provide you with autocompletion, type checking, and inline documentation as you write your scripts.</p>
-<pre><code class="language-bash">wayglance gen-stubs &gt; stubs.lua
+<pre><code class="language-bash">waypane gen-stubs &gt; stubs.lua
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="shell--windows"><a class="header" href="#shell--windows">Shell &amp; Windows</a></h1>
-<p>The <code>Shell</code> and <code>Window</code> objects are the top-level structures used to define your <code>wayglance</code> configuration.</p>
+<p>The <code>Shell</code> and <code>Window</code> objects are the top-level structures used to define your <code>waypane</code> configuration.</p>
 <h2 id="the-shell-1"><a class="header" href="#the-shell-1">The Shell</a></h2>
-<p>The <code>Shell</code> object is created using <code>wayglance.shell()</code>. It manages global settings and acts as a container for your windows.</p>
+<p>The <code>Shell</code> object is created using <code>waypane.shell()</code>. It manages global settings and acts as a container for your windows.</p>
 <h3 id="properties"><a class="header" href="#properties">Properties</a></h3>
 <div class="table-wrapper">
 <table>
@@ -314,12 +314,12 @@ local my_state = wayglance.state(0)
 <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>title</code></td><td><code>string</code></td><td><code>"wayglance"</code></td><td>The application title, used as the GTK application ID.</td></tr>
+<tr><td><code>title</code></td><td><code>string</code></td><td><code>"waypane"</code></td><td>The application title, used as the GTK application ID.</td></tr>
 <tr><td><code>style</code></td><td><code>string</code></td><td></td><td>An optional path to a global CSS stylesheet.</td></tr>
 </tbody>
 </table>
 </div>
-<pre><code class="language-lua">local shell = wayglance.shell({
+<pre><code class="language-lua">local shell = waypane.shell({
   title = "My Bar",
   style = "style.css",
 })
@@ -392,7 +392,7 @@ local my_state = wayglance.state(0)
 <h2 id="window-visibility"><a class="header" href="#window-visibility">Window Visibility</a></h2>
 <p>The visibility of a window is automatically managed based on its root widget. If the root widget’s <code>visible</code> property is set to <code>false</code>, the window will be hidden from the compositor. This is particularly useful for creating togglable UI elements.</p>
 <h3 id="example-togglable-dashboard"><a class="header" href="#example-togglable-dashboard">Example: Togglable Dashboard</a></h3>
-<pre><code class="language-lua">local is_visible = wayglance.state(false)
+<pre><code class="language-lua">local is_visible = waypane.state(false)
 
 shell:window("dashboard", {
   layer = "overlay",
@@ -406,13 +406,13 @@ shell:window("dashboard", {
 })
 
 -- Toggle visibility elsewhere
-wayglance.onSignal("toggle_dashboard", function()
+waypane.onSignal("toggle_dashboard", function()
   is_visible:set(not is_visible:get())
 end)
 </code></pre>
 <h3 id="complete-configuration-example"><a class="header" href="#complete-configuration-example">Complete Configuration Example</a></h3>
 <p>A typical <code>config.lua</code> returns the shell object:</p>
-<pre><code class="language-lua">local shell = wayglance.shell({ title = "My Desktop" })
+<pre><code class="language-lua">local shell = waypane.shell({ title = "My Desktop" })
 
 shell:window("bar", {
   layer = "top",
@@ -425,7 +425,7 @@ return shell
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="global-functions"><a class="header" href="#global-functions">Global Functions</a></h1>
-<p><code>wayglance</code> provides a set of global functions that are primarily used to construct widgets. These functions are available directly in your Lua configuration file without any prefixes.</p>
+<p><code>waypane</code> provides a set of global functions that are primarily used to construct widgets. These functions are available directly in your Lua configuration file without any prefixes.</p>
 <h2 id="widget-constructors"><a class="header" href="#widget-constructors">Widget Constructors</a></h2>
 <p>Each widget constructor takes a single table as an argument, which defines its properties and behavior.</p>
 <h3 id="labelprops"><a class="header" href="#labelprops"><code>Label(props)</code></a></h3>
@@ -451,7 +451,7 @@ return shell
 <a href="#slider">See Slider for more details</a>.</p>
 <h2 id="usage-example"><a class="header" href="#usage-example">Usage Example</a></h2>
 <pre><code class="language-lua">local my_label = Label({
-  text = "Hello, wayglance!",
+  text = "Hello, waypane!",
   halign = "center",
 })
 
@@ -464,10 +464,10 @@ local my_button = Button({
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="state-management"><a class="header" href="#state-management">State Management</a></h1>
-<p>Reactive state is at the heart of <code>wayglance</code>. It allows you to create data points that your widgets can “watch”, automatically updating themselves whenever the data changes.</p>
+<p>Reactive state is at the heart of <code>waypane</code>. It allows you to create data points that your widgets can “watch”, automatically updating themselves whenever the data changes.</p>
 <h2 id="creating-state"><a class="header" href="#creating-state">Creating State</a></h2>
-<p>You can create a new state object using the <code>wayglance.state()</code> function. You can provide an initial value for the state.</p>
-<pre><code class="language-lua">local my_state = wayglance.state("initial value")
+<p>You can create a new state object using the <code>waypane.state()</code> function. You can provide an initial value for the state.</p>
+<pre><code class="language-lua">local my_state = waypane.state("initial value")
 </code></pre>
 <h2 id="getting-and-setting-state"><a class="header" href="#getting-and-setting-state">Getting and Setting State</a></h2>
 <p>State objects have <code>get()</code> and <code>set()</code> methods:</p>
@@ -475,7 +475,7 @@ local my_button = Button({
 <li><code>my_state:get()</code>: Returns the current value of the state.</li>
 <li><code>my_state:set(new_value)</code>: Updates the state with a new value and triggers updates for any bound widgets.</li>
 </ul>
-<pre><code class="language-lua">local count = wayglance.state(0)
+<pre><code class="language-lua">local count = waypane.state(0)
 
 print(count:get()) -- Output: 0
 
@@ -484,7 +484,7 @@ print(count:get()) -- Output: 1
 </code></pre>
 <h2 id="binding-state-to-widgets"><a class="header" href="#binding-state-to-widgets">Binding State to Widgets</a></h2>
 <p>Many widget properties (like a Label’s <code>text</code> or a Container’s <code>children</code>) can accept a state object instead of a static value. When the state changes, the widget property will automatically update.</p>
-<pre><code class="language-lua">local title_state = wayglance.state("My Widget")
+<pre><code class="language-lua">local title_state = waypane.state("My Widget")
 
 local my_label = Label({
   text = title_state,
@@ -496,7 +496,7 @@ title_state:set("Updated Title") -- The label's text will automatically update t
 <h2 id="transforming-state"><a class="header" href="#transforming-state">Transforming State</a></h2>
 <p>You can create a “transformed” version of a state object using the <code>:as()</code> method. This allows you to derive a new value from an existing state without manually managing multiple state objects.</p>
 <p>The <code>:as()</code> method takes a function that receives the current state value and returns the transformed value.</p>
-<pre><code class="language-lua">local count = wayglance.state(5)
+<pre><code class="language-lua">local count = waypane.state(5)
 
 -- Create a derived state that formats the count
 local label_text = count:as(function(val)
@@ -512,7 +512,7 @@ count:set(10) -- The label will automatically update to "The count is: 10"
 </code></pre>
 <h2 id="dynamic-children"><a class="header" href="#dynamic-children">Dynamic Children</a></h2>
 <p>Containers can also use reactive state for their <code>children</code> property. This is a powerful way to create dynamic lists or grids of widgets that can grow or shrink based on external data.</p>
-<pre><code class="language-lua">local items = wayglance.state({ "A", "B", "C" })
+<pre><code class="language-lua">local items = waypane.state({ "A", "B", "C" })
 
 local my_container = Container({
   children = items:as(function(list)
@@ -531,8 +531,8 @@ items:set(current)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="timers"><a class="header" href="#timers">Timers</a></h1>
-<p><code>wayglance</code> provides a set of timer functions that allow you to execute Lua code after a delay or at regular intervals. These timers are integrated with the GTK main loop, ensuring they don’t block the UI thread.</p>
-<h2 id="wayglancesettimeoutcallback-milliseconds"><a class="header" href="#wayglancesettimeoutcallback-milliseconds"><code>wayglance.setTimeout(callback, milliseconds)</code></a></h2>
+<p><code>waypane</code> provides a set of timer functions that allow you to execute Lua code after a delay or at regular intervals. These timers are integrated with the GTK main loop, ensuring they don’t block the UI thread.</p>
+<h2 id="waypanesettimeoutcallback-milliseconds"><a class="header" href="#waypanesettimeoutcallback-milliseconds"><code>waypane.setTimeout(callback, milliseconds)</code></a></h2>
 <p>Executes a callback function once after a specified delay.</p>
 <ul>
 <li><strong>callback</strong>: The function to execute.</li>
@@ -540,14 +540,14 @@ items:set(current)
 <li><strong>Returns</strong>: A <code>CancelHandle</code>.</li>
 </ul>
 <p><strong>Example:</strong></p>
-<pre><code class="language-lua">local handle = wayglance.setTimeout(function()
+<pre><code class="language-lua">local handle = waypane.setTimeout(function()
   print("This message appears after 2 seconds!")
 end, 2000)
 
 -- You can cancel it before it fires:
 handle:cancel()
 </code></pre>
-<h2 id="wayglancesetintervalcallback-milliseconds"><a class="header" href="#wayglancesetintervalcallback-milliseconds"><code>wayglance.setInterval(callback, milliseconds)</code></a></h2>
+<h2 id="waypanesetintervalcallback-milliseconds"><a class="header" href="#waypanesetintervalcallback-milliseconds"><code>waypane.setInterval(callback, milliseconds)</code></a></h2>
 <p>Executes a callback function repeatedly at a specified interval.</p>
 <ul>
 <li><strong>callback</strong>: The function to execute.</li>
@@ -555,7 +555,7 @@ handle:cancel()
 <li><strong>Returns</strong>: A <code>CancelHandle</code>.</li>
 </ul>
 <p><strong>Example:</strong></p>
-<pre><code class="language-lua">local handle = wayglance.setInterval(function()
+<pre><code class="language-lua">local handle = waypane.setInterval(function()
   print("This message appears every second!")
 end, 1000)
 
@@ -572,9 +572,9 @@ handle:cancel()
 </ul>
 <h2 id="example-periodic-update"><a class="header" href="#example-periodic-update">Example: Periodic Update</a></h2>
 <p>Timers are commonly used to update state values periodically, such as for a clock widget.</p>
-<pre><code class="language-lua">local time_state = wayglance.state(os.date("%H:%M:%S"))
+<pre><code class="language-lua">local time_state = waypane.state(os.date("%H:%M:%S"))
 
-local timer = wayglance.setInterval(function()
+local timer = waypane.setInterval(function()
   time_state:set(os.date("%H:%M:%S"))
 end, 1000)
 
@@ -587,8 +587,8 @@ local clock_label = Label({
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="signals"><a class="header" href="#signals">Signals</a></h1>
-<p><code>wayglance</code> uses a signal-based event system that allows your Lua scripts to react to events from the desktop environment (like Hyprland workspace changes) or to communicate between different parts of your configuration.</p>
-<h2 id="wayglanceonsignalsignals-callback"><a class="header" href="#wayglanceonsignalsignals-callback"><code>wayglance.onSignal(signals, callback)</code></a></h2>
+<p><code>waypane</code> uses a signal-based event system that allows your Lua scripts to react to events from the desktop environment (like Hyprland workspace changes) or to communicate between different parts of your configuration.</p>
+<h2 id="waypaneonsignalsignals-callback"><a class="header" href="#waypaneonsignalsignals-callback"><code>waypane.onSignal(signals, callback)</code></a></h2>
 <p>Listens for one or more signals and calls the provided callback when they are emitted.</p>
 <ul>
 <li><strong>signals</strong> (<code>string | string[]</code>): The name or names of the signals to listen for.</li>
@@ -596,7 +596,7 @@ local clock_label = Label({
 <li><strong>Returns</strong>: A <code>CancelHandle</code>.</li>
 </ul>
 <p><strong>Example:</strong></p>
-<pre><code class="language-lua">local handle = wayglance.onSignal("hyprland::workspace_changed", function(workspace)
+<pre><code class="language-lua">local handle = waypane.onSignal("hyprland::workspace_changed", function(workspace)
   print("Active workspace changed to: " .. workspace.name)
 end)
 
@@ -604,11 +604,11 @@ end)
 handle:cancel()
 
 -- You can also listen for multiple signals at once
-wayglance.onSignal({ "event_a", "event_b" }, function(data)
+waypane.onSignal({ "event_a", "event_b" }, function(data)
   print("Signal emitted: " .. tostring(data))
 end)
 </code></pre>
-<h2 id="wayglanceemitsignalsignal-data"><a class="header" href="#wayglanceemitsignalsignal-data"><code>wayglance.emitSignal(signal, data)</code></a></h2>
+<h2 id="waypaneemitsignalsignal-data"><a class="header" href="#waypaneemitsignalsignal-data"><code>waypane.emitSignal(signal, data)</code></a></h2>
 <p>Emits a custom signal with the given name and an optional data payload.</p>
 <ul>
 <li><strong>signal</strong> (<code>string</code>): The name of the signal to emit.</li>
@@ -616,10 +616,10 @@ end)
 </ul>
 <p><strong>Example:</strong></p>
 <pre><code class="language-lua">-- Emit a custom signal
-wayglance.emitSignal("my_event", { message = "Hello from Lua!" })
+waypane.emitSignal("my_event", { message = "Hello from Lua!" })
 
 -- Elsewhere in your script...
-wayglance.onSignal("my_event", function(payload)
+waypane.onSignal("my_event", function(payload)
   print(payload.message)
 end)
 </code></pre>
@@ -635,7 +635,7 @@ end)
 <p>Modules (like Hyprland), may emit signals automatically. For a full list of these, see the <a href="#hyprland-module">Hyprland Module</a> documentation.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="widgets-1"><a class="header" href="#widgets-1">Widgets</a></h1>
-<p>Widgets are the building blocks of your <code>wayglance</code> UI. Each widget represents a single element, such as a text label, a clickable button, or a container for other widgets.</p>
+<p>Widgets are the building blocks of your <code>waypane</code> UI. Each widget represents a single element, such as a text label, a clickable button, or a container for other widgets.</p>
 <h2 id="base-widgets"><a class="header" href="#base-widgets">Base Widgets</a></h2>
 <ul>
 <li><strong><a href="#label">Label</a></strong>: A simple widget that displays a text label.</li>
@@ -664,7 +664,7 @@ end)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="common-widget-properties"><a class="header" href="#common-widget-properties">Common Widget Properties</a></h1>
-<p>Every widget in <code>wayglance</code> shares a set of common properties that you can use to customize its appearance, layout, and behavior. These properties are always available when you’re defining a widget.</p>
+<p>Every widget in <code>waypane</code> shares a set of common properties that you can use to customize its appearance, layout, and behavior. These properties are always available when you’re defining a widget.</p>
 <h2 id="basic-properties"><a class="header" href="#basic-properties">Basic Properties</a></h2>
 <div class="table-wrapper">
 <table>
@@ -753,14 +753,14 @@ end)
 })
 </code></pre>
 <h3 id="dynamic-text"><a class="header" href="#dynamic-text">Dynamic Text</a></h3>
-<pre><code class="language-lua">local time_state = wayglance.state(os.date("%H:%M"))
+<pre><code class="language-lua">local time_state = waypane.state(os.date("%H:%M"))
 
 local clock_label = Label({
   text = time_state,
 })
 
 -- Update the state every minute
-wayglance.setInterval(function()
+waypane.setInterval(function()
   time_state:set(os.date("%H:%M"))
 end, 60000)
 </code></pre>
@@ -850,7 +850,7 @@ end, 60000)
 </code></pre>
 <h3 id="dynamic-children-1"><a class="header" href="#dynamic-children-1">Dynamic Children</a></h3>
 <p>You can use reactive state to create dynamic containers.</p>
-<pre><code class="language-lua">local items_state = wayglance.state({ "A", "B" })
+<pre><code class="language-lua">local items_state = waypane.state({ "A", "B" })
 
 local my_container = Container({
   orientation = "horizontal",
@@ -892,7 +892,7 @@ items_state:set({ "A", "B", "C" })
 </code></pre>
 <h3 id="dynamic-icon-name"><a class="header" href="#dynamic-icon-name">Dynamic Icon Name</a></h3>
 <p>You can use reactive state to change the icon based on external data.</p>
-<pre><code class="language-lua">local volume_state = wayglance.state(50)
+<pre><code class="language-lua">local volume_state = waypane.state(50)
 
 local volume_icon = Icon({
   name = volume_state:as(function(val)
@@ -938,7 +938,7 @@ local volume_icon = Icon({
 </code></pre>
 <h3 id="dynamic-image"><a class="header" href="#dynamic-image">Dynamic Image</a></h3>
 <p>You can change the image source based on reactive state.</p>
-<pre><code class="language-lua">local profile_pic_state = wayglance.state("assets/default.png")
+<pre><code class="language-lua">local profile_pic_state = waypane.state("assets/default.png")
 
 local user_avatar = Image({
   src = profile_pic_state,
@@ -976,7 +976,7 @@ profile_pic_state:set("assets/user-1.png")
 </code></pre>
 <h3 id="dynamic-progress"><a class="header" href="#dynamic-progress">Dynamic Progress</a></h3>
 <p>You can use reactive state to update the progress bar based on external data.</p>
-<pre><code class="language-lua">local cpu_state = wayglance.state(0.1)
+<pre><code class="language-lua">local cpu_state = waypane.state(0.1)
 
 local cpu_bar = ProgressBar({
   fraction = cpu_state,
@@ -1019,7 +1019,7 @@ local cpu_bar = ProgressBar({
 </div>
 <h2 id="examples-6"><a class="header" href="#examples-6">Examples</a></h2>
 <h3 id="volume-slider"><a class="header" href="#volume-slider">Volume Slider</a></h3>
-<pre><code class="language-lua">local volume_state = wayglance.state(50)
+<pre><code class="language-lua">local volume_state = waypane.state(50)
 
 local volume_slider = Slider({
   min = 0,
@@ -1045,10 +1045,10 @@ local volume_slider = Slider({
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="styling"><a class="header" href="#styling">Styling</a></h1>
-<p><code>wayglance</code> uses standard CSS for styling its widgets. This provides a powerful and flexible way to customize the appearance of your desktop environment.</p>
+<p><code>waypane</code> uses standard CSS for styling its widgets. This provides a powerful and flexible way to customize the appearance of your desktop environment.</p>
 <h2 id="applying-css"><a class="header" href="#applying-css">Applying CSS</a></h2>
 <p>You can apply CSS by providing a path to a CSS file when creating your shell object. This stylesheet will be applied to all windows.</p>
-<pre><code class="language-lua">local shell = wayglance.shell({
+<pre><code class="language-lua">local shell = waypane.shell({
   title = "My Bar",
   style = "style.css",
 })
@@ -1114,23 +1114,23 @@ local volume_slider = Slider({
 <p>For more information on the specific CSS properties supported by GTK4, refer to the <a href="https://docs.gtk.org/gtk4/css-properties.html">GTK4 CSS Properties documentation</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="modules"><a class="header" href="#modules">Modules</a></h1>
-<p><code>wayglance</code> can be extended with modules that provide integration with external tools and services. These modules typically expose a set of Lua functions and signals.</p>
+<p><code>waypane</code> can be extended with modules that provide integration with external tools and services. These modules typically expose a set of Lua functions and signals.</p>
 <h2 id="built-in-modules"><a class="header" href="#built-in-modules">Built-in Modules</a></h2>
 <ul>
 <li><strong><a href="#hyprland-module">Hyprland</a></strong>: Deep integration with the Hyprland window manager, allowing you to react to workspace changes, window focus, and more.</li>
 </ul>
 <h2 id="using-modules"><a class="header" href="#using-modules">Using Modules</a></h2>
-<p>Modules are available as sub-tables of the global <code>wayglance</code> table.</p>
+<p>Modules are available as sub-tables of the global <code>waypane</code> table.</p>
 <pre><code class="language-lua">-- Using the Hyprland module
-local workspaces = wayglance.hyprland.getWorkspaces()
+local workspaces = waypane.hyprland.getWorkspaces()
 </code></pre>
 <h2 id="community-modules"><a class="header" href="#community-modules">Community Modules</a></h2>
-<p>In the future, <code>wayglance</code> may support a plugin system or a community-driven set of modules. If you’re interested in developing your own module, check out the source code of the Hyprland module as a reference.</p>
+<p>In the future, <code>waypane</code> may support a plugin system or a community-driven set of modules. If you’re interested in developing your own module, check out the source code of the Hyprland module as a reference.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="hyprland-module"><a class="header" href="#hyprland-module">Hyprland Module</a></h1>
 <p>The <code>hyprland</code> module provides deep integration with the Hyprland window manager. It allows you to query the state of workspaces, windows, and monitors, as well as dispatch commands and react to compositor events via signals.</p>
 <h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
-<p>The Hyprland module is available under the <code>wayglance.hyprland</code> table.</p>
+<p>The Hyprland module is available under the <code>waypane.hyprland</code> table.</p>
 <h2 id="types"><a class="header" href="#types">Types</a></h2>
 <p>The Hyprland module defines several types that are used across its functions and signals.</p>
 <h3 id="hyprlandworkspace"><a class="header" href="#hyprlandworkspace"><code>HyprlandWorkspace</code></a></h3>
@@ -1259,7 +1259,7 @@ local workspaces = wayglance.hyprland.getWorkspaces()
 <li><strong><code>killActiveWindow()</code></strong>: Closes the currently focused window.</li>
 </ul>
 <h2 id="signals-1"><a class="header" href="#signals-1">Signals</a></h2>
-<p>You can subscribe to these events using <code>wayglance.onSignal()</code>.</p>
+<p>You can subscribe to these events using <code>waypane.onSignal()</code>.</p>
 <h3 id="workspace-events"><a class="header" href="#workspace-events">Workspace Events</a></h3>
 <div class="table-wrapper">
 <table>
@@ -1293,7 +1293,7 @@ local workspaces = wayglance.hyprland.getWorkspaces()
   return Button({
     child = Label({ text = tostring(id) }),
     on_click = function()
-      wayglance.hyprland.switchWorkspace(id)
+      waypane.hyprland.switchWorkspace(id)
     end,
   })
 end

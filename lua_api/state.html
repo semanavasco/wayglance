@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>State Management - wayglance documentation</title>
+        <title>State Management - waypane documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8b0f6fe1.js";
+            window.path_to_searchindex_js = "../searchindex-52016b87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-159f6911.js"></script>
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">wayglance documentation</h1>
+                    <h1 class="menu-title">waypane documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -175,10 +175,10 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="state-management"><a class="header" href="#state-management">State Management</a></h1>
-<p>Reactive state is at the heart of <code>wayglance</code>. It allows you to create data points that your widgets can “watch”, automatically updating themselves whenever the data changes.</p>
+<p>Reactive state is at the heart of <code>waypane</code>. It allows you to create data points that your widgets can “watch”, automatically updating themselves whenever the data changes.</p>
 <h2 id="creating-state"><a class="header" href="#creating-state">Creating State</a></h2>
-<p>You can create a new state object using the <code>wayglance.state()</code> function. You can provide an initial value for the state.</p>
-<pre><code class="language-lua">local my_state = wayglance.state("initial value")
+<p>You can create a new state object using the <code>waypane.state()</code> function. You can provide an initial value for the state.</p>
+<pre><code class="language-lua">local my_state = waypane.state("initial value")
 </code></pre>
 <h2 id="getting-and-setting-state"><a class="header" href="#getting-and-setting-state">Getting and Setting State</a></h2>
 <p>State objects have <code>get()</code> and <code>set()</code> methods:</p>
@@ -186,7 +186,7 @@
 <li><code>my_state:get()</code>: Returns the current value of the state.</li>
 <li><code>my_state:set(new_value)</code>: Updates the state with a new value and triggers updates for any bound widgets.</li>
 </ul>
-<pre><code class="language-lua">local count = wayglance.state(0)
+<pre><code class="language-lua">local count = waypane.state(0)
 
 print(count:get()) -- Output: 0
 
@@ -195,7 +195,7 @@ print(count:get()) -- Output: 1
 </code></pre>
 <h2 id="binding-state-to-widgets"><a class="header" href="#binding-state-to-widgets">Binding State to Widgets</a></h2>
 <p>Many widget properties (like a Label’s <code>text</code> or a Container’s <code>children</code>) can accept a state object instead of a static value. When the state changes, the widget property will automatically update.</p>
-<pre><code class="language-lua">local title_state = wayglance.state("My Widget")
+<pre><code class="language-lua">local title_state = waypane.state("My Widget")
 
 local my_label = Label({
   text = title_state,
@@ -207,7 +207,7 @@ title_state:set("Updated Title") -- The label's text will automatically update t
 <h2 id="transforming-state"><a class="header" href="#transforming-state">Transforming State</a></h2>
 <p>You can create a “transformed” version of a state object using the <code>:as()</code> method. This allows you to derive a new value from an existing state without manually managing multiple state objects.</p>
 <p>The <code>:as()</code> method takes a function that receives the current state value and returns the transformed value.</p>
-<pre><code class="language-lua">local count = wayglance.state(5)
+<pre><code class="language-lua">local count = waypane.state(5)
 
 -- Create a derived state that formats the count
 local label_text = count:as(function(val)
@@ -223,7 +223,7 @@ count:set(10) -- The label will automatically update to "The count is: 10"
 </code></pre>
 <h2 id="dynamic-children"><a class="header" href="#dynamic-children">Dynamic Children</a></h2>
 <p>Containers can also use reactive state for their <code>children</code> property. This is a powerful way to create dynamic lists or grids of widgets that can grow or shrink based on external data.</p>
-<pre><code class="language-lua">local items = wayglance.state({ "A", "B", "C" })
+<pre><code class="language-lua">local items = waypane.state({ "A", "B", "C" })
 
 local my_container = Container({
   children = items:as(function(list)

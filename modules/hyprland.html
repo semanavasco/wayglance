@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Hyprland - wayglance documentation</title>
+        <title>Hyprland - waypane documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8b0f6fe1.js";
+            window.path_to_searchindex_js = "../searchindex-52016b87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-159f6911.js"></script>
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">wayglance documentation</h1>
+                    <h1 class="menu-title">waypane documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -177,7 +177,7 @@
                         <h1 id="hyprland-module"><a class="header" href="#hyprland-module">Hyprland Module</a></h1>
 <p>The <code>hyprland</code> module provides deep integration with the Hyprland window manager. It allows you to query the state of workspaces, windows, and monitors, as well as dispatch commands and react to compositor events via signals.</p>
 <h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
-<p>The Hyprland module is available under the <code>wayglance.hyprland</code> table.</p>
+<p>The Hyprland module is available under the <code>waypane.hyprland</code> table.</p>
 <h2 id="types"><a class="header" href="#types">Types</a></h2>
 <p>The Hyprland module defines several types that are used across its functions and signals.</p>
 <h3 id="hyprlandworkspace"><a class="header" href="#hyprlandworkspace"><code>HyprlandWorkspace</code></a></h3>
@@ -306,7 +306,7 @@
 <li><strong><code>killActiveWindow()</code></strong>: Closes the currently focused window.</li>
 </ul>
 <h2 id="signals"><a class="header" href="#signals">Signals</a></h2>
-<p>You can subscribe to these events using <code>wayglance.onSignal()</code>.</p>
+<p>You can subscribe to these events using <code>waypane.onSignal()</code>.</p>
 <h3 id="workspace-events"><a class="header" href="#workspace-events">Workspace Events</a></h3>
 <div class="table-wrapper">
 <table>
@@ -340,7 +340,7 @@
   return Button({
     child = Label({ text = tostring(id) }),
     on_click = function()
-      wayglance.hyprland.switchWorkspace(id)
+      waypane.hyprland.switchWorkspace(id)
     end,
   })
 end

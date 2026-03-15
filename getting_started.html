@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Getting Started - wayglance documentation</title>
+        <title>Getting Started - waypane documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-8b0f6fe1.js";
+            window.path_to_searchindex_js = "searchindex-52016b87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-159f6911.js"></script>
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">wayglance documentation</h1>
+                    <h1 class="menu-title">waypane documentation</h1>
 
                     <div class="right-buttons">
                         <a href="print.html" title="Print this book" aria-label="Print this book">
@@ -175,10 +175,10 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
-<p>This guide will help you set up and run your first wayglance configuration.</p>
-<p>For now, wayglance can only be installed from source.</p>
+<p>This guide will help you set up and run your first waypane configuration.</p>
+<p>For now, waypane can only be installed from source.</p>
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
-<p>Before building wayglance, ensure you have the following installed:</p>
+<p>Before building waypane, ensure you have the following installed:</p>
 <ul>
 <li><strong>Rust</strong>: The Rust toolchain (use <a href="https://rustup.rs/">rustup</a> to install).</li>
 <li><strong>GTK4</strong>: The development libraries for GTK4.</li>
@@ -191,9 +191,9 @@
 </blockquote>
 <h3 id="building"><a class="header" href="#building">Building</a></h3>
 <p>Start by cloning the repository and navigating into it:</p>
-<pre><code class="language-bash">git clone https://github.com/semanavasco/wayglance.git
+<pre><code class="language-bash">git clone https://github.com/semanavasco/waypane.git
 </code></pre>
-<pre><code class="language-bash">cd wayglance
+<pre><code class="language-bash">cd waypane
 </code></pre>
 <p>Then, build the project using Cargo:</p>
 <pre><code class="language-bash">cargo build --release --no-default-features
@@ -202,34 +202,34 @@
 <pre><code class="language-bash">cargo build --release --no-default-features --features hyprland
 </code></pre>
 <h3 id="installation"><a class="header" href="#installation">Installation</a></h3>
-<p>You can also install wayglance system-wide using Cargo:</p>
-<pre><code class="language-bash">cargo install --path crates/wayglance --no-default-features --features hyprland
+<p>You can also install waypane system-wide using Cargo:</p>
+<pre><code class="language-bash">cargo install --path crates/waypane --no-default-features --features hyprland
 </code></pre>
 <h2 id="running-your-first-widget"><a class="header" href="#running-your-first-widget">Running your First Widget</a></h2>
-<p>wayglance requires a Lua configuration file to define its UI and behavior. You can run it by passing the path to your config:</p>
-<pre><code class="language-bash">wayglance run examples/bar.lua
+<p>waypane requires a Lua configuration file to define its UI and behavior. You can run it by passing the path to your config:</p>
+<pre><code class="language-bash">waypane run examples/bar.lua
 </code></pre>
 <p>You can also set the log level using the <code>-l</code> or <code>--log-level</code> flag (defaults to <code>info</code>):</p>
-<pre><code class="language-bash">wayglance run examples/bar.lua --log-level debug
+<pre><code class="language-bash">waypane run examples/bar.lua --log-level debug
 </code></pre>
 <p>Available log levels are: <code>error</code>, <code>warn</code>, <code>info</code>, <code>debug</code>, and <code>trace</code>. Pass nonsense value to disable logging entirely (e.g. <code>none</code>).</p>
 <h2 id="ide-integration-recommended"><a class="header" href="#ide-integration-recommended">IDE Integration (Recommended)</a></h2>
 <p>To get autocompletion and type hints in your Lua editor, generate a stubs file:</p>
-<pre><code class="language-bash">wayglance gen-stubs &gt; stubs.lua
+<pre><code class="language-bash">waypane gen-stubs &gt; stubs.lua
 </code></pre>
 <p>Place this file in your project directory. If you’re using the <a href="https://luals.github.io/">Lua Language Server</a>, it will automatically pick up the definitions.</p>
 <blockquote>
 <p><strong>Note:</strong> You may need an additional <code>.luarc.json</code> file to supress warnings about undefined globals. Here’s an example:</p>
 <pre><code class="language-json">{
   "diagnostics": {
-    "globals": ["Label", "Container", "Button", ..., "wayglance"]
+    "globals": ["Label", "Container", "Button", ..., "waypane"]
   }
 }
 </code></pre>
 </blockquote>
 <h2 id="basic-config-structure"><a class="header" href="#basic-config-structure">Basic Config Structure</a></h2>
-<p>A minimal wayglance configuration file (<code>config.lua</code>) looks like this:</p>
-<pre><code class="language-lua">local shell = wayglance.shell({
+<p>A minimal waypane configuration file (<code>config.lua</code>) looks like this:</p>
+<pre><code class="language-lua">local shell = waypane.shell({
   title = "My Bar",
 })
 
@@ -238,13 +238,13 @@ shell:window("main-window", {
   anchors = { top = true, left = true, right = true },
 
   layout = Label({
-    text = "Hello, wayglance!",
+    text = "Hello, waypane!",
   })
 })
 
 return shell
 </code></pre>
-<p>Save this to a file and run it with wayglance to see your first widget in action!</p>
+<p>Save this to a file and run it with waypane to see your first widget in action!</p>
 
                     </main>
 

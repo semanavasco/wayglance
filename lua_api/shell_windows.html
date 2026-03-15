@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Shell &amp; Windows - wayglance documentation</title>
+        <title>Shell &amp; Windows - waypane documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8b0f6fe1.js";
+            window.path_to_searchindex_js = "../searchindex-52016b87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-159f6911.js"></script>
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">wayglance documentation</h1>
+                    <h1 class="menu-title">waypane documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -175,9 +175,9 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="shell--windows"><a class="header" href="#shell--windows">Shell &amp; Windows</a></h1>
-<p>The <code>Shell</code> and <code>Window</code> objects are the top-level structures used to define your <code>wayglance</code> configuration.</p>
+<p>The <code>Shell</code> and <code>Window</code> objects are the top-level structures used to define your <code>waypane</code> configuration.</p>
 <h2 id="the-shell"><a class="header" href="#the-shell">The Shell</a></h2>
-<p>The <code>Shell</code> object is created using <code>wayglance.shell()</code>. It manages global settings and acts as a container for your windows.</p>
+<p>The <code>Shell</code> object is created using <code>waypane.shell()</code>. It manages global settings and acts as a container for your windows.</p>
 <h3 id="properties"><a class="header" href="#properties">Properties</a></h3>
 <div class="table-wrapper">
 <table>
@@ -185,12 +185,12 @@
 <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>title</code></td><td><code>string</code></td><td><code>"wayglance"</code></td><td>The application title, used as the GTK application ID.</td></tr>
+<tr><td><code>title</code></td><td><code>string</code></td><td><code>"waypane"</code></td><td>The application title, used as the GTK application ID.</td></tr>
 <tr><td><code>style</code></td><td><code>string</code></td><td></td><td>An optional path to a global CSS stylesheet.</td></tr>
 </tbody>
 </table>
 </div>
-<pre><code class="language-lua">local shell = wayglance.shell({
+<pre><code class="language-lua">local shell = waypane.shell({
   title = "My Bar",
   style = "style.css",
 })
@@ -263,7 +263,7 @@
 <h2 id="window-visibility"><a class="header" href="#window-visibility">Window Visibility</a></h2>
 <p>The visibility of a window is automatically managed based on its root widget. If the root widget’s <code>visible</code> property is set to <code>false</code>, the window will be hidden from the compositor. This is particularly useful for creating togglable UI elements.</p>
 <h3 id="example-togglable-dashboard"><a class="header" href="#example-togglable-dashboard">Example: Togglable Dashboard</a></h3>
-<pre><code class="language-lua">local is_visible = wayglance.state(false)
+<pre><code class="language-lua">local is_visible = waypane.state(false)
 
 shell:window("dashboard", {
   layer = "overlay",
@@ -277,13 +277,13 @@ shell:window("dashboard", {
 })
 
 -- Toggle visibility elsewhere
-wayglance.onSignal("toggle_dashboard", function()
+waypane.onSignal("toggle_dashboard", function()
   is_visible:set(not is_visible:get())
 end)
 </code></pre>
 <h3 id="complete-configuration-example"><a class="header" href="#complete-configuration-example">Complete Configuration Example</a></h3>
 <p>A typical <code>config.lua</code> returns the shell object:</p>
-<pre><code class="language-lua">local shell = wayglance.shell({ title = "My Desktop" })
+<pre><code class="language-lua">local shell = waypane.shell({ title = "My Desktop" })
 
 shell:window("bar", {
   layer = "top",

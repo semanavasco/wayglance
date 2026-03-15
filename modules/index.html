@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Modules - wayglance documentation</title>
+        <title>Modules - waypane documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8b0f6fe1.js";
+            window.path_to_searchindex_js = "../searchindex-52016b87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-159f6911.js"></script>
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">wayglance documentation</h1>
+                    <h1 class="menu-title">waypane documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -175,18 +175,18 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="modules"><a class="header" href="#modules">Modules</a></h1>
-<p><code>wayglance</code> can be extended with modules that provide integration with external tools and services. These modules typically expose a set of Lua functions and signals.</p>
+<p><code>waypane</code> can be extended with modules that provide integration with external tools and services. These modules typically expose a set of Lua functions and signals.</p>
 <h2 id="built-in-modules"><a class="header" href="#built-in-modules">Built-in Modules</a></h2>
 <ul>
 <li><strong><a href="./hyprland.html">Hyprland</a></strong>: Deep integration with the Hyprland window manager, allowing you to react to workspace changes, window focus, and more.</li>
 </ul>
 <h2 id="using-modules"><a class="header" href="#using-modules">Using Modules</a></h2>
-<p>Modules are available as sub-tables of the global <code>wayglance</code> table.</p>
+<p>Modules are available as sub-tables of the global <code>waypane</code> table.</p>
 <pre><code class="language-lua">-- Using the Hyprland module
-local workspaces = wayglance.hyprland.getWorkspaces()
+local workspaces = waypane.hyprland.getWorkspaces()
 </code></pre>
 <h2 id="community-modules"><a class="header" href="#community-modules">Community Modules</a></h2>
-<p>In the future, <code>wayglance</code> may support a plugin system or a community-driven set of modules. If you’re interested in developing your own module, check out the source code of the Hyprland module as a reference.</p>
+<p>In the future, <code>waypane</code> may support a plugin system or a community-driven set of modules. If you’re interested in developing your own module, check out the source code of the Hyprland module as a reference.</p>
 
                     </main>
 
