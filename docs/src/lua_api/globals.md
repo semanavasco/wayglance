@@ -1,6 +1,6 @@
 # Global Functions
 
-`wayglance` provides a set of global functions that are primarily used to construct widgets. These functions are available directly in your Lua configuration file without any prefixes.
+`waypane` provides a set of global functions that are primarily used to construct widgets. These functions are available directly in your Lua configuration file without any prefixes.
 
 ## Widget Constructors
 
@@ -45,7 +45,7 @@ Creates a `Slider` widget for selecting a value from a range.
 
 ```lua
 local my_label = Label({
-  text = "Hello, wayglance!",
+  text = "Hello, waypane!",
   halign = "center",
 })
 

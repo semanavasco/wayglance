@@ -1,13 +1,13 @@
 # State Management
 
-Reactive state is at the heart of `wayglance`. It allows you to create data points that your widgets can "watch", automatically updating themselves whenever the data changes.
+Reactive state is at the heart of `waypane`. It allows you to create data points that your widgets can "watch", automatically updating themselves whenever the data changes.
 
 ## Creating State
 
-You can create a new state object using the `wayglance.state()` function. You can provide an initial value for the state.
+You can create a new state object using the `waypane.state()` function. You can provide an initial value for the state.
 
 ```lua
-local my_state = wayglance.state("initial value")
+local my_state = waypane.state("initial value")
 ```
 
 ## Getting and Setting State
@@ -18,7 +18,7 @@ State objects have `get()` and `set()` methods:
 - `my_state:set(new_value)`: Updates the state with a new value and triggers updates for any bound widgets.
 
 ```lua
-local count = wayglance.state(0)
+local count = waypane.state(0)
 
 print(count:get()) -- Output: 0
 
@@ -31,7 +31,7 @@ print(count:get()) -- Output: 1
 Many widget properties (like a Label's `text` or a Container's `children`) can accept a state object instead of a static value. When the state changes, the widget property will automatically update.
 
 ```lua
-local title_state = wayglance.state("My Widget")
+local title_state = waypane.state("My Widget")
 
 local my_label = Label({
   text = title_state,
@@ -48,7 +48,7 @@ You can create a "transformed" version of a state object using the `:as()` metho
 The `:as()` method takes a function that receives the current state value and returns the transformed value.
 
 ```lua
-local count = wayglance.state(5)
+local count = waypane.state(5)
 
 -- Create a derived state that formats the count
 local label_text = count:as(function(val)
@@ -68,7 +68,7 @@ count:set(10) -- The label will automatically update to "The count is: 10"
 Containers can also use reactive state for their `children` property. This is a powerful way to create dynamic lists or grids of widgets that can grow or shrink based on external data.
 
 ```lua
-local items = wayglance.state({ "A", "B", "C" })
+local items = waypane.state({ "A", "B", "C" })
 
 local my_container = Container({
   children = items:as(function(list)

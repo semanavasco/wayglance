@@ -1,6 +1,6 @@
 # Core Concepts
 
-wayglance is built around a few fundamental concepts that work together to create a dynamic desktop environment.
+waypane is built around a few fundamental concepts that work together to create a dynamic desktop environment.
 
 ## The Shell
 
@@ -9,7 +9,7 @@ The `Shell` is the top-level object in your configuration. It manages global set
 A typical configuration returns a `Shell` object at the end of the file.
 
 ```lua
-local shell = wayglance.shell({
+local shell = waypane.shell({
   title = "My Desktop",
   style = "style.css",
 })
@@ -27,16 +27,16 @@ Windows can be configured to appear on specific monitors or all of them. Their l
 
 ## Widgets
 
-`Widgets` are the building blocks of your UI. wayglance provides a variety of built-in widgets like `Label`, `Button`, `Container`, `Icon`, and more. Widgets are declarative, meaning you describe their state and properties, and wayglance handles the rendering and updates.
+`Widgets` are the building blocks of your UI. waypane provides a variety of built-in widgets like `Label`, `Button`, `Container`, `Icon`, and more. Widgets are declarative, meaning you describe their state and properties, and waypane handles the rendering and updates.
 
 Many widget properties can be **reactive**, meaning they automatically update when the underlying data changes.
 
 ## Reactive State
 
-`State` is a core part of wayglance's dynamic nature. By using `wayglance.state()`, you can create observable data points that widgets can subscribe to. When the state changes, any widget property bound to that state will automatically refresh.
+`State` is a core part of waypane's dynamic nature. By using `waypane.state()`, you can create observable data points that widgets can subscribe to. When the state changes, any widget property bound to that state will automatically refresh.
 
 ```lua
-local time = wayglance.state(os.date("%H:%M"))
+local time = waypane.state(os.date("%H:%M"))
 
 -- Later, when `time`'s internal value changes, the label will update automatically
 local my_label = Label({
@@ -46,4 +46,4 @@ local my_label = Label({
 
 ## Signals and Events
 
-`Signals` are a way to react to asynchronous events, such as workspace changes in Hyprland or custom events emitted by your own scripts. You can use `wayglance.onSignal()` to register callbacks for specific signals, allowing your UI to respond to the desktop environment in real-time.
+`Signals` are a way to react to asynchronous events, such as workspace changes in Hyprland or custom events emitted by your own scripts. You can use `waypane.onSignal()` to register callbacks for specific signals, allowing your UI to respond to the desktop environment in real-time.

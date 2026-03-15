@@ -1,6 +1,6 @@
 # Common Widget Properties
 
-Every widget in `wayglance` shares a set of common properties that you can use to customize its appearance, layout, and behavior. These properties are always available when you're defining a widget.
+Every widget in `waypane` shares a set of common properties that you can use to customize its appearance, layout, and behavior. These properties are always available when you're defining a widget.
 
 ## Basic Properties
 

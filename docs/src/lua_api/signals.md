@@ -1,8 +1,8 @@
 # Signals
 
-`wayglance` uses a signal-based event system that allows your Lua scripts to react to events from the desktop environment (like Hyprland workspace changes) or to communicate between different parts of your configuration.
+`waypane` uses a signal-based event system that allows your Lua scripts to react to events from the desktop environment (like Hyprland workspace changes) or to communicate between different parts of your configuration.
 
-## `wayglance.onSignal(signals, callback)`
+## `waypane.onSignal(signals, callback)`
 
 Listens for one or more signals and calls the provided callback when they are emitted.
 
@@ -13,7 +13,7 @@ Listens for one or more signals and calls the provided callback when they are em
 **Example:**
 
 ```lua
-local handle = wayglance.onSignal("hyprland::workspace_changed", function(workspace)
+local handle = waypane.onSignal("hyprland::workspace_changed", function(workspace)
   print("Active workspace changed to: " .. workspace.name)
 end)
 
@@ -21,12 +21,12 @@ end)
 handle:cancel()
 
 -- You can also listen for multiple signals at once
-wayglance.onSignal({ "event_a", "event_b" }, function(data)
+waypane.onSignal({ "event_a", "event_b" }, function(data)
   print("Signal emitted: " .. tostring(data))
 end)
 ```
 
-## `wayglance.emitSignal(signal, data)`
+## `waypane.emitSignal(signal, data)`
 
 Emits a custom signal with the given name and an optional data payload.
 
@@ -37,10 +37,10 @@ Emits a custom signal with the given name and an optional data payload.
 
 ```lua
 -- Emit a custom signal
-wayglance.emitSignal("my_event", { message = "Hello from Lua!" })
+waypane.emitSignal("my_event", { message = "Hello from Lua!" })
 
 -- Elsewhere in your script...
-wayglance.onSignal("my_event", function(payload)
+waypane.onSignal("my_event", function(payload)
   print(payload.message)
 end)
 ```

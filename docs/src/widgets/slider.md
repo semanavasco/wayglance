@@ -23,7 +23,7 @@ In addition to the [Common Properties](./common.md), `Slider` has the following 
 ### Volume Slider
 
 ```lua
-local volume_state = wayglance.state(50)
+local volume_state = waypane.state(50)
 
 local volume_slider = Slider({
   min = 0,

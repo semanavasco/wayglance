@@ -1,8 +1,8 @@
 # Timers
 
-`wayglance` provides a set of timer functions that allow you to execute Lua code after a delay or at regular intervals. These timers are integrated with the GTK main loop, ensuring they don't block the UI thread.
+`waypane` provides a set of timer functions that allow you to execute Lua code after a delay or at regular intervals. These timers are integrated with the GTK main loop, ensuring they don't block the UI thread.
 
-## `wayglance.setTimeout(callback, milliseconds)`
+## `waypane.setTimeout(callback, milliseconds)`
 
 Executes a callback function once after a specified delay.
 
@@ -13,7 +13,7 @@ Executes a callback function once after a specified delay.
 **Example:**
 
 ```lua
-local handle = wayglance.setTimeout(function()
+local handle = waypane.setTimeout(function()
   print("This message appears after 2 seconds!")
 end, 2000)
 
@@ -21,7 +21,7 @@ end, 2000)
 handle:cancel()
 ```
 
-## `wayglance.setInterval(callback, milliseconds)`
+## `waypane.setInterval(callback, milliseconds)`
 
 Executes a callback function repeatedly at a specified interval.
 
@@ -32,7 +32,7 @@ Executes a callback function repeatedly at a specified interval.
 **Example:**
 
 ```lua
-local handle = wayglance.setInterval(function()
+local handle = waypane.setInterval(function()
   print("This message appears every second!")
 end, 1000)
 
@@ -53,9 +53,9 @@ The `CancelHandle` returned by timer functions has a single method:
 Timers are commonly used to update state values periodically, such as for a clock widget.
 
 ```lua
-local time_state = wayglance.state(os.date("%H:%M:%S"))
+local time_state = waypane.state(os.date("%H:%M:%S"))
 
-local timer = wayglance.setInterval(function()
+local timer = waypane.setInterval(function()
   time_state:set(os.date("%H:%M:%S"))
 end, 1000)
 

@@ -1,6 +1,6 @@
 # Widgets
 
-Widgets are the building blocks of your `wayglance` UI. Each widget represents a single element, such as a text label, a clickable button, or a container for other widgets.
+Widgets are the building blocks of your `waypane` UI. Each widget represents a single element, such as a text label, a clickable button, or a container for other widgets.
 
 ## Base Widgets
 

@@ -1,26 +1,26 @@
-# wayglance
+# waypane
 
-wayglance is a Wayland toolkit made in Rust for building custom desktop widgets and bars in Lua. It provides a simple API to create and manage GTK-based widgets, handle events, and interact with the Wayland compositor.
+waypane is a Wayland toolkit made in Rust for building custom desktop widgets and bars in Lua. It provides a simple API to create and manage GTK-based widgets, handle events, and interact with the Wayland compositor.
 
-Documentation including **installation instructions**, **API reference**, etc, can be found [here](https://semanavasco.com/wayglance).
+Documentation including **installation instructions**, **API reference**, etc, can be found [here](https://semanavasco.com/waypane).
 
 ## Usage
 
 Run with a configuration file:
 
 ```bash
-wayglance run examples/bar.lua
+waypane run examples/bar.lua
 ```
 
 Generate Lua stubs for better IDE integration (e.g., with Lua Language Server):
 
 ```bash
-wayglance gen-stubs > stubs.lua
+waypane gen-stubs > stubs.lua
 ```
 
 ## Examples
 
-The [`examples/`](./examples) directory contains a few examples of what you can build with wayglance:
+The [`examples/`](./examples) directory contains a few examples of what you can build with waypane:
 
 - `bar.lua`: A complete status bar featuring workspaces, window titles, and a clock.
 - `clock.lua`: A simple background clock widget.

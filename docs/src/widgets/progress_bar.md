@@ -29,7 +29,7 @@ local my_bar = ProgressBar({
 You can use reactive state to update the progress bar based on external data.
 
 ```lua
-local cpu_state = wayglance.state(0.1)
+local cpu_state = waypane.state(0.1)
 
 local cpu_bar = ProgressBar({
   fraction = cpu_state,

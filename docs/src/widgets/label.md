@@ -24,14 +24,14 @@ local my_label = Label({
 ### Dynamic Text
 
 ```lua
-local time_state = wayglance.state(os.date("%H:%M"))
+local time_state = waypane.state(os.date("%H:%M"))
 
 local clock_label = Label({
   text = time_state,
 })
 
 -- Update the state every minute
-wayglance.setInterval(function()
+waypane.setInterval(function()
   time_state:set(os.date("%H:%M"))
 end, 60000)
 ```

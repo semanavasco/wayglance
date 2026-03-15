@@ -39,7 +39,7 @@ local my_image = Image({
 You can change the image source based on reactive state.
 
 ```lua
-local profile_pic_state = wayglance.state("assets/default.png")
+local profile_pic_state = waypane.state("assets/default.png")
 
 local user_avatar = Image({
   src = profile_pic_state,

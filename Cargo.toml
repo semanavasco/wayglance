@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-  "crates/wayglance",
-  "crates/wayglance-macros",
+  "crates/waypane",
+  "crates/waypane-macros",
 ]

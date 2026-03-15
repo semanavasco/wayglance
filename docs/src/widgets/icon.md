@@ -28,7 +28,7 @@ local my_icon = Icon({
 You can use reactive state to change the icon based on external data.
 
 ```lua
-local volume_state = wayglance.state(50)
+local volume_state = waypane.state(50)
 
 local volume_icon = Icon({
   name = volume_state:as(function(val)

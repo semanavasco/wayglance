@@ -4,7 +4,7 @@ The `hyprland` module provides deep integration with the Hyprland window manager
 
 ## Usage
 
-The Hyprland module is available under the `wayglance.hyprland` table.
+The Hyprland module is available under the `waypane.hyprland` table.
 
 ## Types
 
@@ -114,7 +114,7 @@ Active monitor information, used in the `hyprland::active_monitor_changed` signa
 
 ## Signals
 
-You can subscribe to these events using `wayglance.onSignal()`.
+You can subscribe to these events using `waypane.onSignal()`.
 
 ### Workspace Events
 
@@ -141,7 +141,7 @@ local function workspace_button(id)
   return Button({
     child = Label({ text = tostring(id) }),
     on_click = function()
-      wayglance.hyprland.switchWorkspace(id)
+      waypane.hyprland.switchWorkspace(id)
     end,
   })
 end

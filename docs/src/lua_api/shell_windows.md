@@ -1,20 +1,20 @@
 # Shell & Windows
 
-The `Shell` and `Window` objects are the top-level structures used to define your `wayglance` configuration.
+The `Shell` and `Window` objects are the top-level structures used to define your `waypane` configuration.
 
 ## The Shell
 
-The `Shell` object is created using `wayglance.shell()`. It manages global settings and acts as a container for your windows.
+The `Shell` object is created using `waypane.shell()`. It manages global settings and acts as a container for your windows.
 
 ### Properties
 
 | Property | Type     | Default       | Description                                            |
 | -------- | -------- | ------------- | ------------------------------------------------------ |
-| `title`  | `string` | `"wayglance"` | The application title, used as the GTK application ID. |
+| `title`  | `string` | `"waypane"` | The application title, used as the GTK application ID. |
 | `style`  | `string` |               | An optional path to a global CSS stylesheet.           |
 
 ```lua
-local shell = wayglance.shell({
+local shell = waypane.shell({
   title = "My Bar",
   style = "style.css",
 })
@@ -77,7 +77,7 @@ The visibility of a window is automatically managed based on its root widget. If
 ### Example: Togglable Dashboard
 
 ```lua
-local is_visible = wayglance.state(false)
+local is_visible = waypane.state(false)
 
 shell:window("dashboard", {
   layer = "overlay",
@@ -91,7 +91,7 @@ shell:window("dashboard", {
 })
 
 -- Toggle visibility elsewhere
-wayglance.onSignal("toggle_dashboard", function()
+waypane.onSignal("toggle_dashboard", function()
   is_visible:set(not is_visible:get())
 end)
 ```
@@ -101,7 +101,7 @@ end)
 A typical `config.lua` returns the shell object:
 
 ```lua
-local shell = wayglance.shell({ title = "My Desktop" })
+local shell = waypane.shell({ title = "My Desktop" })
 
 shell:window("bar", {
   layer = "top",

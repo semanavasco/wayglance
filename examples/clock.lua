@@ -1,13 +1,13 @@
--- Example background clock widget using wayglance
+-- Example background clock widget using waypane
 
 -- State
-local current_theme = wayglance.state("theme-purple")
+local current_theme = waypane.state("theme-purple")
 
 -- Widgets
 local function clock_widget()
-  local time_state = wayglance.state(os.date("%H:%M:%S"))
+  local time_state = waypane.state(os.date("%H:%M:%S"))
 
-  wayglance.setInterval(function()
+  waypane.setInterval(function()
     time_state:set(os.date("%H:%M:%S"))
   end, 1000)
 
@@ -22,9 +22,9 @@ local function clock_widget()
 end
 
 local function date_widget()
-  local date_state = wayglance.state(os.date("%A, %B %d, %Y"))
+  local date_state = waypane.state(os.date("%A, %B %d, %Y"))
 
-  wayglance.setInterval(function()
+  waypane.setInterval(function()
     date_state:set(os.date("%A, %B %d, %Y"))
   end, 60000)
 
@@ -72,7 +72,7 @@ local function theme_switcher_widget()
   })
 end
 
-local shell = wayglance.shell({
+local shell = waypane.shell({
   title = "Clock",
   style = "clock.css",
 })

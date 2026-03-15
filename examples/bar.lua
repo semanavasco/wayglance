@@ -1,13 +1,13 @@
--- Example status bar using wayglance
+-- Example status bar using waypane
 
 -- state ---------------------------------------------------------------------
 
 local function create_state(monitor)
-  local active_workspace = wayglance.state(1)
-  local active_window_title = wayglance.state("")
+  local active_workspace = waypane.state(1)
+  local active_window_title = waypane.state("")
 
   local function update_active_workspace()
-    local monitors = wayglance.hyprland.getMonitors() or {}
+    local monitors = waypane.hyprland.getMonitors() or {}
     for _, monitor_info in ipairs(monitors) do
       if monitor_info.focused then
         active_workspace:set(monitor_info.active_workspace.id)
@@ -19,7 +19,7 @@ local function create_state(monitor)
   local function load_initial_state()
     update_active_workspace()
 
-    local window = wayglance.hyprland.getActiveWindow() or {}
+    local window = waypane.hyprland.getActiveWindow() or {}
     if window and window.title then
       active_window_title:set(window.title)
     end
@@ -49,18 +49,18 @@ local function workspace_button(id, is_active)
     valign = "center",
     focusable = false,
     on_click = function()
-      wayglance.hyprland.switchWorkspace(id)
+      waypane.hyprland.switchWorkspace(id)
     end,
   })
 end
 
 local function workspaces_widget(state, update_active_workspace)
-  local children_state = wayglance.state({})
+  local children_state = waypane.state({})
 
   local function rebuild_workspaces()
     update_active_workspace()
 
-    local workspaces = wayglance.hyprland.getWorkspaces() or {}
+    local workspaces = waypane.hyprland.getWorkspaces() or {}
     table.sort(workspaces, function(a, b)
       return a.workspace.id < b.workspace.id
     end)
@@ -80,7 +80,7 @@ local function workspaces_widget(state, update_active_workspace)
   end
 
   -- Rebuild whenever workspace events fire
-  wayglance.onSignal({
+  waypane.onSignal({
     "hyprland::workspace_changed",
     "hyprland::workspace_added",
     "hyprland::workspace_deleted",
@@ -102,16 +102,16 @@ local function workspaces_widget(state, update_active_workspace)
     children = children_state,
     on_scroll = function(_, dy)
       if dy < 0 then
-        wayglance.hyprland.switchWorkspaceRelative(-1)
+        waypane.hyprland.switchWorkspaceRelative(-1)
       else
-        wayglance.hyprland.switchWorkspaceRelative(1)
+        waypane.hyprland.switchWorkspaceRelative(1)
       end
     end,
   })
 end
 
 local function title_widget(state)
-  wayglance.onSignal("hyprland::active_window", function(window)
+  waypane.onSignal("hyprland::active_window", function(window)
     if window and window.title then
       state.active_window_title:set(window.title)
     end
@@ -125,9 +125,9 @@ local function title_widget(state)
 end
 
 local function clock_widget()
-  local time_state = wayglance.state(os.date("%H:%M"))
+  local time_state = waypane.state(os.date("%H:%M"))
 
-  wayglance.setInterval(function()
+  waypane.setInterval(function()
     time_state:set(os.date("%H:%M"))
   end, 1000)
 
@@ -139,8 +139,8 @@ local function clock_widget()
 end
 
 local function date_widget()
-  local date_state = wayglance.state(os.date("%a %d %b"))
-  local tooltip_state = wayglance.state("")
+  local date_state = waypane.state(os.date("%a %d %b"))
+  local tooltip_state = waypane.state("")
 
   local function build_calendar_tooltip()
     local now = os.date("*t")
@@ -193,7 +193,7 @@ local function date_widget()
 
   tooltip_state:set(build_calendar_tooltip())
 
-  wayglance.setInterval(function()
+  waypane.setInterval(function()
     date_state:set(os.date("%a %d %b"))
     tooltip_state:set(build_calendar_tooltip())
   end, 60000)
@@ -212,7 +212,7 @@ end
 
 -- bar layout ----------------------------------------------------------------
 
-local shell = wayglance.shell({
+local shell = waypane.shell({
   title = "Bar",
   style = "bar.css",
 })

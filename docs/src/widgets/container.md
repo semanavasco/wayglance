@@ -47,7 +47,7 @@ local my_list = Container({
 You can use reactive state to create dynamic containers.
 
 ```lua
-local items_state = wayglance.state({ "A", "B" })
+local items_state = waypane.state({ "A", "B" })
 
 local my_container = Container({
   orientation = "horizontal",

@@ -1,13 +1,13 @@
 # Styling
 
-`wayglance` uses standard CSS for styling its widgets. This provides a powerful and flexible way to customize the appearance of your desktop environment.
+`waypane` uses standard CSS for styling its widgets. This provides a powerful and flexible way to customize the appearance of your desktop environment.
 
 ## Applying CSS
 
 You can apply CSS by providing a path to a CSS file when creating your shell object. This stylesheet will be applied to all windows.
 
 ```lua
-local shell = wayglance.shell({
+local shell = waypane.shell({
   title = "My Bar",
   style = "style.css",
 })
