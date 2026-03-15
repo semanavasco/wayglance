@@ -21,9 +21,6 @@ use waypane_macros::lua_func;
     doc = "handle A handle that can be used to cancel the scheduled callback with :cancel()."
 )]
 pub fn set_timeout(lua: &Lua, callback: LuaFn, time: u64) -> mlua::Result<Table> {
-    let callback_key = lua.create_registry_value(callback)?;
-    let callback = lua.registry_value::<mlua::Function>(&callback_key)?;
-
     let source_id = glib::timeout_add_local_once(Duration::from_millis(time), move || {
         if let Err(e) = callback.call::<LuaValue>(()) {
             tracing::error!("Error in setTimeout callback: {}", e);
@@ -48,9 +45,6 @@ pub fn set_timeout(lua: &Lua, callback: LuaFn, time: u64) -> mlua::Result<Table>
     doc = "handle A handle that can be used to cancel the scheduled callback with :cancel()."
 )]
 pub fn set_interval(lua: &Lua, callback: LuaFn, interval: u64) -> mlua::Result<Table> {
-    let callback_key = lua.create_registry_value(callback)?;
-    let callback = lua.registry_value::<mlua::Function>(&callback_key)?;
-
     let source_id = glib::timeout_add_local(Duration::from_millis(interval), move || {
         if let Err(e) = callback.call::<LuaValue>(()) {
             tracing::error!("Error in setInterval callback: {}", e);
